@@ -1,0 +1,1754 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="robots" content="noindex, nofollow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RoySync Water Probe</title>
+<meta name="description" content="A sealed water-quality probe for aquaculture: dissolved oxygen, pH, conductivity, temperature and turbidity, streamed live with alerts.">
+<link rel="icon" type="image/png" href="assets/favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #07080f; --bg-2: #0d0b1a; --panel: rgba(255,255,255,.04); --line: rgba(255,255,255,.09);
+    --fg: #f3f1fa; --muted: #a39fb8; --faint: #6f6a86;
+    --accent: #8b5cf6; --accent-2: #a78bfa; --accent-deep: #5b21b6; --glow: rgba(139,92,246,.35);
+    --ok: #34d399; --warn: #fbbf24;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  html, body { margin: 0; background: var(--bg); color: var(--fg); font-family: Inter, system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+  a { color: inherit; text-decoration: none; }
+  #scroller { position: relative; height: 340vh; }
+  #stage { position: sticky; top: 0; height: 100vh; overflow: hidden; }
+  #stage canvas { display: block; width: 100%; height: 100%; }
+  /* soft shade behind the text so it stays readable over a bright sky */
+  #stage::before { content: ""; position: absolute; inset: 0; z-index: 3; pointer-events: none;
+    background: linear-gradient(90deg, rgba(4,22,38,.6) 0%, rgba(4,22,38,.25) 38%, rgba(4,22,38,0) 60%),
+                linear-gradient(180deg, rgba(4,22,38,.4) 0%, rgba(4,22,38,0) 16%); }
+
+  /* ---------- header ---------- */
+  header {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 10;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 22px 6vw; transition: background .4s, padding .4s, backdrop-filter .4s;
+  }
+  header.scrolled { background: rgba(8, 7, 18, .6); backdrop-filter: blur(14px); padding-top: 14px; padding-bottom: 14px; }
+  .logo { display: flex; align-items: center; gap: 12px; font-weight: 600; font-size: 19px; letter-spacing: -.01em; }
+  .logo img { width: 40px; height: 40px; border-radius: 50%; display: block; }
+  .btn.small { padding: 9px 18px; font-size: 13px; }
+  .btn {
+    display: inline-flex; align-items: center; gap: 8px; padding: 11px 20px; border-radius: 999px;
+    background: var(--accent); color: #fff; font-weight: 500; font-size: 14px;
+    box-shadow: 0 8px 30px var(--glow); transition: transform .2s, background .2s;
+  }
+  .btn:hover { background: #7c4dff; transform: translateY(-1px); }
+  .btn.ghost { background: transparent; border: 1px solid var(--line); box-shadow: none; color: var(--fg); }
+  .btn.ghost:hover { border-color: var(--accent-2); }
+
+  /* ---------- hero overlay ---------- */
+  .copy { position: absolute; z-index: 5; transition: opacity .4s; }
+  #hero-copy { left: 6vw; bottom: 13vh; max-width: 680px; }
+  .eyebrow { display: inline-flex; align-items: center; gap: 8px; font-size: 12px; letter-spacing: .18em; text-transform: uppercase; color: var(--accent-2); margin-bottom: 20px; }
+  .eyebrow::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--accent-2); box-shadow: 0 0 12px var(--accent-2); }
+  #hero-copy h1 { font-size: clamp(36px, 5.2vw, 76px); font-weight: 500; line-height: 1.02; letter-spacing: -.04em; margin: 0 0 20px; }
+  #hero-copy h1 em { font-style: normal; background: linear-gradient(90deg, var(--accent-2), #e9d5ff); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  #hero-copy p { color: var(--muted); font-size: 18px; line-height: 1.55; margin: 0 0 30px; max-width: 440px; }
+  .cta-row { display: flex; gap: 12px; flex-wrap: wrap; }
+  #solid-copy { left: 6vw; bottom: 13vh; max-width: 440px; opacity: 0; pointer-events: none; }
+  #solid-copy h2 { font-size: clamp(28px, 4vw, 50px); font-weight: 500; letter-spacing: -.03em; margin: 0 0 12px; }
+  #solid-copy p { color: var(--muted); font-size: 16px; line-height: 1.55; margin: 0; }
+  #hint { position: absolute; bottom: 22px; left: 50%; transform: translateX(-50%); font-size: 11px;
+          letter-spacing: .25em; text-transform: uppercase; color: var(--faint); z-index: 5; }
+  #loading { position: absolute; inset: 0; display: grid; place-items: center; z-index: 4;
+             color: var(--muted); font-size: 13px; letter-spacing: .15em; transition: opacity .6s; pointer-events: none; }
+
+  /* ---------- sections ---------- */
+  section { position: relative; padding: 120px 6vw; }
+  .wrap { max-width: 1160px; margin: 0 auto; }
+  .kicker { font-size: 12px; letter-spacing: .2em; text-transform: uppercase; color: var(--accent-2); margin-bottom: 16px; }
+  h2.title { font-size: clamp(30px, 4.4vw, 56px); font-weight: 500; letter-spacing: -.035em; line-height: 1.05; margin: 0 0 20px; max-width: 760px; }
+  p.lead { color: var(--muted); font-size: 18px; line-height: 1.6; max-width: 620px; margin: 0; }
+  .reveal { opacity: 0; transform: translateY(24px); transition: opacity .8s ease, transform .8s ease; }
+  .reveal.in { opacity: 1; transform: none; }
+
+  #measures { background: linear-gradient(180deg, var(--bg) 0%, var(--bg-2) 100%); }
+  .params { display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px; margin-top: 56px; }
+  .param { padding: 26px 22px; border-radius: 20px; background: var(--panel); border: 1px solid var(--line); transition: border-color .3s, transform .3s; }
+  .param:hover { border-color: rgba(167,139,250,.5); transform: translateY(-3px); }
+  .param .ico { width: 44px; height: 44px; border-radius: 12px; display: grid; place-items: center; background: rgba(139,92,246,.14); margin-bottom: 22px; }
+  .param h3 { font-size: 18px; font-weight: 500; margin: 0 0 8px; letter-spacing: -.01em; }
+  .param p { font-size: 14px; line-height: 1.5; color: var(--muted); margin: 0; }
+
+  #dawn { background: var(--bg-2); }
+  .split { display: grid; grid-template-columns: 1fr 1.15fr; gap: 64px; align-items: center; }
+  .chart-card { padding: 28px; border-radius: 24px; background: var(--panel); border: 1px solid var(--line); }
+  .chart-card .cap { display: flex; justify-content: space-between; font-size: 13px; color: var(--muted); margin-bottom: 18px; }
+  .chart-card .cap b { color: var(--fg); font-weight: 500; }
+  .chart-card svg { width: 100%; height: auto; display: block; overflow: visible; }
+  .note { font-size: 12px; color: var(--faint); margin-top: 14px; }
+  ul.points { list-style: none; padding: 0; margin: 32px 0 0; display: grid; gap: 18px; }
+  ul.points li { display: grid; grid-template-columns: 28px 1fr; gap: 12px; color: var(--muted); font-size: 16px; line-height: 1.5; }
+  ul.points li b { color: var(--fg); font-weight: 500; }
+  ul.points li::before { content: ""; width: 10px; height: 10px; margin-top: 7px; border-radius: 3px; background: var(--accent); box-shadow: 0 0 14px var(--glow); }
+
+  #reading { background: linear-gradient(180deg, var(--bg-2) 0%, var(--bg) 100%); }
+  .reading-card { font-family: ui-monospace, "SF Mono", Consolas, monospace; font-size: 14px; line-height: 1.9; padding: 30px 32px; border-radius: 24px;
+                  background: #0b0916; border: 1px solid var(--line); box-shadow: 0 30px 80px rgba(91,33,182,.18); }
+  .reading-card .row { display: flex; justify-content: space-between; gap: 20px; border-bottom: 1px dashed rgba(255,255,255,.06); }
+  .reading-card .row:last-child { border-bottom: 0; }
+  .reading-card .k { color: var(--faint); }
+  .reading-card .v { color: var(--fg); text-align: right; }
+  .reading-card .big { font-family: Inter, sans-serif; font-size: 44px; font-weight: 500; letter-spacing: -.03em; line-height: 1; margin: 6px 0 18px; }
+  .reading-card .big small { font-size: 18px; color: var(--muted); margin-left: 6px; }
+  .flag { display: inline-flex; align-items: center; gap: 6px; padding: 2px 10px; border-radius: 999px; font-size: 12px; background: rgba(52,211,153,.12); color: var(--ok); }
+
+  #built { background: var(--bg); }
+  .features { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin-top: 56px; }
+  .feature { padding: 34px; border-radius: 24px; background: var(--panel); border: 1px solid var(--line); position: relative; overflow: hidden; }
+  .feature::after { content: ""; position: absolute; inset: auto -30% -60% auto; width: 60%; height: 120%; background: radial-gradient(closest-side, rgba(139,92,246,.18), transparent); pointer-events: none; }
+  .feature .num { font-size: 13px; color: var(--accent-2); margin-bottom: 18px; letter-spacing: .1em; }
+  .feature h3 { font-size: 22px; font-weight: 500; letter-spacing: -.02em; margin: 0 0 10px; }
+  .feature p { color: var(--muted); font-size: 15px; line-height: 1.6; margin: 0; max-width: 460px; }
+
+  #how { background: var(--bg-2); }
+  .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 56px; counter-reset: s; }
+  .step { padding: 30px; border-top: 1px solid var(--line); }
+  .step::before { counter-increment: s; content: "0" counter(s); display: block; font-size: 44px; font-weight: 500; letter-spacing: -.04em;
+                  background: linear-gradient(180deg, var(--accent-2), var(--accent-deep)); -webkit-background-clip: text; background-clip: text; color: transparent; margin-bottom: 18px; }
+  .step h3 { font-size: 20px; font-weight: 500; margin: 0 0 10px; }
+  .step p { color: var(--muted); font-size: 15px; line-height: 1.6; margin: 0; }
+
+  #contact { text-align: center; padding: 140px 6vw; background:
+             radial-gradient(60% 80% at 50% 100%, rgba(139,92,246,.28), transparent 70%), var(--bg); }
+  #contact h2.title { margin: 0 auto 20px; }
+  #contact p.lead { margin: 0 auto 36px; }
+  #contact .cta-row { justify-content: center; }
+
+  footer { padding: 36px 6vw; border-top: 1px solid var(--line); color: var(--faint); font-size: 13px; }
+  footer .wrap { display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+
+  @media (max-width: 1000px) {
+    .params { grid-template-columns: repeat(2, 1fr); }
+    .split { grid-template-columns: 1fr; gap: 40px; }
+  }
+  @media (max-width: 760px) {
+    #hero-copy, #solid-copy { left: 16px; right: 16px; bottom: 7vh; text-align: center; margin: 0 auto; }
+    #hero-copy p, #solid-copy p { margin-left: auto; margin-right: auto; font-size: 15px; }
+    #stage::before { background: linear-gradient(0deg, rgba(4,22,38,.75) 0%, rgba(4,22,38,.35) 38%, rgba(4,22,38,0) 58%),
+                linear-gradient(180deg, rgba(4,22,38,.45) 0%, rgba(4,22,38,0) 14%); }
+    header { padding: 16px; }
+    header.scrolled { padding-top: 10px; padding-bottom: 10px; }
+    section { padding: 84px 16px; }
+    .params, .features, .steps { grid-template-columns: 1fr; }
+    .reading-card { padding: 22px; font-size: 13px; }
+  }
+  @media (prefers-reduced-motion: reduce) { .reveal { opacity: 1; transform: none; transition: none; } }
+</style>
+<script type="importmap">
+{ "imports": { "three": "./lib/three.module.js", "three/addons/": "./lib/addons/", "three/examples/jsm/": "./lib/jsm/" } }
+</script>
+</head>
+<body>
+<header id="site-header">
+  <a class="logo" href="#top" aria-label="RoySync home">
+    <img src="assets/logo.png" alt="" width="40" height="40">
+    <span>RoySync</span>
+  </a>
+  <a class="btn ghost small" href="#contact">Request a pilot</a>
+</header>
+
+<a id="top"></a>
+<div id="scroller">
+  <div id="stage">
+    <div id="loading">LOADING 0%</div>
+    <div class="copy" id="hero-copy">
+      <h1>Know your water<br><em>before your fish do</em></h1>
+      <p>A sealed probe that reads your tank around the clock.</p>
+      <a class="btn" href="#measures">Explore the probe</a>
+    </div>
+    <div class="copy" id="solid-copy">
+      <h2>Below the surface</h2>
+      <p>The sensors sit under the waterline, inside a twisted flow-guide.</p>
+    </div>
+    <div id="hint">Scroll</div>
+  </div>
+</div>
+
+<section id="measures">
+  <div class="wrap">
+    <div class="kicker reveal">Sensors</div>
+    <h2 class="title reveal">Five readings that decide whether a tank is healthy</h2>
+    <p class="lead reveal">One probe, one cable, one dashboard. Each parameter is measured in the water itself and compensated with the others.</p>
+    <div class="params">
+      <div class="param reveal">
+        <div class="ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="1.8" stroke-linecap="round"><circle cx="9" cy="9" r="4"/><circle cx="16.5" cy="15.5" r="2.5"/><circle cx="7" cy="17.5" r="1.5"/></svg></div>
+        <h3>Dissolved oxygen</h3>
+        <p>Optical sensing that needs no water flow, so it stays accurate in still water at night.</p>
+      </div>
+      <div class="param reveal">
+        <div class="ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="1.8" stroke-linecap="round"><path d="M12 3s6 6.5 6 11a6 6 0 0 1-12 0c0-4.5 6-11 6-11z"/><path d="M9.5 14h5"/></svg></div>
+        <h3>pH</h3>
+        <p>Double-junction reference electrode, built to resist the fouling that ends most pH probes.</p>
+      </div>
+      <div class="param reveal">
+        <div class="ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="1.8" stroke-linecap="round"><path d="M13 3 6 13h5l-1 8 7-10h-5z"/></svg></div>
+        <h3>Conductivity &amp; salinity</h3>
+        <p>Tracks salinity drift and water exchange, and corrects the oxygen reading for it.</p>
+      </div>
+      <div class="param reveal">
+        <div class="ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="1.8" stroke-linecap="round"><path d="M10 14V5a2 2 0 1 1 4 0v9a4 4 0 1 1-4 0z"/></svg></div>
+        <h3>Temperature</h3>
+        <p>A precision sensor in the same water as the others, because every compensation depends on it.</p>
+      </div>
+      <div class="param reveal">
+        <div class="ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="8"/><path d="M4 12h16M12 4a12 12 0 0 1 0 16M12 4a12 12 0 0 0 0 16"/></svg></div>
+        <h3>Turbidity</h3>
+        <p>Shows feeding waste, algae blooms and suspended solids as they build up.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="dawn">
+  <div class="wrap split">
+    <div>
+      <div class="kicker reveal">Alerts</div>
+      <h2 class="title reveal">Built around the hour fish are lost</h2>
+      <p class="lead reveal">Oxygen peaks in the afternoon and falls all night. The lowest point comes just before dawn, when nobody is watching. The probe samples faster as oxygen drops and alerts you at that hour, not in the morning report.</p>
+      <ul class="points">
+        <li class="reveal"><span><b>Adaptive sampling.</b> Every 15 minutes by day, faster overnight and whenever oxygen is falling toward your limit.</span></li>
+        <li class="reveal"><span><b>Instant alerts.</b> A reading below threshold goes out immediately, not in the next batch.</span></li>
+        <li class="reveal"><span><b>Your thresholds.</b> Set limits per tank and per species.</span></li>
+      </ul>
+    </div>
+    <div class="chart-card reveal">
+      <div class="cap"><span><b>Dissolved oxygen</b> · 24 h</span><span>mg/L</span></div>
+      <svg viewBox="0 0 520 260" role="img" aria-label="Illustrative 24-hour dissolved oxygen curve with its minimum just before dawn, below the alert threshold">
+        <defs>
+          <linearGradient id="fillg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8b5cf6" stop-opacity=".35"/><stop offset="1" stop-color="#8b5cf6" stop-opacity="0"/></linearGradient>
+        </defs>
+        <g stroke="rgba(255,255,255,.06)"><line x1="0" y1="40" x2="520" y2="40"/><line x1="0" y1="100" x2="520" y2="100"/><line x1="0" y1="160" x2="520" y2="160"/><line x1="0" y1="220" x2="520" y2="220"/></g>
+        <path d="M0 120 C 60 70, 110 40, 160 45 S 260 110, 320 170 S 390 212, 410 205 S 470 140, 520 110 L 520 240 L 0 240 Z" fill="url(#fillg)"/>
+        <path d="M0 120 C 60 70, 110 40, 160 45 S 260 110, 320 170 S 390 212, 410 205 S 470 140, 520 110" fill="none" stroke="#a78bfa" stroke-width="3" stroke-linecap="round"/>
+        <line x1="0" y1="185" x2="520" y2="185" stroke="#fbbf24" stroke-width="1.5" stroke-dasharray="6 6"/>
+        <text x="8" y="178" fill="#fbbf24" font-size="12" font-family="Inter, sans-serif">alert threshold</text>
+        <circle cx="398" cy="207" r="7" fill="#8b5cf6" stroke="#fff" stroke-width="2"/>
+        <circle cx="398" cy="207" r="16" fill="none" stroke="#a78bfa" stroke-opacity=".5"><animate attributeName="r" values="9;22;9" dur="2.4s" repeatCount="indefinite"/><animate attributeName="stroke-opacity" values=".7;0;.7" dur="2.4s" repeatCount="indefinite"/></circle>
+        <text x="352" y="238" fill="#e9d5ff" font-size="12" font-family="Inter, sans-serif">alert · 04:40</text>
+        <g fill="#6f6a86" font-size="11" font-family="Inter, sans-serif"><text x="0" y="258">12:00</text><text x="120" y="258">18:00</text><text x="250" y="258">00:00</text><text x="375" y="258">06:00</text><text x="484" y="258">12:00</text></g>
+      </svg>
+      <div class="note">Illustrative curve, not measured data.</div>
+    </div>
+  </div>
+</section>
+
+<section id="reading">
+  <div class="wrap split">
+    <div class="reading-card reveal" aria-label="Example reading">
+      <div class="k">dissolved_oxygen · tank 07</div>
+      <div class="big">6.8<small>mg/L</small></div>
+      <div class="row"><span class="k">quality</span><span class="v"><span class="flag">● OK</span></span></div>
+      <div class="row"><span class="k">compensated for</span><span class="v">temp 27.4 °C · salinity 36 PSU</span></div>
+      <div class="row"><span class="k">calibration age</span><span class="v">41 days</span></div>
+      <div class="row"><span class="k">probe serial</span><span class="v">DO-2A-0193</span></div>
+      <div class="row"><span class="k">timestamp</span><span class="v">04:40:12 · GPS time</span></div>
+    </div>
+    <div>
+      <div class="kicker reveal">Data you can trust</div>
+      <h2 class="title reveal">No bare numbers</h2>
+      <p class="lead reveal">Every reading carries its context: a quality flag, the temperature and salinity it was corrected with, how old the calibration is, and which probe took it. Suspicious values are flagged, never silently dropped.</p>
+      <ul class="points">
+        <li class="reveal"><span><b>Checked on the device</b> for range, sudden jumps and cross-parameter sense.</span></li>
+        <li class="reveal"><span><b>Flags you can act on:</b> out of range, stale, calibration overdue, fouling suspected.</span></li>
+      </ul>
+      <p class="note reveal">Example values for illustration.</p>
+    </div>
+  </div>
+</section>
+
+<section id="built">
+  <div class="wrap">
+    <div class="kicker reveal">Design</div>
+    <h2 class="title reveal">Made for months in the tank, not days on the bench</h2>
+    <div class="features">
+      <div class="feature reveal">
+        <div class="num">01</div>
+        <h3>Swap a probe, not a system</h3>
+        <p>Calibration lives on the probe itself. A fresh, calibrated probe plugs in and reads correctly, so no field recalibration.</p>
+      </div>
+      <div class="feature reveal">
+        <div class="num">02</div>
+        <h3>Fish-safe fouling control</h3>
+        <p>Smooth, crevice-free surfaces and a biocide-free foul-release finish. Software watches for drift and asks for a clean before the data suffers.</p>
+      </div>
+      <div class="feature reveal">
+        <div class="num">03</div>
+        <h3>Sealed for the sun and the washdown</h3>
+        <p>UV-stable housing above the water and a radial O-ring seal that doesn't depend on screw torque.</p>
+      </div>
+      <div class="feature reveal">
+        <div class="num">04</div>
+        <h3>Safe power, self-righting body</h3>
+        <p>A LiFePO4 battery that tolerates heat, placed low as ballast so the probe floats upright.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="how">
+  <div class="wrap">
+    <div class="kicker reveal">How it works</div>
+    <h2 class="title reveal">From tank to phone in three steps</h2>
+    <div class="steps">
+      <div class="step reveal"><h3>Deploy</h3><p>Drop the probe into the tank or pond. No wiring into your plant, no on-site computer.</p></div>
+      <div class="step reveal"><h3>Stream</h3><p>Readings go to the RoySync cloud, where every tank appears live on one dashboard.</p></div>
+      <div class="step reveal"><h3>Act</h3><p>Alerts reach the right person's phone the moment a limit is crossed, day or night.</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="contact">
+  <div class="wrap">
+    <div class="kicker reveal">Pilot programme</div>
+    <h2 class="title reveal">Put a probe in your water</h2>
+    <p class="lead reveal">We're running pilots with aquaculture farms. Tell us about your site and we'll plan one with you.</p>
+    <div class="cta-row reveal">
+      <a class="btn" href="mailto:info@RoySync.com?subject=Pilot%20request">info@RoySync.com</a>
+      <a class="btn ghost" href="#top" onclick="scrollTo({top:0,behavior:'smooth'});return false;">Back to top</a>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <span>© RoySync</span>
+    <span>Water intelligence for aquaculture</span>
+  </div>
+</footer>
+
+<script>
+  // fade sections in as they enter the viewport
+  const io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } }), { threshold: 0.15 });
+  document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/GLTFLoader.js';
+import { toCreasedNormals, mergeVertices } from 'three/addons/BufferGeometryUtils.js';
+import { Water } from 'three/examples/jsm/objects/Water.js';
+import { Sky } from 'three/examples/jsm/objects/Sky.js';
+import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
+import { Pass, FullScreenQuad } from 'three/examples/jsm/postprocessing/Pass.js';
+import { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass.js';
+import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js';
+
+// The probe floats with its collar at the waterline (y = 0) on a calm, sunny sea. Scrolling moves the camera
+// from above the surface down through it, ending under water on a wide angle that looks up past the blades
+// into Snell's window.
+// Scale: the 508 mm probe is 6.4 units tall, so 1 unit = 79 mm. Gravity, wave speeds and the water's optics
+// are all set in those units (open-ocean clarity, a half-speed sea), so the float reads as a 0.5 m buoy.
+// Above water: a long low swell plus wind chop (the float rides the same waves), physically based water with a
+// Beckmann sun lobe that breaks into discrete glints, a warm low sun, contact meniscus and clouds.
+// Under water: the scene is drawn with depth, then a half-resolution volume pass marches each view ray through
+// the water (Beer-Lambert per wavelength, sunlight focused into sheets by the waves, the probe's own shadow), so
+// the light shafts, their occlusion by the blades and the blue-green fade all come from the same medium.
+
+const stage = document.getElementById('stage');
+const renderer = new THREE.WebGLRenderer({ antialias: false, powerPreference: 'high-performance' });
+renderer.toneMapping = THREE.NoToneMapping;          // exposure, ACES and sRGB are applied once, in the finishing pass
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.shadowMap.autoUpdate = false;               // refreshed once per frame, not once per pass
+stage.prepend(renderer.domElement);
+
+// integrated and mobile GPUs get 2x MSAA instead of 4x: the multisampled HalfFloat buffers are their largest fixed cost
+const GPU = (() => {
+  try {
+    const gl = renderer.getContext();
+    let s = String(gl.getParameter(gl.RENDERER));
+    if (/webkit|mozilla/i.test(s)) { const e = gl.getExtension('WEBGL_debug_renderer_info'); if (e) s = String(gl.getParameter(e.UNMASKED_RENDERER_WEBGL)); }
+    return s;
+  } catch (err) { return ''; }
+})();
+const LOW_GPU = /Intel|UHD|Iris|Mali|Adreno|PowerVR|Apple GPU|SwiftShader|llvmpipe|Basic Render/i.test(GPU) || innerWidth < 760;
+
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(32, 1, 0.05, 6000);
+const L_AIR = 1, L_WET = 2, L_UNDER = 3;   // layers: above-water only · beneath the surface · eye-under-water only
+const DOME_R = 3.5;                        // virtual dome port: sets how long the split-level crossing lasts
+const MSAA = LOW_GPU ? 2 : 4;
+
+// ---------------- waves: one Gerstner sum shared by the surface, foam, waterline, snow and the float ----------------
+// True gravity is 124 units/s² at 79 mm per unit. The sea runs at half speed (S_MO = 2): G_EFF = g / S², so every
+// wave keeps its real dispersion, and the ripple and caustic fields scroll at the matching phase speeds.
+// The user asked for a calmer sea: quarter speed (S_MO = 4) and waves at WAVE_GAIN of their former height.
+const S_MO = 4;
+const G_EFF = 124 / (S_MO * S_MO);
+const RIPPLE_V = 9;                                  // ripple/caustic scroll speed, slowed with S_MO (was 18 at S_MO = 2)
+const WAVE_GAIN = 0.45;                              // overall wave height
+const SEA_SPEED = 0.4;                               // slows every sea motion together (waves, ripples, glitter, caustics, foam, bob)
+const WIND = Math.atan2(0.94, 0.34);                 // the sea runs toward the camera, a little to the right
+// (heading offset °, wavelength, amplitude): a long, low open-ocean swell (20 m, 7 s), then wind chop of ka 0.03–0.055
+const WAVE_BASE = [[-14, 250, 0.2], [0, 23, 0.1], [27, 13.5, 0.07], [-21, 8.2, 0.06], [46, 5.1, 0.042], [-38, 3.2, 0.028], [12, 2.1, 0.018]];
+const WAVE_DEF = WAVE_BASE.map(([off, lam, amp]) => [off, lam, amp * WAVE_GAIN]);
+const NW = WAVE_DEF.length;
+const WAVE_SUM = WAVE_DEF.reduce((s, w) => s + w[2], 0);
+const WA = [], WB = [];                              // (dir.x, dir.z, k, amplitude) · (omega, phase, steepness Q, wavelength)
+WAVE_DEF.forEach(([off, lam, amp], i) => {
+  const a = WIND + THREE.MathUtils.degToRad(off), k = 2 * Math.PI / lam;
+  // steepness from the original height, so lower waves are also gentler (rounder crests), not just smaller
+  const amp0 = WAVE_BASE[i][2];
+  WA.push(new THREE.Vector4(Math.cos(a), Math.sin(a), k, amp));
+  WB.push(new THREE.Vector4(Math.sqrt(G_EFF * k), 1.3 + i * 2.17, Math.min(lam > 100 ? 1 : 1.5, 0.55 / (k * amp0 * NW)), lam));
+});
+const WAVE_U = { uWA: { value: WA }, uWB: { value: WB } };
+const smoothJS = (a, b, x) => { const t = Math.min(Math.max((x - a) / (b - a), 0), 1); return t * t * (3 - 2 * t); };
+const waveDamp = r => 0.45 + 0.55 * smoothJS(1.2, 4.5, r);        // the float calms the chop right around it (not the swell)
+function waveHeight(x, z, t) {
+  const r = Math.hypot(x, z), dm = waveDamp(r);
+  let h = 0;
+  for (let i = 0; i < NW; i++) {
+    const a = WA[i], b = WB[i];
+    h += a.w * (b.w > 100 ? 1 : dm) * (1 - smoothJS(b.w * 4, b.w * 7, r)) * Math.sin(a.z * (a.x * x + a.y * z) - b.x * t + b.y);
+  }
+  return h;
+}
+
+// ---------------- shared state: sun, water medium ----------------
+const sunDir = new THREE.Vector3();          // toward the sun
+const sunCol = new THREE.Color(0xffd6a6);    // a 5° sun seen through ~10 air masses: warm, not white
+// open-ocean optics (Jerlov type I) per metre × 0.0793 m per unit: red is gone within a few metres, blue carries for tens
+const SIGMA = new THREE.Vector3(0.035, 0.008, 0.005);  // extinction per unit
+const KD = new THREE.Vector3(0.03, 0.006, 0.003);      // how fast daylight fades with depth
+const MU = {
+  uTime: { value: 0 },
+  uEye: { value: new THREE.Vector3() },       // optical eye: y clamped to the side of the surface the eye is on
+  uMode: { value: 0 },                        // 0 eye in air · 1 eye in water · 2 reflected path (underside mirror)
+  uDome: { value: DOME_R },
+  uSigma: { value: SIGMA.clone() },
+  uKd: { value: KD.clone() },
+  uLt: { value: new THREE.Vector3(0, -1, 0) }, // refracted sunlight direction under water (points down)
+  uSunDir: { value: sunDir },
+  uSunCol: { value: sunCol },
+  uApparent: { value: 1 },                    // < 1 while drawing what the surface refracts: apparent depth at grazing view
+  uLup: { value: new THREE.Vector3(0.15, 0.86, 1.2) },     // water radiance just below the surface: looking up
+  uLhz: { value: new THREE.Vector3(0.035, 0.34, 0.6) },    //   … looking level: sunlit blue-cyan
+  uLdn: { value: new THREE.Vector3(0.003, 0.03, 0.075) },  //   … looking down
+  uLwin: { value: new THREE.Vector3(0.95, 1.15, 1.3) },    // the sky seen through Snell's window
+  uEup: { value: new THREE.Vector3(1.3, 2.3, 2.8) },       // irradiance on an upward face just below the surface
+  uUpwell: { value: new THREE.Color(0x0a3b5c) },           // deep water seen from above
+  uCaustTex: { value: null },
+  uCaustScale: { value: 0.13 },
+  uCaustBlur: { value: 1.3 },
+};
+
+// ---------------- GLSL ----------------
+const NOISE = /* glsl */`
+float h21(vec2 p){ p = fract(p * vec2(123.34, 456.21)); p += dot(p, p + 45.32); return fract(p.x * p.y); }
+float vnoise(vec2 p){
+  vec2 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f);
+  return mix(mix(h21(i), h21(i + vec2(1.0, 0.0)), f.x), mix(h21(i + vec2(0.0, 1.0)), h21(i + vec2(1.0, 1.0)), f.x), f.y);
+}`;
+
+const WAVES = /* glsl */`
+uniform vec4 uWA[${NW}], uWB[${NW}];
+float waveDamp(float r){ return mix(0.45, 1.0, smoothstep(1.2, 4.5, r)); }
+vec3 wavePos(vec2 x0, float t){                 // Gerstner displacement of the rest point x0
+  float r = length(x0), dm = waveDamp(r);
+  vec3 P = vec3(x0.x, 0.0, x0.y);
+  for (int i = 0; i < ${NW}; i++) {
+    vec4 a = uWA[i], b = uWB[i];
+    float A = a.w * (b.w > 100.0 ? 1.0 : dm) * (1.0 - smoothstep(b.w * 4.0, b.w * 7.0, r));
+    float th = a.z * dot(a.xy, x0) - b.x * t + b.y;
+    P.xz += b.z * A * a.xy * cos(th);
+    P.y += A * sin(th);
+  }
+  return P;
+}
+float waveHeight(vec2 x, float t){
+  float r = length(x), dm = waveDamp(r), h = 0.0;
+  for (int i = 0; i < ${NW}; i++) {
+    vec4 a = uWA[i], b = uWB[i];
+    h += a.w * (b.w > 100.0 ? 1.0 : dm) * (1.0 - smoothstep(b.w * 4.0, b.w * 7.0, r)) * sin(a.z * dot(a.xy, x) - b.x * t + b.y);
+  }
+  return h;
+}
+vec2 waveSlope(vec2 x0, float t, float dist, out float lost){   // dh/dx, dh/dz; waves too fine to resolve become roughness
+  float dm = waveDamp(length(x0));
+  vec3 n = vec3(0.0, 1.0, 0.0); lost = 0.0;
+  for (int i = 0; i < ${NW}; i++) {
+    vec4 a = uWA[i], b = uWB[i];
+    float kA = a.z * a.w * (b.w > 100.0 ? 1.0 : dm), w = 1.0 - smoothstep(b.w * 30.0, b.w * 90.0, dist);
+    float th = a.z * dot(a.xy, x0) - b.x * t + b.y;
+    n.xz -= a.xy * (kA * w * cos(th));
+    n.y -= b.z * kA * w * sin(th);
+    lost += 0.5 * kA * kA * (1.0 - w * w);
+  }
+  return -n.xz / n.y;
+}`;
+
+// capillary ripples from the vendored normal map at four scales; the mip average keeps the slope variance (Toksvig)
+const RIPPLES = /* glsl */`
+uniform sampler2D normalSampler;
+uniform float uWave, uFine;
+vec2 nmSlope(vec2 uv, float w, inout float v){
+  vec3 n = texture2D(normalSampler, uv).rgb * 2.0 - 1.0;
+  float len = max(length(n), 1e-3);
+  v += w * w * max(1.0 - len, 0.0) / len;
+  n /= len;
+  return n.xy / max(n.z, 0.35) * w;
+}
+vec2 rippleSlope(vec2 p, out float v){
+  float t = uTime * ${RIPPLE_V.toFixed(1)}; v = 0.0;            // phase speeds of the ripples on a half-speed sea
+  vec2 q1 = vec2(p.x * 0.8 - p.y * 0.6, p.x * 0.6 + p.y * 0.8);
+  vec2 q2 = vec2(p.x * 0.5 + p.y * 0.866, -p.x * 0.866 + p.y * 0.5);
+  vec2 s = nmSlope(p * 0.61 + t * vec2(0.047, 0.029), 0.16, v)
+         + nmSlope(p * 0.21 + t * vec2(0.034, 0.018), 0.30, v)
+         + nmSlope(q1 * 0.13 - t * vec2(-0.021, 0.029), 0.30, v)
+         + nmSlope(q2 * 0.047 + t * vec2(0.008, -0.011), 0.26, v);
+  if (uFine > 0.0) s += nmSlope(p * 2.4 + t * vec2(-0.14, 0.12), 0.10 * uFine, v);   // capillary octave: the facets that glint
+  v *= uWave * uWave;
+  return s * uWave;
+}
+vec2 rippleSlopeLo(vec2 p){                     // the two broad octaves only: a smooth field for bending images
+  float t = uTime * ${RIPPLE_V.toFixed(1)}, v = 0.0;
+  vec2 q1 = vec2(p.x * 0.8 - p.y * 0.6, p.x * 0.6 + p.y * 0.8);
+  vec2 q2 = vec2(p.x * 0.5 + p.y * 0.866, -p.x * 0.866 + p.y * 0.5);
+  return (nmSlope(q1 * 0.13 - t * vec2(-0.021, 0.029), 0.30, v) + nmSlope(q2 * 0.047 + t * vec2(0.008, -0.011), 0.26, v)) * uWave;
+}`;
+
+// light in the water: per-wavelength extinction, and closed-form in-scatter of daylight that fades with depth
+const MEDIUM = /* glsl */`
+uniform float uTime, uMode, uDome;
+uniform vec3 uEye, uSigma, uKd, uLt, uSunDir, uSunCol, uLup, uLhz, uLdn, uLwin, uEup, uUpwell;
+float hgPhase(float mu, float g){ float g2 = g * g; return (1.0 - g2) / (12.566 * pow(max(1.0 + g2 - 2.0 * g * mu, 1e-4), 1.5)); }
+vec3 waterL0(vec3 d){                         // deep-water radiance along d, just below the surface
+  vec3 c = d.y > 0.0 ? mix(uLhz, uLup, smoothstep(0.0, 0.9, d.y)) : mix(uLhz, uLdn, smoothstep(0.0, 0.6, -d.y));
+  return c + uLhz * 0.9 * hgPhase(dot(d, -uLt), 0.55);
+}
+vec3 inscatter(vec3 d, float y0, float len){   // integral of the glow along a ray starting at depth y0
+  vec3 a = max(uSigma - uKd * d.y, vec3(1e-3));
+  return uSigma / a * waterL0(d) * exp(uKd * min(y0, 0.0)) * (1.0 - exp(-a * len));
+}
+vec3 applyWater(vec3 col, vec3 wp){
+  vec3 dv = wp - uEye; float L = max(length(dv), 1e-4); vec3 dir = dv / L;
+  if (uMode < 0.5) {                          // seen from the air, down through the surface
+    if (wp.y >= 0.0) return col;
+    float ci = clamp((uEye.y - wp.y) / L, 0.0, 1.0);
+    float st = sqrt(1.0 - ci * ci) / 1.333;
+    vec3 T = exp(-uSigma * 1.2 * (-wp.y / sqrt(1.0 - st * st)));
+    return col * T + uUpwell * (1.0 - T);
+  }
+  if (uMode < 1.5) {                          // eye in the water, behind a dome port
+    float s1 = wp.y > 0.0 ? L * (-uEye.y) / max(wp.y - uEye.y, 1e-4) : L;
+    float len = max(s1 - uDome, 0.0);
+    return col * exp(-uSigma * len) + inscatter(dir, uEye.y + dir.y * uDome, len);
+  }
+  if (wp.y >= 0.0) return col;                // mirrored by the underside: only the water below the surface
+  float len = L * (-wp.y) / max(uEye.y - wp.y, 1e-4);
+  return col * exp(-uSigma * len) + inscatter(dir, 0.0, len);
+}`;
+
+const UWLIGHT = /* glsl */`
+vec3 uwIrradiance(vec3 n, float y){           // daylight arriving on a face with normal n at depth y
+  vec3 e = n.y > 0.0 ? mix(uLhz * PI, uEup, smoothstep(0.0, 1.0, n.y)) : mix(uLhz * PI, uLdn * PI, smoothstep(0.0, 1.0, -n.y));
+  return e * exp(uKd * min(y, 0.0));
+}
+vec3 uwRadiance(vec3 r, float y, float rough){ // what a glossy face reflects: the bright window above, blue around
+  float w = 0.04 + 0.5 * rough * rough;
+  vec3 L = mix(waterL0(r), uLwin, smoothstep(0.66 - w, 0.66 + w, r.y));
+  return L * exp(uKd * min(y, 0.0));
+}`;
+
+const CAUSTIC = /* glsl */`
+uniform sampler2D uCaustTex;
+uniform float uCaustScale, uCaustBlur;
+vec3 causticRGB(vec3 p, float dep){           // sunlight focused by the waves, projected along the refracted sun
+  vec2 e = (p.xz - uLt.xz * (p.y / uLt.y)) * uCaustScale;
+  float lod = log2(1.0 + dep * uCaustBlur);
+  vec2 sp = normalize(uLt.xz + 1e-4) * (0.0035 * dep);   // a trace of dispersion, growing with depth
+  vec3 c = vec3(textureLod(uCaustTex, e + sp, lod).r, textureLod(uCaustTex, e, lod).r, textureLod(uCaustTex, e - sp, lod).r);
+  return mix(vec3(1.0), c, exp(-dep * 0.1));
+}`;
+
+// ---------------- sky: physical sky, polarised blue, and a thin sunlit cloud layer ----------------
+const sky = new Sky();
+sky.scale.setScalar(10000);
+const skyU = {
+  uBlue: { value: 0.92 }, uPol: { value: 0.7 },
+  uHueLo: { value: new THREE.Vector3(0.55, 0.76, 1.0) }, uHueHi: { value: new THREE.Vector3(0.13, 0.37, 1.0) },
+  uDisk: { value: 1 }, uTime: MU.uTime, uCloud: { value: 0.75 }, uCloudL: { value: 0.9 }, uCheap: { value: 0 },
+};
+{
+  const u = sky.material.uniforms;
+  u.turbidity.value = 1.8; u.rayleigh.value = 1.2; u.mieCoefficient.value = 0.0025; u.mieDirectionalG.value = 0.93;
+  u.sunPosition.value = sunDir;
+  sky.material.onBeforeCompile = sh => {
+    Object.assign(sh.uniforms, skyU);
+    sh.fragmentShader = sh.fragmentShader
+      .replace('uniform vec3 up;', /* glsl */`uniform vec3 up;
+        uniform float uBlue, uPol, uDisk, uTime, uCloud, uCloudL;
+        uniform int uCheap;
+        uniform vec3 uHueLo, uHueHi;
+        float ch(vec2 p){ p = fract(p * vec2(233.34, 851.73)); p += dot(p, p + 23.45); return fract(p.x * p.y); }
+        float cn(vec2 p){ vec2 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f);
+          return mix(mix(ch(i), ch(i + vec2(1.0, 0.0)), f.x), mix(ch(i + vec2(0.0, 1.0)), ch(i + vec2(1.0, 1.0)), f.x), f.y); }
+        float cfbm(vec2 p, int oct){ float s = 0.0, a = 0.5; mat2 m = mat2(1.6, 1.2, -1.2, 1.6);
+          for (int i = 0; i < 6; i++) { if (i >= oct) break; s += a * cn(p); p = m * p + 3.1; a *= 0.5; } return s; }`)
+      .replace('L0 += ( vSunE * 19000.0 * Fex ) * sundisk;', 'L0 += ( vSunE * 19000.0 * Fex ) * sundisk * uDisk;')
+      .replace('gl_FragColor = vec4( retColor, 1.0 );', /* glsl */`
+        vec3 lw = vec3(0.2126, 0.7152, 0.0722);
+        float h = max(direction.y, 0.0);
+        vec3 hue = mix(uHueLo, uHueHi, smoothstep(0.0, 0.28, h));
+        float P = (1.0 - cosTheta * cosTheta) / (1.0 + cosTheta * cosTheta);   // Rayleigh polarisation
+        vec3 blue = hue * dot(retColor, lw) * (1.0 - uPol * P * smoothstep(0.0, 0.25, h)) / dot(hue, lw);
+        // the low band keeps Preetham's own warm extinction toward the horizon
+        retColor = mix(retColor, blue, uBlue * smoothstep(0.0, 0.08, h) * smoothstep(0.9975, 0.94, cosTheta));
+        if (uCloud > 0.0 && direction.y > 0.004) {
+          // a few fair-weather clouds in loose patches, lit from the low sun, thinning toward the zenith
+          vec2 cp = direction.xz / (direction.y + 0.035);
+          vec2 q = cp * 0.3 + vec2(uTime * 0.004, uTime * 0.0014);
+          vec2 wq = q + 1.2 * vec2(cfbm(q * 0.6 + 5.2, 2), cfbm(q * 0.6 + 1.7, 2));
+          float n = cfbm(wq * vec2(1.0, 1.25), 5 - uCheap);
+          float patches = smoothstep(0.45, 0.68, cfbm(q * 0.11 + vec2(3.7, 9.1), 3));
+          float cov = smoothstep(0.55, 0.85, n) * patches * smoothstep(0.004, 0.05, h) * (1.0 - 0.85 * smoothstep(0.07, 0.5, h));
+          vec2 sd2 = normalize(vSunDirection.xz + vec2(1e-4));
+          float n2 = cfbm((wq + sd2 * 0.07) * vec2(1.0, 1.25), 3);
+          float lit = clamp(0.62 + (n - n2) * 4.0, 0.2, 1.25);
+          float silver = hgPhase(cosTheta, 0.7) * 2.5;
+          vec3 cc = (vec3(1.0, 0.9, 0.78) * lit * (0.5 + silver) + vec3(0.5, 0.58, 0.72) * 0.55) * uCloudL * (0.6 + 0.4 * dot(retColor, lw));
+          float haze = 1.0 - smoothstep(0.0, 0.16, h);
+          retColor = mix(retColor, mix(cc, retColor * 1.08 + 0.02, haze * 0.55), cov * uCloud);
+        }
+        gl_FragColor = vec4( retColor, 1.0 );`);
+  };
+}
+scene.add(sky);
+
+// ---------------- lights ----------------
+// no studio fill: the float is lit by the sun behind it (a warm rim) and by the sky and sea around it (the environment)
+const SUN_I = 2.8, UW_I = 2.6;
+const sun = new THREE.DirectionalLight(sunCol, SUN_I);       // low, warm late-afternoon sun
+sun.target.position.set(0, -1.6, 0);
+sun.castShadow = true;
+sun.shadow.mapSize.set(2048, 2048);
+sun.shadow.bias = -0.0004;
+sun.shadow.normalBias = 0.02;
+sun.shadow.radius = 3;
+Object.assign(sun.shadow.camera, { left: -3.2, right: 3.2, top: 3.8, bottom: -3.8, near: 1, far: 90 });
+scene.add(sun, sun.target);
+// the same sun after the surface has bent it: lights (and shadows) everything under water
+const sunUW = new THREE.DirectionalLight(sunCol, UW_I);
+sunUW.target.position.set(0, -1.6, 0);
+sunUW.castShadow = true;
+sunUW.shadow.mapSize.set(2048, 2048);
+sunUW.shadow.bias = -0.0004;
+sunUW.shadow.normalBias = 0.02;
+sunUW.shadow.radius = 2;
+Object.assign(sunUW.shadow.camera, { left: -2.4, right: 2.4, top: 3.9, bottom: -3.9, near: 1, far: 90 });
+scene.add(sunUW, sunUW.target);
+// each view carries only its own lights, so every fragment does one shadow lookup, not two
+function lightFor(under) { sun.visible = !under; sunUW.visible = under; }
+lightFor(false);
+
+// ---------------- environment: the real sky (plus the dark sea below the horizon) ----------------
+const pmrem = new THREE.PMREMGenerator(renderer);
+const cubeRT = new THREE.WebGLCubeRenderTarget(256, { type: THREE.HalfFloatType, generateMipmaps: true, minFilter: THREE.LinearMipmapLinearFilter });
+const cubeCam = new THREE.CubeCamera(0.1, 1000, cubeRT);
+const envScene = new THREE.Scene();
+envScene.add(new THREE.Mesh(new THREE.SphereGeometry(100, 64, 32), new THREE.ShaderMaterial({
+  side: THREE.BackSide, transparent: true, depthWrite: false,
+  uniforms: { uSea: { value: new THREE.Color(0x0a2c45) } },
+  vertexShader: `varying vec3 vD; void main(){ vD = position; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
+  fragmentShader: `uniform vec3 uSea; varying vec3 vD;
+    void main(){ vec3 d = normalize(vD); if (d.y > 0.0) discard; gl_FragColor = vec4(uSea, smoothstep(0.0, 0.22, -d.y)); }`,
+})));
+let envRT = null;
+function rebuildEnv() {
+  envScene.add(sky);
+  sky.visible = true;
+  skyU.uDisk.value = 0;                      // the sun itself is drawn analytically wherever this cube is seen
+  cubeCam.update(renderer, envScene);
+  skyU.uDisk.value = 1;
+  if (envRT) envRT.dispose();
+  envRT = pmrem.fromScene(envScene, 0, 0.1, 1000);
+  scene.environment = envRT.texture;
+  scene.add(sky);
+}
+
+// ---------------- the sea surface mesh: rings that are fine at the float and coarse at the horizon ----------------
+function polarGrid(nr, ns, r0, rMax) {
+  const c = Math.log(1 + rMax / r0) / nr;
+  const pos = new Float32Array((nr * ns + 1) * 3), nrm = new Float32Array((nr * ns + 1) * 3);
+  for (let v = 0; v < nr * ns + 1; v++) nrm[v * 3 + 2] = 1;
+  for (let i = 1; i <= nr; i++) {
+    const r = r0 * (Math.exp(c * i) - 1);
+    for (let j = 0; j < ns; j++) {
+      const a = j / ns * Math.PI * 2, v = 1 + (i - 1) * ns + j;
+      pos[v * 3] = Math.cos(a) * r; pos[v * 3 + 1] = Math.sin(a) * r;
+    }
+  }
+  const idx = [];
+  for (let j = 0; j < ns; j++) idx.push(0, 1 + j, 1 + (j + 1) % ns);
+  for (let i = 1; i < nr; i++) for (let j = 0; j < ns; j++) {
+    const a = 1 + (i - 1) * ns + j, b = a + ns, j1 = (j + 1) % ns, c1 = 1 + i * ns + j1, d = 1 + (i - 1) * ns + j1;
+    idx.push(a, b, c1, a, c1, d);
+  }
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  g.setAttribute('normal', new THREE.BufferAttribute(nrm, 3));
+  g.setIndex(new THREE.BufferAttribute(new Uint32Array(idx), 1));
+  g.boundingSphere = new THREE.Sphere(new THREE.Vector3(), rMax);
+  return g;
+}
+const seaGeo = polarGrid(160, 288, 0.35, 3000);
+
+// ---------------- water surface, seen from above (Water.js mirror + refraction) ----------------
+const waterNormals = new THREE.TextureLoader().load('assets/waternormals.jpg');
+waterNormals.wrapS = waterNormals.wrapT = THREE.RepeatWrapping;
+waterNormals.anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy());
+const MIRROR = 512;                          // the mirror is bent by waves and blended into the sky probe far out: 512 is plenty
+const water = new Water(seaGeo, {
+  textureWidth: MIRROR, textureHeight: MIRROR, waterNormals, sunDirection: sunDir, sunColor: sunCol, fog: false,
+});
+water.rotation.x = -Math.PI / 2;
+water.receiveShadow = true;
+water.frustumCulled = false;
+water.layers.set(L_AIR);
+const refrRT = new THREE.WebGLRenderTarget(1, 1, { type: THREE.HalfFloatType });
+const wu = water.material.uniforms;
+Object.assign(wu, WAVE_U, {
+  uTime: MU.uTime, uWave: { value: 1.0 }, uFine: { value: 1.0 }, uRefr: { value: refrRT.texture }, uSkyCube: { value: cubeRT.texture },
+  uScreen: { value: new THREE.Vector2(1, 1) }, uReflDistort: { value: 0.2 }, uRefrDistort: { value: 0.05 },
+  uHaze: { value: 0.0032 }, uSSS: { value: new THREE.Color(0x0e6b75) }, uSunE: { value: 2.6 }, uRough: { value: 0.0012 },
+});
+water.material.vertexShader = /* glsl */`
+  uniform mat4 textureMatrix;
+  uniform float uTime;
+  varying vec4 mirrorCoord;
+  varying vec4 worldPosition;
+  varying vec2 vX0;
+  varying float vH;
+  #include <common>
+  #include <fog_pars_vertex>
+  #include <shadowmap_pars_vertex>
+  #include <logdepthbuf_pars_vertex>
+  ${WAVES}
+  void main() {
+    vec4 w0 = modelMatrix * vec4(position, 1.0);
+    vX0 = w0.xz;
+    vec3 P = wavePos(w0.xz, uTime);
+    vH = P.y;
+    worldPosition = vec4(P, 1.0);
+    mirrorCoord = textureMatrix * worldPosition;
+    vec4 mvPosition = viewMatrix * worldPosition;
+    gl_Position = projectionMatrix * mvPosition;
+    #include <beginnormal_vertex>
+    #include <defaultnormal_vertex>
+    #include <logdepthbuf_vertex>
+    #include <fog_vertex>
+    #include <shadowmap_vertex>
+  }`;
+water.material.fragmentShader = /* glsl */`
+  uniform sampler2D mirrorSampler;
+  uniform sampler2D uRefr;
+  uniform samplerCube uSkyCube;
+  uniform vec3 sunColor, sunDirection, eye, uSSS;
+  uniform vec2 uScreen;
+  uniform float uTime, uReflDistort, uRefrDistort, uHaze, uSunE, uRough;
+  varying vec4 mirrorCoord;
+  varying vec4 worldPosition;
+  varying vec2 vX0;
+  varying float vH;
+  #include <common>
+  #include <packing>
+  #include <bsdfs>
+  #include <fog_pars_fragment>
+  #include <logdepthbuf_pars_fragment>
+  #include <lights_pars_begin>
+  #include <shadowmap_pars_fragment>
+  #include <shadowmask_pars_fragment>
+  ${WAVES}
+  ${RIPPLES}
+  float sunShadow(){                            // the float's shadow on the water: a cheap 4-tap PCF
+    #if defined( USE_SHADOWMAP ) && NUM_DIR_LIGHT_SHADOWS > 0
+      vec4 sc = vDirectionalShadowCoord[ 0 ];
+      sc.xyz /= sc.w; sc.z += directionalLightShadows[ 0 ].shadowBias;
+      if (sc.x < 0.0 || sc.x > 1.0 || sc.y < 0.0 || sc.y > 1.0 || sc.z > 1.0) return 1.0;
+      vec2 ts = 1.5 / directionalLightShadows[ 0 ].shadowMapSize;
+      return 0.25 * (texture2DCompare(directionalShadowMap[ 0 ], sc.xy - ts, sc.z) + texture2DCompare(directionalShadowMap[ 0 ], sc.xy + vec2(ts.x, -ts.y), sc.z)
+                   + texture2DCompare(directionalShadowMap[ 0 ], sc.xy + vec2(-ts.x, ts.y), sc.z) + texture2DCompare(directionalShadowMap[ 0 ], sc.xy + ts, sc.z));
+    #else
+      return 1.0;
+    #endif
+  }
+  void main() {
+    #include <logdepthbuf_fragment>
+    vec3 toEye = eye - worldPosition.xyz;
+    float dist = length(toEye);
+    vec3 V = toEye / dist;
+    float lost, rv;
+    vec2 slW = waveSlope(vX0, uTime, dist, lost), slR = rippleSlope(worldPosition.xz, rv);
+    vec2 sl = slW + slR, slM = slW + rippleSlopeLo(worldPosition.xz);
+    vec3 N = normalize(vec3(-sl.x, 1.0, -sl.y));
+    vec2 Nlo = normalize(vec3(-slM.x, 1.0, -slM.y)).xz;    // waves and broad ripples only: bends images without tearing them
+    float NdV = dot(N, V);
+    if (NdV < 0.05) { N = normalize(N + V * (0.05 - NdV)); NdV = dot(N, V); }   // facets turned away are not seen
+    float F = 0.02 + 0.98 * pow(1.0 - clamp(NdV, 0.0, 1.0), 5.0);                // Schlick, water F0 = 0.02
+    float shadow = sunShadow();
+
+    // reflection: the mirror (sky and float) bent by the waves; far out, the sky probe along the true rippled normal,
+    // so the distant sea smears the sky vertically instead of mirroring it
+    vec2 muv = clamp(mirrorCoord.xy / mirrorCoord.w + Nlo * uReflDistort / (1.0 + dist * 0.12), 0.001, 0.999);
+    vec3 refl = texture2D(mirrorSampler, muv).rgb;
+    vec3 Rv = reflect(-V, N); Rv.y = abs(Rv.y) + 0.004;
+    refl = mix(refl, textureCube(uSkyCube, normalize(Rv)).rgb, smoothstep(18.0, 40.0, dist));
+
+    // the sun: Beckmann lobe; slope the pixel cannot resolve widens it (Toksvig), so the glitter path grows toward the
+    // horizon, while resolved facets stay sharp enough to glint one by one
+    vec3 dN = fwidth(N);
+    float m2 = uRough + 2.0 * max(lost + rv, 0.0) + min(dot(dN, dN) * 0.5, 0.004);
+    vec3 H = normalize(V + sunDirection);
+    float NdH = max(dot(N, H), 1e-3), c2 = NdH * NdH;
+    float D = exp((c2 - 1.0) / (m2 * c2)) / (PI * m2 * c2 * c2);
+    float Fh = 0.02 + 0.98 * pow(1.0 - max(dot(V, H), 0.0), 5.0);
+    vec3 spec = sunColor * uSunE * Fh * D / (4.0 * max(NdV, 0.05)) * shadow;
+
+    // refraction: what lies beneath, and sunlight glowing through the crests
+    vec3 refr = texture2D(uRefr, gl_FragCoord.xy / uScreen + Nlo * uRefrDistort / (1.0 + dist * 0.2)).rgb;
+    vec3 Lh = normalize(vec3(sunDirection.x, 0.0, sunDirection.z));
+    float back = pow(clamp(dot(-V, Lh), 0.0, 1.0), 4.0);
+    float crest = smoothstep(-0.04, 0.16, vH);
+    float thin = max(dot(N.xz, -Lh.xz), 0.0);
+    refr = refr * mix(0.82, 1.0, shadow) + uSSS * sunColor * back * crest * (0.2 + 4.0 * thin) * shadow;
+
+    vec3 col = mix(refr, refl, F) + spec;
+    vec3 haze = textureCube(uSkyCube, normalize(vec3(-V.x, 0.035, -V.z))).rgb;
+    col = mix(col, haze, 1.0 - exp(-dist * uHaze));                     // aerial perspective toward the horizon
+    gl_FragColor = vec4(col, 1.0);
+  }`;
+{
+  // the sun is drawn by the lobe above, not as a disk in the mirror
+  const renderMirror = water.onBeforeRender;
+  // the mirror sees the sky through a cheap cube of it (no sun disk: the sun is the lobe above)
+  const skyBox = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), new THREE.ShaderMaterial({
+    side: THREE.BackSide, depthWrite: false, uniforms: { tCube: { value: cubeRT.texture } },
+    vertexShader: `varying vec3 vD; void main(){ vec4 w = modelMatrix * vec4(position, 1.0); vD = w.xyz - cameraPosition;
+      gl_Position = projectionMatrix * viewMatrix * w; gl_Position.z = gl_Position.w; }`,
+    fragmentShader: `uniform samplerCube tCube; varying vec3 vD; void main(){ gl_FragColor = vec4(textureCube(tCube, normalize(vD)).rgb, 1.0); }`,
+  }));
+  skyBox.scale.setScalar(9000);
+  skyBox.visible = false;
+  skyBox.frustumCulled = false;
+  scene.add(skyBox);
+  water.onBeforeRender = function (r, s, c, g, m, grp) {     // explicit params: no per-frame argument array
+    sky.visible = false; skyBox.visible = true; probeLOD(true);
+    renderMirror.call(this, r, s, c, g, m, grp);
+    sky.visible = true; skyBox.visible = false; probeLOD(false);
+  };
+}
+scene.add(water);
+const CLIP_UNDER = [new THREE.Plane(new THREE.Vector3(0, -1, 0), 0.03)], NO_CLIP = [];
+
+// ---------------- water surface, seen from below: Snell's window + total internal reflection ----------------
+// No mirror render under water: outside the window the surface reflects the depths, which in-scatter alone describes.
+const under = new THREE.Mesh(seaGeo, new THREE.ShaderMaterial({
+    uniforms: { ...MU, ...WAVE_U, normalSampler: { value: waterNormals }, uWave: wu.uWave, uFine: { value: 0 }, uSkyCube: { value: cubeRT.texture } },
+    vertexShader: /* glsl */`
+      uniform float uTime;
+      varying vec3 vW; varying vec2 vX0;
+      ${WAVES}
+      void main(){
+        vec4 w0 = modelMatrix * vec4(position, 1.0);
+        vX0 = w0.xz;
+        vec4 w = vec4(wavePos(w0.xz, uTime), 1.0);
+        vW = w.xyz;
+        gl_Position = projectionMatrix * viewMatrix * w;
+      }`,
+    fragmentShader: /* glsl */`
+      uniform samplerCube uSkyCube;
+      varying vec3 vW; varying vec2 vX0;
+      ${MEDIUM}${WAVES}${RIPPLES}
+      float fresnelOut(float ci, float n){      // water to air, unpolarised; 1 past the critical angle
+        float st2 = n * n * (1.0 - ci * ci);
+        if (st2 >= 1.0) return 1.0;
+        float ct = sqrt(1.0 - st2);
+        float rs = (n * ci - ct) / (n * ci + ct), rp = (ci - n * ct) / (ci + n * ct);
+        return 0.5 * (rs * rs + rp * rp);
+      }
+      void main(){
+        vec3 I = normalize(vW - cameraPosition);
+        float dist = length(vW - cameraPosition);
+        float lost, rv;
+        vec2 sl = waveSlope(vX0, uTime, dist, lost) + rippleSlope(vW.xz, rv);
+        vec3 N = normalize(vec3(-sl.x, 1.0, -sl.y)), Nd = -N;
+        float ci = clamp(dot(I, N), 0.0, 1.0);
+        // the window's rim, softened by the slope this pixel cannot resolve: it wobbles instead of fizzing
+        float w = 0.012 + 0.8 * sqrt(max(rv + lost, 0.0)) + 0.6 * length(fwidth(N));
+        float inW = smoothstep(0.6614 - w, 0.6614 + w, ci);
+        float cw = max(ci, 0.664);
+        vec3 F = vec3(fresnelOut(cw, 1.331), fresnelOut(cw, 1.333), fresnelOut(cw, 1.338));   // the rim is faintly coloured
+        vec3 T = refract(I, Nd, 1.333);         // inside Snell's window: the whole sky, squeezed into a 97° cone
+        if (dot(T, T) < 0.5) T = normalize(vec3(I.x, 0.02, I.z));
+        float sd = max(dot(T, uSunDir), 0.0);
+        // radiance gains n² ≈ 1.78 entering the denser medium: the window is brighter than the sky it shows
+        vec3 win = textureCube(uSkyCube, T).rgb * 1.7 + uSunCol * (pow(sd, 2400.0) * 90.0 + pow(sd, 120.0) * 2.0);
+        vec3 R = reflect(I, Nd);                  // outside it: a mirror of the depths
+        vec3 Fe = mix(vec3(1.0), F, inW);
+        vec3 col = win * (1.0 - Fe) + inscatter(R, 0.0, 400.0) * Fe;
+        gl_FragColor = vec4(applyWater(col, vW), 1.0);
+      }`,
+}));
+under.rotation.x = Math.PI / 2;
+under.frustumCulled = false;
+under.layers.set(L_UNDER);
+scene.add(under);
+
+// ---------------- caustics: a grid refracted by the ripples; where the light converges it gets brighter ----------------
+const caustRT = new THREE.WebGLRenderTarget(512, 512, {
+  type: THREE.HalfFloatType, wrapS: THREE.RepeatWrapping, wrapT: THREE.RepeatWrapping, depthBuffer: false,
+  minFilter: THREE.LinearMipmapLinearFilter, magFilter: THREE.LinearFilter, generateMipmaps: true,
+});
+MU.uCaustTex.value = caustRT.texture;
+const caustScene = new THREE.Scene(), caustCam = new THREE.Camera();
+const caustMesh = new THREE.Mesh(new THREE.PlaneGeometry(1.3, 1.3, 220, 220).translate(0.5, 0.5, 0), new THREE.ShaderMaterial({
+  uniforms: { normalSampler: { value: waterNormals }, uTime: MU.uTime, uFocus: { value: 0.3 } },
+  blending: THREE.AdditiveBlending, transparent: true, depthTest: false, depthWrite: false, side: THREE.DoubleSide,
+  vertexShader: /* glsl */`
+    uniform sampler2D normalSampler; uniform float uTime, uFocus;
+    varying vec2 vOld, vNew;
+    void main(){
+      vec2 uv = position.xy;                         // one period of the (tiling) ripple field
+      float t = uTime * ${RIPPLE_V.toFixed(1)};      // the same phase speeds as the ripples that focus the light
+      vec3 a = texture2D(normalSampler, uv * 2.0 + t * vec2(0.021, 0.013)).rgb * 2.0 - 1.0;
+      vec3 b = texture2D(normalSampler, uv.yx * 3.0 + t * vec2(-0.017, 0.024)).rgb * 2.0 - 1.0;
+      vec2 s = a.xy / max(a.z, 0.3) * 0.55 + b.xy / max(b.z, 0.3) * 0.45;
+      s *= min(1.0, 1.2 / max(length(s), 1e-4));
+      vec3 T = refract(vec3(0.0, -1.0, 0.0), normalize(vec3(-s.x, 1.0, -s.y)), 0.75);
+      vOld = uv; vNew = uv + T.xz * (uFocus / max(-T.y, 0.3));
+      gl_Position = vec4(vNew * 2.0 - 1.0, 0.0, 1.0);
+    }`,
+  fragmentShader: /* glsl */`
+    varying vec2 vOld, vNew;
+    void main(){
+      vec2 ox = dFdx(vOld), oy = dFdy(vOld), nx = dFdx(vNew), ny = dFdy(vNew);
+      float a0 = abs(ox.x * oy.y - ox.y * oy.x), a1 = abs(nx.x * ny.y - nx.y * ny.x);
+      gl_FragColor = vec4(vec3(min(a0 / max(a1, 1e-12), 30.0)), 1.0);
+    }`,
+}));
+caustMesh.frustumCulled = false;
+caustScene.add(caustMesh);
+const _cc = new THREE.Color();
+function bakeCaustics() {
+  renderer.getClearColor(_cc); const ca = renderer.getClearAlpha();
+  renderer.setClearColor(0x000000, 1);
+  renderer.setRenderTarget(caustRT);
+  renderer.render(caustScene, caustCam);
+  renderer.setClearColor(_cc, ca);
+}
+
+// ---------------- the water volume behind everything, and drifting marine snow ----------------
+const backdrop = new THREE.Mesh(new THREE.SphereGeometry(500, 48, 24), new THREE.ShaderMaterial({
+  side: THREE.BackSide, depthWrite: false, uniforms: { ...MU },
+  vertexShader: `varying vec3 vW; void main(){ vec4 w = modelMatrix * vec4(position, 1.0); vW = w.xyz; gl_Position = projectionMatrix * viewMatrix * w; }`,
+  fragmentShader: MEDIUM + /* glsl */`
+    varying vec3 vW;
+    void main(){
+      vec3 dir = normalize(vW - cameraPosition);
+      if (uMode < 0.5) { gl_FragColor = vec4(uUpwell, 1.0); return; }
+      float y0 = uEye.y + dir.y * uDome;
+      float len = dir.y > 0.002 ? max(-uEye.y / dir.y - uDome, 0.0) : 400.0;
+      gl_FragColor = vec4(inscatter(dir, y0, len), 1.0);
+    }`,
+}));
+backdrop.renderOrder = -10;
+backdrop.frustumCulled = false;
+backdrop.layers.set(L_WET);
+scene.add(backdrop);
+
+const N_P = 2600;
+const pPos = new Float32Array(N_P * 3), pSeed = new Float32Array(N_P), pSize = new Float32Array(N_P);
+for (let i = 0; i < N_P; i++) {
+  pPos[i * 3] = (Math.random() - 0.5) * 30; pPos[i * 3 + 1] = -0.25 - Math.random() * 16.5; pPos[i * 3 + 2] = (Math.random() - 0.5) * 30 + 2;
+  pSeed[i] = Math.random();
+  pSize[i] = 0.005 * Math.pow(7, Math.pow(Math.random(), 1.6));    // mostly specks, a few larger flakes
+}
+const pGeo = new THREE.BufferGeometry();
+pGeo.setAttribute('position', new THREE.BufferAttribute(pPos, 3));
+pGeo.setAttribute('aSeed', new THREE.BufferAttribute(pSeed, 1));
+pGeo.setAttribute('aSize', new THREE.BufferAttribute(pSize, 1));
+const snowU = { uFocal: { value: 1000 }, uFocusD: { value: 12.5 }, uCoc: { value: 0.012 }, uGain: { value: 1.0 } };
+const particles = new THREE.Points(pGeo, new THREE.ShaderMaterial({
+  transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
+  uniforms: { ...MU, ...WAVE_U, ...snowU },
+  vertexShader: MEDIUM + WAVES + /* glsl */`
+    attribute float aSeed, aSize;
+    uniform float uFocal, uFocusD, uCoc, uGain;
+    varying vec3 vCol; varying float vA;
+    void main(){
+      vec3 p = position;
+      p.y = -0.25 - mod(-p.y - 0.25 + uTime * (0.008 + 0.02 * aSeed), 16.5);   // slow sinking, wrapped
+      p.x += sin(uTime * 0.13 + aSeed * 40.0) * 0.3;
+      p.z += cos(uTime * 0.11 + aSeed * 23.0) * 0.3;
+      for (int i = 0; i < 2; i++) {                  // carried round by the swell, less so deeper down
+        vec4 a = uWA[i], b = uWB[i];
+        float th = a.z * dot(a.xy, p.xz) - b.x * uTime + b.y, e = a.w * exp(a.z * p.y);
+        p.xz += a.xy * (e * cos(th)); p.y += e * sin(th);
+      }
+      vec4 mv = viewMatrix * vec4(p, 1.0);
+      gl_Position = projectionMatrix * mv;
+      float z = max(-mv.z, 0.05), d = length(mv.xyz);
+      float sharp = aSize * uFocal / z;
+      float coc = uCoc * uFocal * abs(1.0 / z - 1.0 / uFocusD);          // out of focus close to the lens
+      float sz = max(sqrt(sharp * sharp + coc * coc), 1.3);
+      gl_PointSize = min(sz * 2.0, 48.0);
+      vA = min(1.0, max(sharp, 0.8) * max(sharp, 0.8) / (sz * sz)) * smoothstep(uDome, uDome * 1.35, d);
+      if (d < uDome) gl_Position = vec4(2.0, 2.0, 2.0, 1.0);          // inside the dome port: nothing to draw
+      float dep = max(-p.y, 0.0);
+      vec3 sunHere = uSunCol * exp(-uSigma * dep / max(-uLt.y, 0.3)) * hgPhase(dot(normalize(p - cameraPosition), -uLt), 0.8) * 10.0;
+      vCol = (uLhz * 2.5 * exp(-uKd * dep) + sunHere) * exp(-uSigma * max(d - uDome, 0.0)) * (0.3 + 0.7 * fract(aSeed * 7.31)) * uGain;
+    }`,
+  fragmentShader: /* glsl */`
+    varying vec3 vCol; varying float vA;
+    void main(){
+      vec2 c = gl_PointCoord * 2.0 - 1.0; float r2 = dot(c, c);
+      if (r2 > 1.0) discard;
+      gl_FragColor = vec4(vCol * vA * exp(-r2 * 4.0), 1.0);
+    }`,
+}));
+particles.frustumCulled = false;
+particles.layers.set(L_UNDER);
+scene.add(particles);
+
+// ---------------- the probe ----------------
+const probe = new THREE.Group();
+// two versions of the float: the decimated hero mesh for the eye, a light proxy for the mirror, refraction and shadow
+const probeMain = new THREE.Group(), probeProxy = new THREE.Group();
+probeProxy.visible = false;
+probe.add(probeMain, probeProxy);
+scene.add(probe);
+function probeLOD(proxy) {
+  if (proxy && probeProxy.children.length === 0) proxy = false;
+  probeMain.visible = !proxy; probeProxy.visible = proxy;
+}
+const MATS = {
+  head: new THREE.MeshPhysicalMaterial({ color: 0xf2f2ee, roughness: 0.34, clearcoat: 0.3, clearcoatRoughness: 0.16, envMapIntensity: 1.3, side: THREE.DoubleSide }),
+  paye: new THREE.MeshPhysicalMaterial({ color: 0xe9ebe7, roughness: 0.38, clearcoat: 0.25, clearcoatRoughness: 0.2, envMapIntensity: 1.3, side: THREE.DoubleSide }),
+};
+// moulded-plastic grain, the wet band at the waterline, underwater daylight and caustics, and the water to the eye
+function patchProbe(sh) {
+  Object.assign(sh.uniforms, MU);
+  sh.vertexShader = sh.vertexShader
+    .replace('#include <common>', '#include <common>\nuniform float uApparent;\nvarying vec3 vWPos;\nvarying vec3 vLPos;')
+    // seen through the surface at a grazing angle, the submerged hull is squeezed up toward the waterline
+    .replace('#include <project_vertex>', `vec4 wApp = modelMatrix * vec4(transformed, 1.0);
+      vWPos = wApp.xyz; vLPos = transformed;
+      wApp.y *= wApp.y < 0.0 ? uApparent : 1.0;
+      vec4 mvPosition = viewMatrix * wApp;
+      gl_Position = projectionMatrix * mvPosition;`);
+  sh.fragmentShader = sh.fragmentShader
+    .replace('#include <common>', '#include <common>\nvarying vec3 vWPos;\nvarying vec3 vLPos;\n' + NOISE + MEDIUM + UWLIGHT + CAUSTIC)
+    .replace('#include <color_fragment>', `#include <color_fragment>
+      float wet = 1.0 - smoothstep(0.04, 0.22, vLPos.y);          // the band the bobbing keeps wet, and all below it
+      float grain = vnoise(vLPos.xz * 23.0 + vLPos.y * 7.0) * 0.6 + vnoise(vLPos.xy * 61.0 + 3.7) * 0.4;
+      diffuseColor.rgb *= mix(1.0, 0.8, wet * step(0.0, vWPos.y)) * (0.985 + 0.03 * grain);`)
+    .replace('#include <roughnessmap_fragment>', `#include <roughnessmap_fragment>
+      roughnessFactor = mix(roughnessFactor * (0.82 + 0.36 * grain), 0.1, wet * step(0.0, vWPos.y));`)
+    .replace('#include <lights_fragment_maps>', `float uwF = smoothstep(0.02, -0.1, vWPos.y);
+      if (uwF < 0.999) {                                         // the sky probe is only needed above the water
+      #include <lights_fragment_maps>
+      }
+      #if defined( RE_IndirectSpecular )
+      if (uwF > 0.0) {                                           // under water the "sky" is the window and the blue
+        vec3 wN = inverseTransformDirection(geometryNormal, viewMatrix);
+        vec3 wR = inverseTransformDirection(reflect(-geometryViewDir, geometryNormal), viewMatrix);
+        iblIrradiance = mix(iblIrradiance, uwIrradiance(wN, vWPos.y), uwF);
+        radiance = mix(radiance, uwRadiance(wR, vWPos.y, material.roughness) * 0.6, uwF);
+        #ifdef USE_CLEARCOAT
+        clearcoatRadiance = mix(clearcoatRadiance, uwRadiance(wR, vWPos.y, 0.2) * 0.6, uwF);
+        #endif
+      }
+      #endif`)
+    .replace('#include <lights_fragment_end>', `#include <lights_fragment_end>
+      if (uwF > 0.0) {                                           // the refracted sun arrives focused into caustics
+        float dep = max(-vWPos.y, 0.0);
+        vec3 k = causticRGB(vWPos, dep) * exp(-uSigma * dep / max(-uLt.y, 0.3));
+        reflectedLight.directDiffuse *= mix(vec3(1.0), k, uwF);
+        reflectedLight.directSpecular *= mix(vec3(1.0), k * 0.5, uwF);
+        #ifdef USE_CLEARCOAT
+        clearcoatSpecularDirect *= mix(vec3(1.0), k * 0.5, uwF);
+        #endif
+      }`)
+    .replace('#include <opaque_fragment>', `#include <opaque_fragment>
+      gl_FragColor.rgb = applyWater(gl_FragColor.rgb, vWPos);`);
+}
+MATS.head.onBeforeCompile = MATS.paye.onBeforeCompile = patchProbe;
+
+const WATERLINE_MM = 100;   // CAD height (mm) that sits at the water surface: the middle of the collar
+const HEIGHT = 6.4;
+let TOP = 1.6, BOTTOM = -4.8;
+let foam = null;
+
+// the meniscus where the float meets the water: a bright hairline where the water climbs the wall, the darker curve
+// just outside it, and a little froth only while the float bobs against the waves
+const foamU = { uFoam: { value: 0 } };
+function makeFoam(r0) {
+  const r1 = r0 + 0.15;
+  const m = new THREE.Mesh(new THREE.RingGeometry(r0 * 0.96, r1, 256, 3).rotateX(-Math.PI / 2), new THREE.ShaderMaterial({
+    transparent: true, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2,
+    uniforms: { ...WAVE_U, ...foamU, uTime: MU.uTime, uR0: { value: r0 }, uR1: { value: r1 } },
+    vertexShader: /* glsl */`
+      uniform float uTime; varying vec2 vX0;
+      ${WAVES}
+      void main(){
+        vec4 w = modelMatrix * vec4(position, 1.0);
+        vX0 = w.xz;
+        vec3 P = wavePos(w.xz, uTime); P.y += 0.004;
+        gl_Position = projectionMatrix * viewMatrix * vec4(P, 1.0);
+      }`,
+    fragmentShader: NOISE + /* glsl */`
+      uniform float uTime, uR0, uR1, uFoam; varying vec2 vX0;
+      void main(){
+        float d = length(vX0) - uR0;                                              // distance out from the hull
+        float lip = exp(-(d * d) / (0.022 * 0.022));                               // the meniscus catching the sky
+        float dark = smoothstep(0.012, 0.03, d) * (1.0 - smoothstep(0.03, 0.1, d)); // its curve mirrors the darker sea
+        float n = vnoise(vX0 * 24.0 + vec2(uTime * 1.7, -uTime * 1.3)) * 0.6 + vnoise(vX0 * 53.0 - uTime * 2.4) * 0.4;
+        float froth = smoothstep(0.5, 0.78, n) * (1.0 - smoothstep(0.0, 0.14, d)) * uFoam;
+        float bright = max(lip, froth);
+        vec3 col = mix(vec3(0.015, 0.05, 0.08), vec3(0.78, 0.84, 0.88), bright / max(bright + dark * 0.35, 1e-3));
+        gl_FragColor = vec4(col, clamp(lip * 0.7 + froth * 0.75 + dark * 0.2, 0.0, 1.0));
+      }`,
+  }));
+  m.renderOrder = 5;
+  m.layers.set(L_AIR);
+  return m;
+}
+
+// ---------------- decimation: the CAD mesh (244k triangles) is far denser than any screen needs ----------------
+// Vertex clustering with quadric placement (Lindstrom 2000): one vertex per grid cell and normal direction, placed
+// where it best fits the planes of the triangles around it. It is a single pass, so it costs less at load than the
+// full-resolution creasing it replaces, and splitting each cell by normal keeps the two faces of a thin blade apart.
+function prepDecimate(P, IX) {
+  const nv = P.length / 3, ni = IX ? IX.length : nv;
+  const weld = new Int32Array(nv), wp = new Float64Array(nv * 3), keys = new Map();
+  let nw = 0;
+  for (let i = 0; i < nv; i++) {                       // weld the corners the export split at seams (0.08 mm grid)
+    const k = ((Math.round(P[i * 3] * 1e3) + 65536) * 131072 + (Math.round(P[i * 3 + 1] * 1e3) + 65536)) * 131072 + (Math.round(P[i * 3 + 2] * 1e3) + 65536);
+    let w = keys.get(k);
+    if (w === undefined) { w = nw++; keys.set(k, w); wp[w * 3] = P[i * 3]; wp[w * 3 + 1] = P[i * 3 + 1]; wp[w * 3 + 2] = P[i * 3 + 2]; }
+    weld[i] = w;
+  }
+  const tri = new Int32Array(ni), fn = new Float64Array(ni), vn = new Float64Array(nw * 3);
+  let area = 0;
+  for (let t = 0; t < ni; t += 3) {
+    const a = weld[IX ? IX[t] : t], b = weld[IX ? IX[t + 1] : t + 1], c = weld[IX ? IX[t + 2] : t + 2];
+    tri[t] = a; tri[t + 1] = b; tri[t + 2] = c;
+    const ux = wp[b * 3] - wp[a * 3], uy = wp[b * 3 + 1] - wp[a * 3 + 1], uz = wp[b * 3 + 2] - wp[a * 3 + 2];
+    const vx = wp[c * 3] - wp[a * 3], vy = wp[c * 3 + 1] - wp[a * 3 + 1], vz = wp[c * 3 + 2] - wp[a * 3 + 2];
+    const nx = uy * vz - uz * vy, ny = uz * vx - ux * vz, nz = ux * vy - uy * vx;
+    fn[t] = nx; fn[t + 1] = ny; fn[t + 2] = nz;
+    area += 0.5 * Math.hypot(nx, ny, nz);
+    vn[a * 3] += nx; vn[a * 3 + 1] += ny; vn[a * 3 + 2] += nz;
+    vn[b * 3] += nx; vn[b * 3 + 1] += ny; vn[b * 3 + 2] += nz;
+    vn[c * 3] += nx; vn[c * 3 + 1] += ny; vn[c * 3 + 2] += nz;
+  }
+  return { nw, wp, tri, fn, vn, area };
+}
+function addQuadric(Q, c, nx, ny, nz, d, w) {
+  const q = c * 10;
+  Q[q] += w * nx * nx; Q[q + 1] += w * nx * ny; Q[q + 2] += w * nx * nz; Q[q + 3] += w * ny * ny; Q[q + 4] += w * ny * nz; Q[q + 5] += w * nz * nz;
+  Q[q + 6] += w * d * nx; Q[q + 7] += w * d * ny; Q[q + 8] += w * d * nz;
+}
+function decimate(D, cell) {
+  const { nw, wp, tri, fn, vn } = D, ni = tri.length, inv = 1 / cell;
+  const cl = new Int32Array(nw), cells = new Map();
+  let nc = 0;
+  for (let v = 0; v < nw; v++) {                       // cluster = grid cell + dominant axis of the vertex normal
+    const nx = vn[v * 3], ny = vn[v * 3 + 1], nz = vn[v * 3 + 2], ax = Math.abs(nx), ay = Math.abs(ny), az = Math.abs(nz);
+    const dir = ax >= ay && ax >= az ? (nx > 0 ? 0 : 1) : ay >= az ? (ny > 0 ? 2 : 3) : (nz > 0 ? 4 : 5);
+    const k = (((Math.floor(wp[v * 3] * inv) + 512) * 1024 + (Math.floor(wp[v * 3 + 1] * inv) + 512)) * 1024 + (Math.floor(wp[v * 3 + 2] * inv) + 512)) * 6 + dir;
+    let c = cells.get(k);
+    if (c === undefined) { c = nc++; cells.set(k, c); }
+    cl[v] = c;
+  }
+  const Q = new Float64Array(nc * 10), M = new Float64Array(nc * 4);
+  for (let v = 0; v < nw; v++) { const m = cl[v] * 4; M[m] += wp[v * 3]; M[m + 1] += wp[v * 3 + 1]; M[m + 2] += wp[v * 3 + 2]; M[m + 3]++; }
+  for (let t = 0; t < ni; t += 3) {                    // area-weighted plane quadrics of every triangle, per cluster
+    const len = Math.hypot(fn[t], fn[t + 1], fn[t + 2]);
+    if (len < 1e-14) continue;
+    const nx = fn[t] / len, ny = fn[t + 1] / len, nz = fn[t + 2] / len, a = tri[t];
+    const d = -(nx * wp[a * 3] + ny * wp[a * 3 + 1] + nz * wp[a * 3 + 2]), w = 0.5 * len;
+    const c0 = cl[a], c1 = cl[tri[t + 1]], c2 = cl[tri[t + 2]];
+    addQuadric(Q, c0, nx, ny, nz, d, w);
+    if (c1 !== c0) addQuadric(Q, c1, nx, ny, nz, d, w);
+    if (c2 !== c0 && c2 !== c1) addQuadric(Q, c2, nx, ny, nz, d, w);
+  }
+  const out = new Float32Array(nc * 3);
+  for (let c = 0; c < nc; c++) {                       // best-fit point, pulled toward the mean where the planes agree
+    const q = c * 10, m = c * 4, n = M[m + 3];
+    const mx = M[m] / n, my = M[m + 1] / n, mz = M[m + 2] / n;
+    const a00 = Q[q], a01 = Q[q + 1], a02 = Q[q + 2], a11 = Q[q + 3], a12 = Q[q + 4], a22 = Q[q + 5];
+    const lam = 0.02 * (a00 + a11 + a22) + 1e-12, b00 = a00 + lam, b11 = a11 + lam, b22 = a22 + lam;
+    const r0 = -(a00 * mx + a01 * my + a02 * mz + Q[q + 6]), r1 = -(a01 * mx + a11 * my + a12 * mz + Q[q + 7]), r2 = -(a02 * mx + a12 * my + a22 * mz + Q[q + 8]);
+    const k00 = b11 * b22 - a12 * a12, k01 = a02 * a12 - a01 * b22, k02 = a01 * a12 - a02 * b11;
+    const det = b00 * k00 + a01 * k01 + a02 * k02;
+    let dx = 0, dy = 0, dz = 0;
+    if (Math.abs(det) > 1e-30) {
+      const k11 = b00 * b22 - a02 * a02, k12 = a01 * a02 - b00 * a12, k22 = b00 * b11 - a01 * a01;
+      dx = (k00 * r0 + k01 * r1 + k02 * r2) / det; dy = (k01 * r0 + k11 * r1 + k12 * r2) / det; dz = (k02 * r0 + k12 * r1 + k22 * r2) / det;
+      const dl = Math.hypot(dx, dy, dz);
+      if (dl > cell) { dx *= cell / dl; dy *= cell / dl; dz *= cell / dl; }
+    }
+    out[c * 3] = mx + dx; out[c * 3 + 1] = my + dy; out[c * 3 + 2] = mz + dz;
+  }
+  const idx = [], seen = new Set();
+  for (let t = 0; t < ni; t += 3) {
+    const a = cl[tri[t]], b = cl[tri[t + 1]], c = cl[tri[t + 2]];
+    if (a === b || b === c || a === c) continue;
+    const lo = Math.min(a, b, c), hi = Math.max(a, b, c), mid = a + b + c - lo - hi, k = (lo * nc + mid) * nc + hi;
+    if (seen.has(k)) continue;
+    seen.add(k);
+    // keep the original facing (a collapsed sliver can flip)
+    const ux = out[b * 3] - out[a * 3], uy = out[b * 3 + 1] - out[a * 3 + 1], uz = out[b * 3 + 2] - out[a * 3 + 2];
+    const vx = out[c * 3] - out[a * 3], vy = out[c * 3 + 1] - out[a * 3 + 1], vz = out[c * 3 + 2] - out[a * 3 + 2];
+    const flip = (uy * vz - uz * vy) * fn[t] + (uz * vx - ux * vz) * fn[t + 1] + (ux * vy - uy * vx) * fn[t + 2] < 0;
+    if (flip) idx.push(a, c, b); else idx.push(a, b, c);
+  }
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.BufferAttribute(out, 3));
+  g.setIndex(idx);
+  return g;
+}
+// one cell size for all parts (uniform density), refined once toward the triangle budget
+function decimateAll(parts, target) {
+  const area = parts.reduce((s, p) => s + p.D.area, 0);
+  let cell = Math.sqrt(2.6 * area / target), geos = null;
+  for (let it = 0; it < 3; it++) {
+    geos = parts.map(p => decimate(p.D, cell));
+    const n = geos.reduce((s, g) => s + g.index.count / 3, 0);
+    if (Math.abs(n / target - 1) < 0.12) break;
+    cell *= Math.sqrt(n / target);
+  }
+  return geos;
+}
+
+const PROBE_TRIS = 38000, PROXY_TRIS = 10000;
+const loadingEl = document.getElementById('loading');
+new GLTFLoader().load('model-mid.glb', gltf => {
+  const root = gltf.scene;
+  // the middle ring is left out, so the dome sits straight on the base (mm, as exported from CAD)
+  const head = root.getObjectByName('head');
+  if (head) head.position.y -= 174.8 - 124.33;
+  root.updateMatrixWorld(true);
+  const box = new THREE.Box3().setFromObject(root);
+  const size = box.getSize(new THREE.Vector3()), c = box.getCenter(new THREE.Vector3());
+  const s = HEIGHT / size.y;
+  const fit = new THREE.Matrix4().makeScale(s, s, s).multiply(new THREE.Matrix4().makeTranslation(-c.x, -WATERLINE_MM, -c.z));
+  TOP = (box.max.y - WATERLINE_MM) * s; BOTTOM = (box.min.y - WATERLINE_MM) * s;
+  let rWater = 0;
+  const parts = [];
+  root.traverse(o => {
+    if (!o.isMesh) return;
+    const g = o.geometry.clone().applyMatrix4(new THREE.Matrix4().multiplyMatrices(fit, o.matrixWorld));
+    const pa = g.attributes.position, P = new Float32Array(pa.count * 3);
+    for (let i = 0; i < pa.count; i++) {
+      P[i * 3] = pa.getX(i); P[i * 3 + 1] = pa.getY(i); P[i * 3 + 2] = pa.getZ(i);
+      if (Math.abs(P[i * 3 + 1]) < 0.08) rWater = Math.max(rWater, Math.hypot(P[i * 3], P[i * 3 + 2]));
+    }
+    parts.push({ g, mat: MATS[o.name] || MATS.paye, D: prepDecimate(P, g.index ? g.index.array : null) });
+  });
+  const crease = THREE.MathUtils.degToRad(35);
+  const addParts = (geos, group) => geos.forEach((g, i) => {
+    const mesh = new THREE.Mesh(mergeVertices(toCreasedNormals(g, crease)), parts[i].mat);   // re-indexed: fewer vertices per pass
+    mesh.castShadow = mesh.receiveShadow = true;
+    group.add(mesh);
+  });
+  try {
+    addParts(decimateAll(parts, PROBE_TRIS), probeMain);
+    addParts(decimateAll(parts, PROXY_TRIS), probeProxy);
+  } catch (err) {                                       // never lose the hero: fall back to the full CAD mesh
+    console.warn('probe decimation failed, using the full mesh', err);
+    probeMain.clear(); probeProxy.clear();
+    addParts(parts.map(p => p.g), probeMain);
+  }
+  if (rWater > 0) { foam = makeFoam(rWater); foam.userData.r0 = rWater; scene.add(foam); }
+  loadingEl.style.opacity = 0;
+}, e => {
+  if (e.total) loadingEl.textContent = `LOADING ${Math.round(e.loaded / e.total * 100)}%`;
+}, err => { loadingEl.textContent = 'MODEL FAILED TO LOAD'; console.error(err); });
+
+// ---------------- rendering: air view, water view, and the split between them ----------------
+function renderAir(target) {
+  const above = camera.position.y > 0;
+  MU.uEye.value.set(camera.position.x, Math.max(camera.position.y, 0.002), camera.position.z);
+  MU.uMode.value = 0;
+  lightFor(false);
+  renderer.shadowMap.needsUpdate = true;
+  if (above) {                              // what lies beneath the surface, for the water's refraction (and the shadow map)
+    sky.visible = false;
+    camera.layers.set(0); camera.layers.enable(L_WET);
+    renderer.clippingPlanes = CLIP_UNDER;
+    probeLOD(true); MU.uApparent.value = 0.3;
+    renderer.setRenderTarget(refrRT);
+    renderer.render(scene, camera);
+    probeLOD(false); MU.uApparent.value = 1;
+    renderer.clippingPlanes = NO_CLIP;
+  }
+  sky.visible = true;
+  water.visible = above;
+  if (foam) foam.visible = above;
+  camera.layers.set(0); camera.layers.enable(L_AIR);
+  renderer.setRenderTarget(target);
+  renderer.render(scene, camera);
+}
+function renderUnder(target) {
+  MU.uEye.value.set(camera.position.x, Math.min(camera.position.y, -0.002), camera.position.z);
+  MU.uMode.value = 1;
+  lightFor(true);
+  renderer.shadowMap.needsUpdate = true;
+  sky.visible = false;                      // the top mirror is not drawn, so its reflection render is skipped too
+  water.visible = false;
+  if (foam) foam.visible = false;
+  camera.layers.set(0); camera.layers.enable(L_WET); camera.layers.enable(L_UNDER);
+  renderer.setRenderTarget(target);
+  renderer.render(scene, camera);
+  sky.visible = true;
+}
+
+// the water volume: each (half-resolution) view ray is marched from the dome port to the scene depth. It carries only
+// the structure of the sunlight (caustic sheets and the probe's shadow, around their mean); the mean glow is the
+// closed-form in-scatter already in the scene, so long rays settle to it instead of turning milky.
+const volU = {
+  tDepth: { value: null }, tShadow: { value: null }, uShadowMat: { value: sunUW.shadow.matrix },
+  uProjInv: { value: camera.projectionMatrixInverse }, uCamWorld: { value: camera.matrixWorld },
+  uEye: MU.uEye, uDome: MU.uDome, uSigma: MU.uSigma, uLt: MU.uLt, uCaustTex: MU.uCaustTex,
+  uShaftScale: MU.uCaustScale, uSunUW: { value: new THREE.Vector3(0.08, 0.08, 0.08) },   // set from the sun in setSun()
+  uMaxDist: { value: 300 }, uFrame: { value: 0 },
+};
+const volumeMat = new THREE.ShaderMaterial({
+  uniforms: volU,
+  vertexShader: `varying vec2 vUv; void main(){ vUv = uv; gl_Position = vec4(position.xy, 0.0, 1.0); }`,
+  fragmentShader: /* glsl */`
+    uniform sampler2D tDepth, tShadow, uCaustTex;
+    uniform mat4 uShadowMat, uProjInv, uCamWorld;
+    uniform vec3 uEye, uSigma, uLt, uSunUW;
+    uniform float uDome, uShaftScale, uMaxDist, uFrame;
+    varying vec2 vUv;
+    #include <packing>
+    float hg(float mu, float g){ float g2 = g * g; return (1.0 - g2) / (12.566 * pow(max(1.0 + g2 - 2.0 * g * mu, 1e-4), 1.5)); }
+    float lit(vec3 p){                              // is the refracted sun blocked by the probe? (its own shadow map)
+      vec4 sc = uShadowMat * vec4(p, 1.0);
+      if (sc.x < 0.0 || sc.x > 1.0 || sc.y < 0.0 || sc.y > 1.0) return 1.0;
+      float d = unpackRGBAToDepth(textureLod(tShadow, sc.xy, 0.0));
+      return sc.z > 1.0 ? step(0.9999, d) : step(sc.z - 0.003, d);
+    }
+    void main(){
+      float z = textureLod(tDepth, vUv, 0.0).r;
+      vec4 vp = uProjInv * vec4(vUv * 2.0 - 1.0, z * 2.0 - 1.0, 1.0);
+      vp.xyz /= vp.w;
+      float dist = z > 0.99999 ? uMaxDist : min(length(vp.xyz), uMaxDist);
+      vec3 dir = normalize(mat3(uCamWorld) * vp.xyz);
+      float s0 = uDome, s1 = dist;
+      if (dir.y > 1e-4) s1 = min(s1, max(-uEye.y, 0.0) / dir.y);
+      float len = s1 - s0;
+      vec3 acc = vec3(0.0);
+      if (len > 0.0) {
+        // how fast this ray sweeps across the projected caustic field (texels per unit): a step that crosses many
+        // cells can only see their mean, so it reads a coarser mip instead of aliasing into noise
+        float sweep = length(dir.xz - uLt.xz * (dir.y / uLt.y)) * uShaftScale * 512.0;
+        float j = fract(52.9829189 * fract(dot(gl_FragCoord.xy, vec2(0.06711056, 0.00583715))));   // interleaved gradient noise
+        j = fract(j + uFrame * 0.6180340);                                                          // a new offset every frame
+        for (int i = 0; i < 30; i++) {
+          float u = (float(i) + j) / 30.0;
+          float s = s0 + len * u * u, ds = len * 2.0 * u / 30.0;     // denser near the lens
+          vec3 p = uEye + dir * s;
+          float dep = max(-p.y, 0.0);
+          vec2 e = (p.xz - uLt.xz * (p.y / uLt.y)) * uShaftScale;
+          float c = textureLod(uCaustTex, e, max(1.0 + log2(1.0 + dep * 0.15), log2(max(sweep * ds, 1.0)))).r;
+          // sheets of focused light and the gaps between them, around the mean; the probe's shadow is a dark shaft
+          acc += exp(-uSigma * ((s - s0) + dep / max(-uLt.y, 0.2))) * ((c * lit(p) - 1.0) * ds);
+        }
+      }
+      float mu = dot(dir, -uLt);
+      gl_FragColor = vec4(acc * uSunUW * (0.6 * hg(mu, 0.8) + 0.4 * hg(mu, 0.3)), dist);
+    }`,
+  depthTest: false, depthWrite: false,
+});
+
+const compU = {
+  tAir: { value: null }, tUnder: { value: null }, tScene: { value: null }, tVol: { value: null }, tDepth: { value: null },
+  uProjInv: { value: camera.projectionMatrixInverse }, uCamWorld: { value: camera.matrixWorld },
+  uR: { value: DOME_R }, uCamY: { value: 0 }, uCamXZ: { value: new THREE.Vector2() },
+  uTime: MU.uTime, uPx: { value: 0.001 }, uMaxDist: volU.uMaxDist, uVolTexel: { value: new THREE.Vector2(1, 1) },
+  uTexel: { value: new THREE.Vector2(1, 1) }, ...WAVE_U,
+};
+const UPSAMPLE = /* glsl */`
+    uniform sampler2D tVol, tDepth;
+    uniform mat4 uProjInv;
+    uniform float uMaxDist;
+    uniform vec2 uVolTexel;
+    float viewDist(vec2 uv){
+      float z = textureLod(tDepth, uv, 0.0).r;
+      if (z > 0.99999) return uMaxDist;
+      vec4 vp = uProjInv * vec4(uv * 2.0 - 1.0, z * 2.0 - 1.0, 1.0);
+      return min(length(vp.xyz / vp.w), uMaxDist);
+    }
+    vec3 volume(vec2 uv){                        // depth-aware upsampling of the half-resolution light shafts
+      float D = viewDist(uv);
+      vec2 st = uv / uVolTexel - 0.5, i0 = floor(st), f = st - i0;
+      ivec2 mx = textureSize(tVol, 0) - 1;
+      vec3 acc = vec3(0.0); float ws = 1e-5;
+      for (int k = 0; k < 4; k++) {
+        vec2 o = vec2(float(k - (k / 2) * 2), float(k / 2));
+        vec4 v = texelFetch(tVol, clamp(ivec2(i0 + o), ivec2(0), mx), 0);
+        float w = mix(1.0 - f.x, f.x, o.x) * mix(1.0 - f.y, f.y, o.y) / (0.02 + abs(v.a - D) / max(D, 0.5));
+        acc += v.rgb * w; ws += w;
+      }
+      return acc / ws;
+    }`;
+const QUAD_VS = `varying vec2 vUv; void main(){ vUv = uv; gl_Position = vec4(position.xy, 0.0, 1.0); }`;
+const addShaftsMat = new THREE.ShaderMaterial({   // fully under water: frame + shafts, written to the other buffer
+  uniforms: compU, vertexShader: QUAD_VS,
+  fragmentShader: `uniform sampler2D tScene; varying vec2 vUv; ${UPSAMPLE}
+    void main(){ gl_FragColor = vec4(max(texture2D(tScene, vUv).rgb + volume(vUv), 0.0), 1.0); }`,
+  depthTest: false, depthWrite: false,
+});
+const compositeMat = new THREE.ShaderMaterial({   // split level: air above the waterline on the dome port, water below
+  uniforms: compU, vertexShader: QUAD_VS,
+  fragmentShader: /* glsl */`
+    uniform sampler2D tAir, tUnder;
+    uniform mat4 uCamWorld;
+    uniform float uR, uCamY, uTime, uPx;
+    uniform vec2 uCamXZ, uTexel;
+    varying vec2 vUv;
+    ${UPSAMPLE}
+    ${WAVES}
+    float g2(float x){ return exp(-x * x); }
+    void main(){
+      // the waterline on the dome port follows the real waves; where the water is draining, a sheet lags above it
+      vec4 v = uProjInv * vec4(vUv * 2.0 - 1.0, 1.0, 1.0);
+      vec3 dir = normalize(mat3(uCamWorld) * (v.xyz / v.w));
+      vec2 X = uCamXZ + dir.xz * uR;
+      float h = waveHeight(X, uTime);
+      float hd = (waveHeight(X, uTime + 0.05) - waveHeight(X, uTime - 0.05)) * 10.0;            // dh/dt
+      float wob = 0.012 * clamp(-hd * 0.8, -1.0, 1.0) * (0.65 + 0.35 * sin(vUv.x * 6.0 + uTime * 0.8))
+                + 0.0025 * sin(vUv.x * 19.0 - uTime * 2.3) + 0.0012 * sin(vUv.x * 47.0 + uTime * 3.1);
+      float s = dir.y - (h - uCamY) / uR - wob;                      // > 0: this pixel looks out above the water
+      float px = uPx;
+      // a film of water on the port just above the line bends and softens the air view behind it
+      float sheet = step(0.0, s) * (1.0 - smoothstep(6.0 * px, 18.0 * px, s));
+      vec2 ro = sheet * vec2(0.004 * sin(vUv.x * 61.0 + uTime * 2.6), 0.006 * sin(vUv.x * 37.0 - uTime * 1.9 + vUv.y * 90.0));
+      vec3 air = texture2D(tAir, vUv + ro).rgb;
+      if (sheet > 0.0) {
+        vec3 soft = (air + texture2D(tAir, vUv + ro + vec2(0.0, 2.5) * uTexel).rgb + texture2D(tAir, vUv + ro - vec2(0.0, 2.5) * uTexel).rgb) / 3.0;
+        air = mix(air, soft, sheet);
+      }
+      float near = exp(-abs(s) / (14.0 * px));
+      vec2 uvU = vUv + vec2(0.0, 0.012 * near * step(s, 0.0));
+      vec3 und = max(texture2D(tUnder, uvU).rgb + volume(uvU), 0.0);
+      vec3 c = mix(und, air, smoothstep(-px, px, s));
+      float lum = dot(air, vec3(0.2126, 0.7152, 0.0722));
+      c *= 1.0 - 0.55 * g2(s / (10.0 * px));                        // the meniscus seen edge-on: a thick dark band
+      c += air * 0.4 * g2((s - 13.0 * px) / (6.0 * px));            // its bright lip
+      c += und * 0.3 * g2((s + 9.0 * px) / (4.0 * px));             // silvery underside, totally reflected
+      c += lum * (vec3(0.07, 0.0, -0.03) * g2((s - 3.0 * px) / (1.5 * px)) + vec3(-0.03, 0.0, 0.06) * g2((s + 3.0 * px) / (1.5 * px)));
+      gl_FragColor = vec4(max(c, 0.0), 1.0);
+    }`,
+  depthTest: false, depthWrite: false,
+});
+
+const view = { mode: 0, sinW: -1, px: 0.001 };   // mode: 0 air · 1 split · 2 under
+class OceanPass extends Pass {
+  constructor() {
+    super();
+    this.rtUnder = new THREE.WebGLRenderTarget(1, 1, { type: THREE.HalfFloatType, samples: MSAA });   // split frames only
+    this.rtUnder.depthTexture = new THREE.DepthTexture(1, 1);
+    this.rtVol = new THREE.WebGLRenderTarget(1, 1, { type: THREE.HalfFloatType, depthBuffer: false });
+    this.volQuad = new FullScreenQuad(volumeMat);
+    this.addQuad = new FullScreenQuad(addShaftsMat);
+    this.quad = new FullScreenQuad(compositeMat);
+    compU.tUnder.value = this.rtUnder.texture; compU.tVol.value = this.rtVol.texture;
+  }
+  setSize(w, h) {
+    this.rtUnder.setSize(w, h);
+    const hw = Math.min(1024, Math.max(1, w >> 1)), hh = Math.min(1024, Math.max(1, h >> 1));
+    this.rtVol.setSize(hw, hh);
+    compU.uVolTexel.value.set(1 / hw, 1 / hh);
+    compU.uTexel.value.set(1 / w, 1 / h);
+  }
+  shafts(r, depth) {
+    volU.tDepth.value = compU.tDepth.value = depth;
+    volU.tShadow.value = sunUW.shadow.map ? sunUW.shadow.map.texture : null;
+    r.setRenderTarget(this.rtVol);
+    this.volQuad.render(r);
+  }
+  render(r, writeBuffer, readBuffer) {
+    this.needsSwap = false;
+    if (view.mode === 0) { renderAir(readBuffer); return; }
+    if (view.mode === 2) {
+      renderUnder(readBuffer);
+      this.shafts(r, readBuffer.depthTexture);
+      compU.tScene.value = readBuffer.texture;  // read one buffer, write the other: no feedback loop at any MSAA level
+      r.setRenderTarget(writeBuffer);
+      this.addQuad.render(r);
+      this.needsSwap = true;
+      return;
+    }
+    renderAir(readBuffer);
+    renderUnder(this.rtUnder);
+    this.shafts(r, this.rtUnder.depthTexture);
+    compU.tAir.value = readBuffer.texture;
+    compU.uCamY.value = camera.position.y;
+    compU.uCamXZ.value.set(camera.position.x, camera.position.z);
+    compU.uPx.value = view.px;
+    r.setRenderTarget(writeBuffer);
+    this.quad.render(r);
+    this.needsSwap = true;
+  }
+}
+
+// grade, vignette, ACES, sRGB, then film grain and a dither so the deep-blue gradients never band
+const FinishShader = {
+  uniforms: { tDiffuse: { value: null }, tBloom: { value: null }, uAspect: { value: 1 }, uTime: { value: 0 }, uVignette: { value: 0.26 }, uExposure: { value: 0.5 } },
+  vertexShader: `varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
+  fragmentShader: /* glsl */`
+    uniform sampler2D tDiffuse, tBloom; uniform float uAspect, uTime, uVignette, uExposure; varying vec2 vUv;
+    vec3 rrt(vec3 v){ vec3 a = v * (v + 0.0245786) - 0.000090537; vec3 b = v * (0.983729 * v + 0.4329510) + 0.238081; return a / b; }
+    vec3 aces(vec3 c){
+      const mat3 IM = mat3(vec3(0.59719, 0.07600, 0.02840), vec3(0.35458, 0.90834, 0.13383), vec3(0.04823, 0.01566, 0.83777));
+      const mat3 OM = mat3(vec3(1.60475, -0.10208, -0.00327), vec3(-0.53108, 1.10813, -0.07276), vec3(-0.07367, -0.00605, 1.07602));
+      return clamp(OM * rrt(IM * (c * uExposure / 0.6)), 0.0, 1.0);
+    }
+    vec3 srgb(vec3 c){ return mix(c * 12.92, 1.055 * pow(c, vec3(1.0 / 2.4)) - 0.055, step(vec3(0.0031308), c)); }
+    float h12(vec2 p){ vec3 p3 = fract(vec3(p.xyx) * 0.1031); p3 += dot(p3, p3.yzx + 33.33); return fract((p3.x + p3.y) * p3.z); }
+    void main(){
+      vec3 c = texture2D(tDiffuse, vUv).rgb + texture2D(tBloom, vUv).rgb;
+      float l = dot(c, vec3(0.2126, 0.7152, 0.0722));
+      c *= mix(vec3(0.985, 1.0, 1.02), vec3(1.03, 1.0, 0.965), smoothstep(0.05, 1.2, l));   // cool shadows, warm highlights
+      c = max(mix(vec3(l), c, 1.05), 0.0);
+      vec2 q = (vUv - 0.5) * vec2(uAspect, 1.0);
+      c *= mix(1.0 - uVignette, 1.0, smoothstep(0.95, 0.2, length(q)));
+      c = srgb(aces(c));
+      vec2 fc = gl_FragCoord.xy + fract(uTime * 7.0) * vec2(113.0, 71.0);
+      float g = h12(fc) + h12(fc + 37.17) - 1.0;                                             // triangular noise
+      float y = dot(c, vec3(0.299, 0.587, 0.114));
+      c += g * (1.3 / 255.0 + 0.02 * y * (1.0 - y));                                        // dither + fine grain
+      gl_FragColor = vec4(c, 1.0);
+    }`,
+};
+
+const sceneRT = new THREE.WebGLRenderTarget(1, 1, { type: THREE.HalfFloatType, samples: MSAA });
+sceneRT.depthTexture = new THREE.DepthTexture(1, 1);          // the composer's buffers keep depth for the water volume
+const composer = new EffectComposer(renderer, sceneRT);
+const ocean = new OceanPass();
+composer.addPass(ocean);
+// the glow is built at half resolution and added by the finishing pass (no extra full-screen blend)
+class BloomLite extends UnrealBloomPass {
+  render(r, writeBuffer, readBuffer) {
+    r.getClearColor(this._oldClearColor); this.oldClearAlpha = r.getClearAlpha();
+    const oldAutoClear = r.autoClear; r.autoClear = false;
+    r.setClearColor(this.clearColor, 0);
+    this.highPassUniforms['tDiffuse'].value = readBuffer.texture;
+    this.highPassUniforms['luminosityThreshold'].value = this.threshold;
+    this.fsQuad.material = this.materialHighPassFilter;
+    r.setRenderTarget(this.renderTargetBright); r.clear(); this.fsQuad.render(r);
+    let input = this.renderTargetBright;
+    for (let i = 0; i < this.nMips; i++) {
+      const m = this.separableBlurMaterials[i];
+      this.fsQuad.material = m;
+      m.uniforms['colorTexture'].value = input.texture; m.uniforms['direction'].value = UnrealBloomPass.BlurDirectionX;
+      r.setRenderTarget(this.renderTargetsHorizontal[i]); r.clear(); this.fsQuad.render(r);
+      m.uniforms['colorTexture'].value = this.renderTargetsHorizontal[i].texture; m.uniforms['direction'].value = UnrealBloomPass.BlurDirectionY;
+      r.setRenderTarget(this.renderTargetsVertical[i]); r.clear(); this.fsQuad.render(r);
+      input = this.renderTargetsVertical[i];
+    }
+    this.fsQuad.material = this.compositeMaterial;
+    this.compositeMaterial.uniforms['bloomStrength'].value = this.strength;
+    this.compositeMaterial.uniforms['bloomRadius'].value = this.radius;
+    this.compositeMaterial.uniforms['bloomTintColors'].value = this.bloomTintColors;
+    r.setRenderTarget(this.renderTargetsHorizontal[0]); r.clear(); this.fsQuad.render(r);
+    r.setClearColor(this._oldClearColor, this.oldClearAlpha);
+    r.autoClear = oldAutoClear;
+  }
+}
+const bloom = new BloomLite(new THREE.Vector2(1, 1), 0.22, 0.35, 2.5);   // only the sun, its glints and the window
+composer.addPass(bloom);
+const finish = new ShaderPass(FinishShader);
+finish.uniforms.tBloom.value = bloom.renderTargetsHorizontal[0].texture;
+composer.addPass(finish);
+
+// ---------------- sun placement ----------------
+const _lt = new THREE.Vector3();
+function setSun(elDeg, azDeg) {
+  const el = THREE.MathUtils.degToRad(elDeg), az = THREE.MathUtils.degToRad(azDeg);
+  sunDir.set(Math.sin(az) * Math.cos(el), Math.sin(el), -Math.cos(az) * Math.cos(el));
+  sun.position.copy(sun.target.position).addScaledVector(sunDir, 30);
+  // sunlight bends as it enters the water (Snell): the direction it travels below the surface
+  const eta = 1 / 1.333, ci = sunDir.y, k = 1 - eta * eta * (1 - ci * ci);
+  MU.uLt.value.copy(sunDir).multiplyScalar(-eta).add(_lt.set(0, eta * ci - Math.sqrt(k), 0)).normalize();
+  sunUW.position.copy(sunUW.target.position).addScaledVector(MU.uLt.value, -30);
+  // the shafts carry the sunlight the surface lets through (unpolarised Fresnel transmission at this sun height)
+  const cI = Math.max(ci, 1e-3), cT = Math.sqrt(k), n = 1.333;
+  const rs = (cI - n * cT) / (cI + n * cT), rp = (cT - n * cI) / (cT + n * cI);
+  const tF = 1 - 0.5 * (rs * rs + rp * rp);
+  volU.uSunUW.value.set(sunCol.r, sunCol.g, sunCol.b).multiplyScalar(SHAFT_GAIN * tF);
+  rebuildEnv();
+}
+const SHAFT_GAIN = 0.2;
+
+// ---------------- layout ----------------
+let viewW = 1, viewH = 1, wide = true, sunWide = null, bufH = 1;
+let prScale = 1;                           // lowered at run time if the GPU cannot keep up
+function layout() {
+  viewW = stage.clientWidth; viewH = stage.clientHeight; wide = viewW / viewH >= 1;
+  const pr = Math.min(devicePixelRatio, viewW < 760 ? 1.25 : 1.5) * prScale;
+  renderer.setPixelRatio(pr);
+  renderer.setSize(viewW, viewH, false);
+  // the composer works in whole pixels, matching the drawing buffer exactly (no 1138.5-px targets)
+  const bw = Math.max(1, Math.floor(viewW * pr)), bh = Math.max(1, Math.floor(viewH * pr));
+  composer.setPixelRatio(1);
+  composer.setSize(bw, bh);
+  refrRT.setSize(Math.min(1024, Math.max(1, bw >> 1)), Math.min(1024, Math.max(1, bh >> 1)));
+  wu.uScreen.value.set(bw, bh);
+  bufH = bh;
+  finish.uniforms.uAspect.value = viewW / viewH;
+  camera.aspect = viewW / viewH;
+  // the sun sits in frame, to the right of the probe and clear of the header
+  if (sunWide !== wide) { sunWide = wide; wide ? setSun(5, 9) : setSun(4, 6); }
+  // shift the picture instead of the camera: model right of the text on wide screens, above it on tall ones
+  frame(0);
+}
+// above water the picture is nudged down to show more sky; under water it is centred on the blades
+function frame(dive) {
+  if (wide) camera.setViewOffset(viewW, viewH, -viewW * 0.2, -viewH * 0.1 * (1 - dive), viewW, viewH);
+  else camera.setViewOffset(viewW, viewH, 0, viewH * 0.16, viewW, viewH);
+  camera.updateProjectionMatrix();
+}
+addEventListener('resize', layout);
+layout();
+window.__h2 = { THREE, renderer, sky, skyU, sun, sunUW, water, wu, under, MU, volU, compU, snowU, foamU, bloom, finish, MATS, caustMesh, caustRT, view, camera, ocean, probeMain, probeProxy, GPU, MSAA }; // DEBUG-TEMP
+
+// which side of the waterline each part of the frame looks out of (with room for the waves)
+const _d = new THREE.Vector3();
+const EDGES = [-1, 1, 0, 1, 1, 1, -1, -1, 0, -1, 1, -1];
+function pickView() {
+  const sinW = THREE.MathUtils.clamp(-camera.position.y / DOME_R, -1, 1);
+  let lo = 1, hi = -1;
+  for (let i = 0; i < EDGES.length; i += 2) {
+    _d.set(EDGES[i], EDGES[i + 1], 0.5).unproject(camera).sub(camera.position).normalize();
+    lo = Math.min(lo, _d.y); hi = Math.max(hi, _d.y);
+  }
+  view.sinW = sinW;
+  const m = 0.02 + WAVE_SUM / DOME_R;      // room for the highest crest (or deepest trough) on the port
+  view.mode = sinW < lo - m ? 0 : sinW > hi + m ? 2 : 1;
+}
+
+// ---------------- interaction ----------------
+let userRot = 0, dragX = null;
+stage.addEventListener('pointerdown', e => { if (e.pointerType === 'mouse' && !e.target.closest('a')) dragX = e.clientX; });
+addEventListener('pointerup', () => dragX = null);
+addEventListener('pointermove', e => { if (dragX !== null) { userRot += (e.clientX - dragX) * 0.008; dragX = e.clientX; } });
+
+const header = document.getElementById('site-header');
+const scroller = document.getElementById('scroller');
+const heroCopy = document.getElementById('hero-copy'), solidCopy = document.getElementById('solid-copy'), hint = document.getElementById('hint');
+const smooth = (a, b, x) => { const t = Math.min(Math.max((x - a) / (b - a), 0), 1); return t * t * (3 - 2 * t); };
+const lerp = THREE.MathUtils.lerp;
+const TAN16 = Math.tan(THREE.MathUtils.degToRad(16));
+
+// the float rides the same waves: heave from the height under it, tilt from the slope across it, with a little lag
+const buoy = { y: 0, rx: 0, rz: 0, rel: 0 };
+function rideWaves(t, dt) {
+  const R = 1.3;
+  const hx1 = waveHeight(R, 0, t), hx0 = waveHeight(-R, 0, t), hz1 = waveHeight(0, R, t), hz0 = waveHeight(0, -R, t);
+  const hy = (2 * waveHeight(0, 0, t) + hx1 + hx0 + hz1 + hz0) / 6;
+  const a = 1 - Math.exp(-dt * 3);
+  buoy.y += (hy - buoy.y) * a;
+  buoy.rz += (Math.atan((hx1 - hx0) / (2 * R)) * 0.8 - buoy.rz) * a;
+  buoy.rx += (-Math.atan((hz1 - hz0) / (2 * R)) * 0.8 - buoy.rx) * a;
+}
+
+// keep the motion smooth on slow GPUs: render fewer pixels when frames take too long, more when there is room
+const perf = { sum: 0, n: 0, hold: 0 };
+function govern(t, dt) {
+  if (dt <= 0 || dt > 0.25) return;                    // hidden tab or a hitch
+  perf.sum += dt; perf.n++;
+  if (perf.sum < 1.5) return;
+  const avg = perf.sum / perf.n; perf.sum = 0; perf.n = 0;
+  if (avg > 1 / 38 && prScale > 0.6) { prScale = Math.max(0.6, prScale - 0.15); perf.hold = t + 12; layout(); }
+  else if (avg < 1 / 56 && prScale < 1 && t > perf.hold) { prScale = Math.min(1, prScale + 0.15); layout(); }
+}
+let rot = 0, lastT = 0;
+const clock = new THREE.Clock();
+function tick() {
+  const t = clock.getElapsedTime();
+  const rawDt = t - lastT, dt = Math.min(rawDt, 0.1); lastT = t;
+  // one clock for everything the sea moves (waves, ripples, glitter, caustics, foam, the float's bob), slowed for a calm sea
+  const seaT = t * SEA_SPEED, seaDt = dt * SEA_SPEED;
+  govern(t, rawDt);
+  const span = scroller.offsetHeight - innerHeight;
+  const p = Math.min(Math.max(-scroller.getBoundingClientRect().top / span, 0), 1);
+  header.classList.toggle('scrolled', scrollY > 40);
+
+  // camera: descend from above the surface to below it, pulling in on the blades; for the last stretch the lens opens
+  // to an underwater wide angle and tilts up, so Snell's window and the refracted sun sit at the top of the frame
+  const dive = smooth(0.08, 0.72, p);
+  const uw = smooth(0.45, 0.85, p);
+  camera.fov = lerp(32, wide ? 50 : 58, uw);
+  const halfT = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2));
+  // tall screens: back off so the probe fits the width (less as the lens widens)
+  const fitW = wide ? 1 : Math.min(2.2, 0.9 / camera.aspect * TAN16 / halfT);
+  const dist = lerp(lerp(15.5, 12.5, dive), wide ? 11.5 : 12.5, uw) * fitW;
+  const camY = lerp(lerp(2.6, -4.6, dive), -5.4, uw);
+  const tgtAir = lerp(-0.2, -1.5, dive);   // under water the camera looks up at the surface
+  const pitch = lerp(Math.atan2(tgtAir - camY, dist), THREE.MathUtils.degToRad(wide ? 26.5 : 27.5), uw);
+  frame(dive);                             // after the fov: frame() updates the projection
+  camera.position.set(0, camY, dist);
+  camera.lookAt(0, camY + dist * Math.tan(pitch), 0);
+  camera.updateMatrixWorld();
+  pickView();
+  snowU.uFocal.value = bufH / (2 * halfT);
+  view.px = 2 * halfT / bufH;
+
+  MU.uTime.value = seaT;
+  MU.uSigma.value.copy(SIGMA).multiplyScalar(1 / fitW);   // same clarity at any camera distance
+  MU.uDome.value = DOME_R * fitW;
+  snowU.uFocusD.value = dist;
+  volU.uFrame.value = (volU.uFrame.value + 1) % 4096;
+  backdrop.position.copy(camera.position);
+  finish.uniforms.uTime.value = t;
+  finish.uniforms.uExposure.value = lerp(0.5, 0.62, smooth(0.2, -3.0, camY));
+
+  // slow, calm turn: ~3 minutes per revolution, plus a small turn with scroll
+  rot = lerp(rot, t * 0.035 + p * Math.PI * 0.3 + userRot, 0.04);
+  probe.rotation.y = rot;
+  rideWaves(seaT, seaDt);
+  probe.position.y = buoy.y;
+  probe.rotation.z = buoy.rz;
+  probe.rotation.x = buoy.rx;
+  if (foam) {                              // froth only while the float moves against the water at its hull
+    const r0 = foam.userData.r0;
+    const rel = buoy.y - 0.25 * (waveHeight(r0, 0, seaT) + waveHeight(-r0, 0, seaT) + waveHeight(0, r0, seaT) + waveHeight(0, -r0, seaT));
+    if (dt > 0) {
+      const v = Math.abs(rel - buoy.rel) / dt;
+      foamU.uFoam.value += (Math.min(1, Math.max(0, (v - 0.04) * 4)) - foamU.uFoam.value) * (1 - Math.exp(-dt * 3));
+    }
+    buoy.rel = rel;
+  }
+
+  heroCopy.style.opacity = 1 - smooth(0.03, 0.14, p);
+  heroCopy.style.pointerEvents = p > 0.1 ? 'none' : 'auto';
+  solidCopy.style.opacity = smooth(0.74, 0.88, p);
+  hint.style.opacity = 1 - smooth(0.0, 0.05, p);
+
+  bakeCaustics();
+  composer.render();
+}
+renderer.setAnimationLoop(tick);
+Object.assign(window.__h2, { tick, renderAir, renderUnder, bakeCaustics, composer, particles, backdrop, probe, volumeMat, compositeMat }); // DEBUG-TEMP
+</script>
+</body>
+</html>
