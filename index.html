@@ -68,8 +68,8 @@
   .eyebrow::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--accent-2); box-shadow: 0 0 12px var(--accent-2); }
   #hero-copy h1 { font-size: clamp(36px, 5.2vw, 76px); font-weight: 500; line-height: 1.02; letter-spacing: -.04em; margin: 0 0 20px; }
   #hero-copy h1 em { font-style: normal; background: linear-gradient(90deg, var(--accent-2), #e9d5ff); -webkit-background-clip: text; background-clip: text; color: transparent; }
-  #hero-copy p { color: var(--muted); font-size: 18px; line-height: 1.55; margin: 0 0 30px; max-width: 440px; }
-  .cta-row { display: flex; gap: 12px; flex-wrap: wrap; }
+  #hero-copy p { color: var(--muted); font-size: 17px; line-height: 1.55; margin: 0 0 26px; max-width: 520px; }
+  #hero-copy .cta-row { display: flex; gap: 12px; flex-wrap: wrap; }
   #solid-copy { left: 6vw; bottom: 13vh; max-width: 440px; opacity: 0; pointer-events: none; }
   #solid-copy h2 { font-size: clamp(28px, 4vw, 50px); font-weight: 500; letter-spacing: -.03em; margin: 0 0 12px; }
   #solid-copy p { color: var(--muted); font-size: 16px; line-height: 1.55; margin: 0; }
@@ -97,6 +97,9 @@
             mask-image: linear-gradient(180deg, transparent 0, #000 14%, #000 86%, transparent 100%);
     opacity: 0; transition: opacity .9s ease; }
   #story > section.tint-in::before { opacity: 1; }
+  /* the deeper the chapter, the heavier the water veil — the page darkens as you sink */
+  #story > section:nth-child(n+9)::before { background: linear-gradient(180deg, rgba(3,6,16,.62), rgba(3,6,16,.88)); }
+  #story > section:nth-child(n+11)::before { background: linear-gradient(180deg, rgba(2,4,12,.7), rgba(2,4,12,.93)); }
   .wrap { max-width: 1160px; margin: 0 auto; }
   .kicker { font-size: 12px; letter-spacing: .2em; text-transform: uppercase; color: var(--accent-2); margin-bottom: 16px; }
   h2.title { font-size: clamp(30px, 4.4vw, 56px); font-weight: 500; letter-spacing: -.035em; line-height: 1.05; margin: 0 0 20px; max-width: 760px; }
@@ -160,6 +163,11 @@
   #dawn { background: transparent; }
   .split { display: grid; grid-template-columns: 1fr 1.15fr; gap: 64px; align-items: center; }
   .chart-card { padding: 28px; border-radius: 24px; background: var(--panel); border: 1px solid var(--line); }
+  .price-card .price { font-size: clamp(40px, 5vw, 56px); font-weight: 500; letter-spacing: -.03em; line-height: 1; margin: 6px 0 22px; }
+  .price-card .price small { font-size: 16px; color: var(--muted); font-weight: 400; margin-left: 8px; letter-spacing: 0; }
+  .price-card .row { display: flex; justify-content: space-between; gap: 20px; font-size: 14px; line-height: 2.1; border-bottom: 1px dashed rgba(255,255,255,.06); }
+  .price-card .row .k { color: var(--faint); }
+  .price-card .row .v { color: var(--fg); text-align: right; }
   .chart-card .cap { display: flex; justify-content: space-between; font-size: 13px; color: var(--muted); margin-bottom: 18px; }
   .chart-card .cap b { color: var(--fg); font-weight: 500; }
   .chart-card svg { width: 100%; height: auto; display: block; overflow: visible; }
@@ -181,7 +189,13 @@
   .flag { display: inline-flex; align-items: center; gap: 6px; padding: 2px 10px; border-radius: 999px; font-size: 12px; background: rgba(52,211,153,.12); color: var(--ok); }
 
   #built { background: transparent; }
-  .features { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin-top: 56px; }
+  .features { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin-top: 56px; text-align: left; }
+  .features.three { grid-template-columns: repeat(3, 1fr); }
+  .features.three .feature { padding: 28px; }
+  .quote { margin: 30px 0 0; padding: 4px 0 4px 22px; border-left: 2px solid var(--accent);
+           font-size: 17px; line-height: 1.55; color: #d8d3ea; font-style: italic; max-width: 520px; }
+  .quote cite { display: block; margin-top: 8px; font-style: normal; font-size: 13px;
+                letter-spacing: .06em; text-transform: uppercase; color: var(--faint); }
   .feature { padding: 34px; border-radius: 24px; background: var(--panel); border: 1px solid var(--line); position: relative; overflow: hidden; }
   .feature::after { content: ""; position: absolute; inset: auto -30% -60% auto; width: 60%; height: 120%; background: radial-gradient(closest-side, rgba(139,92,246,.18), transparent); pointer-events: none; }
   .feature .num { font-size: 13px; color: var(--accent-2); margin-bottom: 18px; letter-spacing: .1em; }
@@ -251,6 +265,7 @@
     header.scrolled { padding-top: 10px; padding-bottom: 10px; }
     section { padding: 84px 16px; }
     .params, .features, .steps { grid-template-columns: 1fr; }
+    .features.three { grid-template-columns: 1fr; }
     .reading-card { padding: 22px; font-size: 13px; }
   }
   @media (prefers-reduced-motion: reduce) {
@@ -289,9 +304,12 @@
   <div id="stage">
     <div id="loading">LOADING 0%</div>
     <div class="copy" id="hero-copy">
-      <h1>Know your water<br><em>before your fish do</em></h1>
-      <p>A sealed probe that reads your tank around the clock.</p>
-      <a class="btn" href="#measures">Explore the probe</a>
+      <h1>Predict water risks<br><em>before your fish pay the price</em></h1>
+      <p>RoySync's autonomous AI monitors water quality in real time, predicts lethal events, and triggers corrective actions before mortality occurs. No wiring. No guesswork. Just protection.</p>
+      <div class="cta-row">
+        <a class="btn" href="#contact">Request a free demo</a>
+        <a class="btn ghost" href="#solution">See how it works</a>
+      </div>
     </div>
     <div class="copy" id="solid-copy">
       <h2>Below the surface</h2>
@@ -308,13 +326,15 @@
   <div class="wrap split">
     <div>
       <div class="kicker reveal">The problem</div>
-      <h2 class="title u reveal">Your next reading is hours away</h2>
-      <p class="lead reveal">Water can turn overnight. A manual measurement tells you how the tank was at one moment — nothing about what happened between two.</p>
+      <h2 class="title u reveal">Safe to lethal in under 60 minutes</h2>
+      <p class="lead reveal">Water quality can shift from safe to lethal inside an hour. Manual spot-checks only tell you how the tank looked at one moment — nothing about what happened between two.</p>
       <ul class="points">
-        <li class="reveal"><span><b>Spot checks miss the dip.</b> Oxygen falls all night and bottoms out just before dawn.</span></li>
-        <li class="reveal"><span><b>Labs report yesterday.</b> By the time results arrive, the loss already happened.</span></li>
-        <li class="reveal"><span><b>Nobody watches at 04:40.</b> The critical hour is the one nobody is awake for.</span></li>
+        <li class="reveal"><span><b>Late warnings.</b> By the time stress shows in fish behaviour, biological damage is already underway.</span></li>
+        <li class="reveal"><span><b>Silent losses.</b> A mass mortality event can wipe out an entire harvest overnight.</span></li>
+        <li class="reveal"><span><b>Hidden costs.</b> Stressed fish stop eating — FCR spikes and profit disappears with it.</span></li>
+        <li class="reveal"><span><b>Blind spots.</b> Manual spot-checks capture only a tiny fraction of actual water-quality events.</span></li>
       </ul>
+      <blockquote class="quote reveal">"Morning DO was within our required range only 23% of the time."<cite>— Fish Welfare Initiative, 2024</cite></blockquote>
     </div>
     <div class="chart-card reveal">
       <div class="cap"><span><b>Tank oxygen</b> · spot checks vs. reality</span><span>mg/L</span></div>
@@ -341,8 +361,25 @@
 <section id="solution">
   <div class="wrap">
     <div class="kicker reveal">The solution</div>
-    <h2 class="title u reveal">RoySync closes the gap</h2>
-    <p class="lead reveal">One float on the water, sensors under it, readings every few minutes — day, night, and the hour between.</p>
+    <h2 class="title u reveal">Monitor &rarr; Predict &rarr; Prevent</h2>
+    <p class="lead reveal">RoySync's AI engine doesn't wait for disaster — it sees it coming. One float on the water, sensors under it, readings every few minutes: day, night, and the hour between.</p>
+    <div class="features three">
+      <div class="feature reveal">
+        <div class="num">AI</div>
+        <h3>On-device AI agent</h3>
+        <p>Every unit learns what "normal" looks like for your specific pond, detecting anomalies instantly with minimal false alarms.</p>
+      </div>
+      <div class="feature reveal">
+        <div class="num">DT</div>
+        <h3>Cloud digital twin</h3>
+        <p>Physics-aware models simulate scenarios and recommend the highest-ROI interventions — aeration, feed reduction — before you commit resources.</p>
+      </div>
+      <div class="feature reveal">
+        <div class="num">0 W</div>
+        <h3>Zero infrastructure</h3>
+        <p>A solar-powered, self-sufficient floating unit. No exposed cables, no corrosion, no site preparation. Drop it in and walk away.</p>
+      </div>
+    </div>
   </div>
 </section>
 
@@ -522,14 +559,65 @@
   </div>
 </section>
 
+<section id="trust">
+  <div class="wrap">
+    <div class="kicker reveal">Trust</div>
+    <h2 class="title u reveal">Why leading farmers trust RoySync</h2>
+    <div class="features">
+      <div class="feature reveal">
+        <div class="num">6535677</div>
+        <h3>Registered design</h3>
+        <p>Protected intellectual property (Design Reg. 6535677) — the hardware is certified, not a prototype.</p>
+      </div>
+      <div class="feature reveal">
+        <div class="num">RESEARCH</div>
+        <h3>Scientifically backed</h3>
+        <p>Insights aligned with Cambridge University Press and SRAC Mississippi State University research.</p>
+      </div>
+      <div class="feature reveal">
+        <div class="num">LTE-M · NB-IoT · LoRaWAN</div>
+        <h3>Built for harsh environments</h3>
+        <p>Engineered for remote, wet, poorly connected sites — it reports over whichever network reaches your pond.</p>
+      </div>
+      <div class="feature reveal">
+        <div class="num">SECURE</div>
+        <h3>Secure &amp; reliable</h3>
+        <p>Encrypted payloads, signed firmware and remote diagnostics keep your data and hardware safe.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="pricing">
+  <div class="wrap split">
+    <div>
+      <div class="kicker reveal">Pricing</div>
+      <h2 class="title u reveal">An investment in peace of mind</h2>
+      <ul class="points">
+        <li class="reveal"><span><b>Hardware.</b> One-time purchase, instant installation — no site works, no wiring crew.</span></li>
+        <li class="reveal"><span><b>Annual subscription.</b> Continuous monitoring, AI predictions and expert-backed analytics.</span></li>
+        <li class="reveal"><span><b>No hidden fees.</b> Low-maintenance design and remote support keep operating costs predictable.</span></li>
+      </ul>
+    </div>
+    <div class="chart-card price-card reveal">
+      <div class="cap"><span><b>Per device</b> · annual</span><span>GBP</span></div>
+      <div class="price">&pound;1,620<small>/device/year</small></div>
+      <div class="row"><span class="k">Includes</span><span class="v">monitoring · AI predictions · analytics</span></div>
+      <div class="row"><span class="k">Hardware</span><span class="v">one-time purchase</span></div>
+      <div class="row"><span class="k">Support</span><span class="v">remote diagnostics included</span></div>
+      <div class="note">Subscription renews annually. Pilot terms on request.</div>
+    </div>
+  </div>
+</section>
+
 <section id="contact">
   <div class="wrap">
-    <div class="kicker reveal">Pilot programme</div>
-    <h2 class="title u reveal">Put a probe in your water</h2>
-    <p class="lead reveal">We're running pilots with aquaculture farms. Tell us about your site and we'll plan one with you.</p>
+    <div class="kicker reveal">Get started</div>
+    <h2 class="title u reveal">Don't let unpredictable water threaten your yield</h2>
+    <p class="lead reveal">Join the next generation of intelligent aquaculture. Tell us about your site and we'll plan a pilot with you.</p>
     <div class="cta-row reveal">
-      <a class="btn" href="mailto:info@RoySync.com?subject=Pilot%20request">info@RoySync.com</a>
-      <a class="btn ghost" href="#top" onclick="scrollTo({top:0,behavior:'smooth'});return false;">Back to top</a>
+      <a class="btn" href="mailto:info@RoySync.com?subject=Demo%20request">Request a consultation</a>
+      <a class="btn ghost" href="mailto:info@RoySync.com?subject=Sales%20enquiry">Contact sales team</a>
     </div>
   </div>
 </section>
