@@ -1524,7 +1524,7 @@ for (let i = 0; i < N_FISH; i++) {
   school.size[i] = 3.2 * (0.85 + 0.3 * Math.random());
   fPhase[i] = Math.random() * Math.PI * 2;
 }
-new GLTFLoader().load('assets/fish.glb', gltf => {
+if (false) new GLTFLoader().load('assets/fish.glb', gltf => {
   let src = null;
   gltf.scene.traverse(o => { if (o.isMesh && !src) src = o; });
   const g = src.geometry.clone();
@@ -2271,7 +2271,7 @@ function tick(static_ = false) {
   MU.uLdn.value.lerpVectors(LDN0, LDN_REEF, reefV);
   MU.uKd.value.copy(KD).multiplyScalar(1 - 0.6 * reefV);
   // the school rises into view once the camera is well under, and swims ahead of the lens all the way down
-  updateFish(t, Math.min(dt, 0.1), 0, lerp(-70, camY + lerp(4, 5, reefV), smooth(0.28, 0.4, p)), -8, 9 * Math.min(1, camera.aspect));
+  // fish removed: updateFish(t, Math.min(dt, 0.1), 0, lerp(-70, camY + lerp(4, 5, reefV), smooth(0.28, 0.4, p)), -8, 9 * Math.min(1, camera.aspect));
 
   // slow, calm turn: ~3 minutes per revolution, plus a small turn with scroll
   rot = lerp(rot, t * 0.035 + p * Math.PI * 0.3 + userRot, 0.04);
