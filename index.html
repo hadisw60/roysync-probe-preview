@@ -1550,10 +1550,10 @@ const REEF_Y = -24;
     }
   };
   const up = new THREE.Vector3(0, 1, 0);
-  for (let i = 0; i < 280; i++) {
+  for (let i = 0; i < 40; i++) {
     const ang = rnd() * Math.PI * 2, rad = 1.5 + Math.sqrt(rnd()) * 20;
     const x = Math.cos(ang) * rad * 1.3, z = -18 + Math.sin(ang) * rad, y = REEF_Y + (rnd() - 0.5) * 0.4;
-    const c = PAL[(rnd() * PAL.length) | 0], kind = rnd();
+    const c = PAL[(rnd() * PAL.length) | 0], kind = 0.9;
     if (kind < 0.3) branch(x, y, z, up, 0.6 + rnd() * 0.5, 0.1, 3, c);
     else if (kind < 0.5) {                                  // brain / boulder coral
       const g = new THREE.SphereGeometry(1, 16, 10, 0, Math.PI * 2, 0, Math.PI / 2);
@@ -1574,7 +1574,7 @@ const REEF_Y = -24;
       const g = new THREE.SphereGeometry(1, 14, 10), pos = g.attributes.position;
       for (let j = 0; j < pos.count; j++) { const f = 1 + 0.18 * Math.sin(pos.getX(j) * 3.1 + i) * Math.cos(pos.getZ(j) * 2.7 - i); pos.setXYZ(j, pos.getX(j) * f, pos.getY(j) * f, pos.getZ(j) * f); }
       g.computeVertexNormals();
-      add(g, col.setRGB(0.4, 0.38, 0.33), x, y - 0.3, z, 0, rnd() * 6, 0, sc, sc * 0.45, sc);
+      add(g, col.setRGB(0.26, 0.25, 0.22), x, y - 0.3, z, 0, rnd() * 6, 0, sc, sc * 0.45, sc);
     }
   }
   const sand = new THREE.CircleGeometry(90, 48).rotateX(-Math.PI / 2);
@@ -1585,6 +1585,39 @@ const REEF_Y = -24;
   reef.layers.set(L_UNDER);
   reef.frustumCulled = false;
   scene.add(reef);
+
+  // real coral: CC0 museum scans (Smithsonian NMNH), bleached skeletons tinted per instance with living colours
+  const SPECIES = [['acropora', 40, 4.2], ['pocillopora', 46, 2.6], ['porites', 30, 3.4], ['agaricia', 30, 3.2], ['favia', 30, 2.8]];
+  const LIVE = [0xff8a6b, 0xff6f9c, 0xc49bff, 0xffd36e, 0x7fe0b4, 0xf0a070, 0xa8d8ff, 0xe8e0c8].map(c => new THREE.Color(c));
+  const loader = new GLTFLoader();
+  SPECIES.forEach(([name, count, size]) => loader.load(`assets/coral-${name}.glb`, gltf => {
+    let src = null;
+    gltf.scene.traverse(o => { if (o.isMesh && !src) src = o; });
+    const g = src.geometry.clone();
+    g.computeBoundingBox();
+    const bb = g.boundingBox, ext = bb.getSize(new THREE.Vector3()), k = 1 / Math.max(ext.x, ext.y, ext.z);
+    g.translate(-(bb.min.x + bb.max.x) / 2, -bb.min.y, -(bb.min.z + bb.max.z) / 2);
+    g.scale(k, k, k);
+    const mat = new THREE.MeshStandardMaterial({ map: src.material.map, roughness: 0.8, metalness: 0, emissive: 0x0a1418 });
+    mat.onBeforeCompile = sh => {
+      patchProbe(sh);
+      sh.vertexShader = sh.vertexShader.replace('vec4 wApp = modelMatrix * vec4(transformed, 1.0);', 'vec4 wApp = modelMatrix * instanceMatrix * vec4(transformed, 1.0);');
+    };
+    const im = new THREE.InstancedMesh(g, mat, count), o = new THREE.Object3D();
+    for (let i = 0; i < count; i++) {
+      const ang = rnd() * Math.PI * 2, rad = 1.5 + Math.sqrt(rnd()) * 20;
+      const sc = size * (0.6 + rnd() * 0.9);
+      o.position.set(Math.cos(ang) * rad * 1.3, REEF_Y - (name === 'porites' || name === 'favia' ? 0.3 : 0.12) * sc, -18 + Math.sin(ang) * rad);   // sink the museum mount into the sand
+      o.rotation.set((rnd() - 0.5) * 0.25, rnd() * Math.PI * 2, (rnd() - 0.5) * 0.25);
+      o.scale.setScalar(sc);
+      o.updateMatrix();
+      im.setMatrixAt(i, o.matrix);
+      im.setColorAt(i, LIVE[(rnd() * LIVE.length) | 0]);
+    }
+    im.layers.set(L_UNDER);
+    im.frustumCulled = false;
+    scene.add(im);
+  }));
 }
 
 
