@@ -25,7 +25,9 @@
   html, body { margin: 0; background: var(--bg); color: var(--fg); font-family: Inter, system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
   a { color: inherit; text-decoration: none; }
   #scroller { position: relative; height: 340vh; }
-  #stage { position: sticky; top: 0; height: 100vh; overflow: hidden; }
+  /* the story keeps flowing underwater: the 3D sea stays behind it, deepening with scroll */
+  #stage { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; overflow: hidden; z-index: 0; }
+  #story, footer { position: relative; z-index: 2; }
   #stage canvas { display: block; width: 100%; height: 100%; }
   /* soft shade behind the text so it stays readable over a bright sky */
   #stage::before { content: ""; position: absolute; inset: 0; z-index: 3; pointer-events: none;
@@ -83,8 +85,16 @@
   #loading { position: absolute; inset: 0; display: grid; place-items: center; z-index: 4;
              color: var(--muted); font-size: 13px; letter-spacing: .15em; transition: opacity .6s; pointer-events: none; }
 
-  /* ---------- sections ---------- */
+  /* the dive does not end at the hero: every story section sits in the water column, so the whole page
+     reads as one continuous descent. Sections are translucent panels over the live underwater scene —
+     no opaque background of their own; the depth tint behind them is applied by JS as they scroll in. */
   section { position: relative; padding: 120px 6vw; }
+  #story > section::before { content: ""; position: absolute; inset: -40px 0; z-index: -1; pointer-events: none;
+    background: linear-gradient(180deg, rgba(5,9,22,.5), rgba(5,9,22,.78));
+    -webkit-mask-image: linear-gradient(180deg, transparent 0, #000 14%, #000 86%, transparent 100%);
+            mask-image: linear-gradient(180deg, transparent 0, #000 14%, #000 86%, transparent 100%);
+    opacity: 0; transition: opacity .9s ease; }
+  #story > section.tint-in::before { opacity: 1; }
   .wrap { max-width: 1160px; margin: 0 auto; }
   .kicker { font-size: 12px; letter-spacing: .2em; text-transform: uppercase; color: var(--accent-2); margin-bottom: 16px; }
   h2.title { font-size: clamp(30px, 4.4vw, 56px); font-weight: 500; letter-spacing: -.035em; line-height: 1.05; margin: 0 0 20px; max-width: 760px; }
@@ -137,7 +147,7 @@
                      text-transform: uppercase; color: var(--faint); white-space: nowrap; transition: top .25s linear; }
   @media (max-width: 760px) { #depth-rail { display: none; } }
 
-  #measures { background: linear-gradient(180deg, var(--bg) 0%, var(--bg-2) 100%); }
+  #measures { background: transparent; }
   .params { display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px; margin-top: 56px; }
   .param { padding: 26px 22px; border-radius: 20px; background: var(--panel); border: 1px solid var(--line); transition: border-color .3s, transform .3s; }
   .param:hover { border-color: rgba(167,139,250,.5); transform: translateY(-3px); }
@@ -145,7 +155,7 @@
   .param h3 { font-size: 18px; font-weight: 500; margin: 0 0 8px; letter-spacing: -.01em; }
   .param p { font-size: 14px; line-height: 1.5; color: var(--muted); margin: 0; }
 
-  #dawn { background: var(--bg-2); }
+  #dawn { background: transparent; }
   .split { display: grid; grid-template-columns: 1fr 1.15fr; gap: 64px; align-items: center; }
   .chart-card { padding: 28px; border-radius: 24px; background: var(--panel); border: 1px solid var(--line); }
   .chart-card .cap { display: flex; justify-content: space-between; font-size: 13px; color: var(--muted); margin-bottom: 18px; }
@@ -157,7 +167,7 @@
   ul.points li b { color: var(--fg); font-weight: 500; }
   ul.points li::before { content: ""; width: 10px; height: 10px; margin-top: 7px; border-radius: 3px; background: var(--accent); box-shadow: 0 0 14px var(--glow); }
 
-  #reading { background: linear-gradient(180deg, var(--bg-2) 0%, var(--bg) 100%); }
+  #reading { background: transparent; }
   .reading-card { font-family: ui-monospace, "SF Mono", Consolas, monospace; font-size: 14px; line-height: 1.9; padding: 30px 32px; border-radius: 24px;
                   background: #0b0916; border: 1px solid var(--line); box-shadow: 0 30px 80px rgba(91,33,182,.18); }
   .reading-card .row { display: flex; justify-content: space-between; gap: 20px; border-bottom: 1px dashed rgba(255,255,255,.06); }
@@ -168,7 +178,7 @@
   .reading-card .big small { font-size: 18px; color: var(--muted); margin-left: 6px; }
   .flag { display: inline-flex; align-items: center; gap: 6px; padding: 2px 10px; border-radius: 999px; font-size: 12px; background: rgba(52,211,153,.12); color: var(--ok); }
 
-  #built { background: var(--bg); }
+  #built { background: transparent; }
   .features { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin-top: 56px; }
   .feature { padding: 34px; border-radius: 24px; background: var(--panel); border: 1px solid var(--line); position: relative; overflow: hidden; }
   .feature::after { content: ""; position: absolute; inset: auto -30% -60% auto; width: 60%; height: 120%; background: radial-gradient(closest-side, rgba(139,92,246,.18), transparent); pointer-events: none; }
@@ -176,12 +186,12 @@
   .feature h3 { font-size: 22px; font-weight: 500; letter-spacing: -.02em; margin: 0 0 10px; }
   .feature p { color: var(--muted); font-size: 15px; line-height: 1.6; margin: 0; max-width: 460px; }
 
-  #problem { background: linear-gradient(180deg, var(--bg) 0%, var(--bg-2) 100%); }
+  #problem { background: transparent; }
   #solution { text-align: center; padding-top: 150px; padding-bottom: 150px; background:
-              radial-gradient(55% 70% at 50% 0%, rgba(139,92,246,.16), transparent 70%), var(--bg); }
+              radial-gradient(55% 70% at 50% 0%, rgba(139,92,246,.16), transparent 70%); }
   #solution .title, #solution p.lead { margin-left: auto; margin-right: auto; }
 
-  #system { background: var(--bg); }
+  #system { background: transparent; }
   .flow { margin-top: 56px; padding: 34px 28px; border-radius: 24px; background: var(--panel); border: 1px solid var(--line); }
   .flow svg { width: 100%; height: auto; display: block; overflow: visible; }
   .flow .box { fill: rgba(255,255,255,.03); stroke: rgba(255,255,255,.14); }
@@ -200,7 +210,7 @@
     .flow .beam, .flow .wire { stroke-width: 2.5; }
   }
 
-  #how { background: var(--bg-2); }
+  #how { background: transparent; }
   .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 56px; counter-reset: s; }
   .step { padding: 30px; border-top: 1px solid var(--line); }
   .step::before { counter-increment: s; content: "0" counter(s); display: block; font-size: 44px; font-weight: 500; letter-spacing: -.04em;
@@ -209,12 +219,21 @@
   .step p { color: var(--muted); font-size: 15px; line-height: 1.6; margin: 0; }
 
   #contact { text-align: center; padding: 140px 6vw; background:
-             radial-gradient(60% 80% at 50% 100%, rgba(139,92,246,.28), transparent 70%), var(--bg); }
+             radial-gradient(60% 80% at 50% 100%, rgba(139,92,246,.28), transparent 70%); }
   #contact h2.title { margin: 0 auto 20px; }
   #contact p.lead { margin: 0 auto 36px; }
   #contact .cta-row { justify-content: center; }
 
-  footer { padding: 36px 6vw; border-top: 1px solid var(--line); color: var(--faint); font-size: 13px; }
+  #story, footer { background: transparent; }
+  /* translucent panels over the live underwater scene — depth shows through behind every card */
+  .chart-card, .flow { background: rgba(13, 14, 28, .5); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
+  .reading-card { background: rgba(11, 9, 22, .72); }
+  .param, .feature { background: rgba(15, 16, 32, .45); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
+  .step { background: rgba(15, 16, 32, .4); }
+  header.scrolled { background: rgba(8, 7, 18, .55); }
+
+  footer { padding: 36px 6vw; border-top: 1px solid var(--line); color: var(--faint); font-size: 13px;
+           background: linear-gradient(180deg, rgba(5,9,22,.6), rgba(5,9,22,.9)); }
   footer .wrap { display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
 
   @media (max-width: 1000px) {
@@ -241,7 +260,9 @@
     .param .ico, .feature::after, #contact .btn:not(.ghost) { animation: none; }
     h2.title.u::after { transition: none; transform: scaleX(1); }
     .chart-card.reveal, .reading-card.reveal, .flow.reveal { transform: none; }
-    #depth-rail { display: none; }
+    #depth-rail i, #depth-rail u, #depth-rail span { transition: none; }
+    /* no drifting camera: keep the water visible behind the panels, but darken it for readability */
+    #story > section::before { background: rgba(5, 9, 22, .86); opacity: 1; transition: none; }
   }
 </style>
 <script type="importmap">
@@ -528,6 +549,13 @@
   const io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } }), { threshold: 0.15 });
   document.querySelectorAll('.reveal').forEach(el => io.observe(el));
 
+  // depth tint: each story section fades its dark water veil in as it scrolls up into view,
+  // so the sections read as lit panels inside one continuous underwater scene
+  const tio = new IntersectionObserver(es => es.forEach(e => {
+    if (e.isIntersecting) { e.target.classList.add('tint-in'); tio.unobserve(e.target); }
+  }), { rootMargin: '12% 0px' });
+  document.querySelectorAll('#story > section').forEach(s => tio.observe(s));
+
   // draw the oxygen curves in when their card scrolls into view (skipped when motion is reduced)
   if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
     const cio = new IntersectionObserver(es => es.forEach(e => {
@@ -548,7 +576,8 @@
   // naming the chapter you are in — the same idea as the hero's dive rail, continued to the end of the page
   (() => {
     const rail = document.getElementById('depth-rail');
-    if (!rail || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    if (!rail) return;
+    const REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
     const dot = rail.querySelector('i'), tick = rail.querySelector('u'), label = rail.querySelector('span');
     const scroller = document.getElementById('scroller');
     const chapters = [...document.querySelectorAll('#story > section')];
@@ -561,6 +590,7 @@
       if (!done) return;
       const total = document.documentElement.scrollHeight - innerHeight;
       const p = Math.min(Math.max(scrollY / total, 0), 1);
+      if (REDUCED) return;                       // reduced motion: keep the rail visible, hold the markers still
       dot.style.top = `${p * 100}%`;
       tick.style.top = `${p * 100}%`;
       label.style.top = `calc(${p * 100}% - 4px)`;
@@ -1898,6 +1928,11 @@ stage.addEventListener('pointerdown', e => { if (e.pointerType === 'mouse' && !e
 addEventListener('pointerup', () => dragX = null);
 addEventListener('pointermove', e => { if (dragX !== null) { userRot += (e.clientX - dragX) * 0.008; dragX = e.clientX; } });
 
+// the fixed stage sits behind the story: pointer events only reach it while the hero is on screen
+const setStageMode = () => { stage.style.pointerEvents = scrollY > innerHeight * 0.5 ? 'none' : 'auto'; };
+addEventListener('scroll', setStageMode, { passive: true });
+setStageMode();
+
 const header = document.getElementById('site-header');
 const scroller = document.getElementById('scroller');
 const heroCopy = document.getElementById('hero-copy'), solidCopy = document.getElementById('solid-copy'), hint = document.getElementById('hint');
@@ -1937,18 +1972,23 @@ function tick(static_ = false) {
   if (!static_) govern(t, rawDt);
   const span = scroller.offsetHeight - innerHeight;
   const p = Math.min(Math.max(-scroller.getBoundingClientRect().top / span, 0), 1);
+  // one continuous descent: the hero dive ends at p = 1, but the camera keeps sinking through the whole
+  // story scroll (q = 0..1 across #story/footer), so every section is seen from deeper in the water column
+  const docSpan = Math.max(1, document.documentElement.scrollHeight - innerHeight);
+  const q = Math.min(Math.max((scrollY - span) / (docSpan - span), 0), 1);
   header.classList.toggle('scrolled', scrollY > 40);
 
   // camera: descend from above the surface to below it, pulling in on the blades; for the last stretch the lens opens
   // to an underwater wide angle and tilts up, so Snell's window and the refracted sun sit at the top of the frame
   const dive = smooth(0.08, 0.72, p);
-  const uw = smooth(0.45, 0.85, p);
+  const uw = Math.min(smooth(0.45, 0.85, p) + q * 0.15, 1);   // the deep-descent stretch keeps the wide underwater lens
   camera.fov = lerp(32, wide ? 50 : 58, uw);
   const halfT = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2));
   // tall screens: back off so the probe fits the width (less as the lens widens)
   const fitW = wide ? 1 : Math.min(2.2, 0.9 / camera.aspect * TAN16 / halfT);
-  const dist = lerp(lerp(15.5, 12.5, dive), wide ? 11.5 : 12.5, uw) * fitW;
-  const camY = lerp(lerp(2.6, -4.6, dive), -5.4, uw);
+  const dist = lerp(lerp(15.5, 12.5, dive), wide ? 11.5 : 12.5, uw) * fitW * (1 - q * 0.2);   // drift a little closer while sinking
+  // after the hero dive the camera keeps sinking through the water column, drifting gently closer to the probe
+  const camY = lerp(lerp(lerp(2.6, -4.6, dive), -5.4, uw), -30, q);
   const tgtAir = lerp(-0.2, -1.5, dive);   // under water the camera looks up at the surface
   const pitch = lerp(Math.atan2(tgtAir - camY, dist), THREE.MathUtils.degToRad(wide ? 26.5 : 27.5), uw);
   frame(dive);                             // after the fov: frame() updates the projection
@@ -1960,7 +2000,8 @@ function tick(static_ = false) {
   view.px = 2 * halfT / bufH;
 
   MU.uTime.value = seaT;
-  MU.uSigma.value.copy(SIGMA).multiplyScalar(1 / fitW);   // same clarity at any camera distance
+  // murkier water the deeper you scroll: keeps the story panels readable and makes the descent feel real
+  MU.uSigma.value.copy(SIGMA).multiplyScalar(1 / fitW * (1 + q * 0.9));
   MU.uDome.value = DOME_R * fitW;
   snowU.uFocusD.value = dist;
   volU.uFrame.value = (volU.uFrame.value + 1) % 4096;
@@ -1991,18 +2032,30 @@ function tick(static_ = false) {
   }
   heroCopy.style.opacity = 1 - smooth(0.03, 0.14, p);
   heroCopy.classList.toggle('faded', p > 0.1);
-  solidCopy.style.opacity = smooth(0.74, 0.88, p);
+  // the stage copies belong to the dive itself: they fade out as the story panels scroll up over them
+  solidCopy.style.opacity = smooth(0.74, 0.88, p) * (1 - smooth(0.02, 0.22, q));
+  solidCopy.classList.toggle('faded', q > 0.15);
   hint.style.opacity = 1 - smooth(0.0, 0.05, p);
-  diveEl.style.opacity = 1 - smooth(0.9, 0.99, p);
-  diveDot.style.top = `${(0.06 + p * 0.88) * 100}%`;
+  diveEl.style.opacity = (1 - smooth(0.9, 0.99, p)) * (1 - smooth(0.0, 0.12, q));
+  diveDot.style.top = `${(0.06 + Math.min(p + q * 0.94, 1) * 0.88) * 100}%`;
 
   bakeCaustics();
+  // below the hero the sea is only a backdrop behind dark panels: render it at half rate, and skip whole
+  // frames when nothing moves (tab hidden, or the fixed stage scrolled out of view)
+  if (!static_ && !document.hidden) {
+    const stageGone = scroller.getBoundingClientRect().bottom <= 0;
+    if (stageGone && Math.abs(q - lastQ) < 0.0004 && dragX === null) return;   // idle backdrop: no redraw needed
+    lastQ = q;
+    if (q > 0 && ((volU.uFrame.value & 1) === 0)) return;                      // half-rate behind the story
+  }
   composer.render();
 }
+let lastQ = -1;
 const diveEl = document.getElementById('dive'), diveDot = diveEl.querySelector('i');
 const REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
 if (REDUCED) {
   MU.uTime.value = 7.0;                       // one chosen instant of the sea, held still
+  document.querySelectorAll('#story > section').forEach(s => s.classList.add('tint-in'));   // CSS holds the veil at full opacity
   const ioOnce = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) e.target.classList.add('in'); }), { threshold: 0.1 });
   document.querySelectorAll('.reveal').forEach(el => ioOnce.observe(el));   // the main observer never unobserves in this branch
   // keep the full cinematic composition — surface, dive, float, light shafts — but render still frames on scroll
