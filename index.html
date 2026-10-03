@@ -91,15 +91,13 @@
      reads as one continuous descent. Sections are translucent panels over the live underwater scene —
      no opaque background of their own; the depth tint behind them is applied by JS as they scroll in. */
   section { position: relative; padding: 120px 6vw; }
-  #story > section::before { content: ""; position: absolute; inset: -40px 0; z-index: -1; pointer-events: none;
-    background: linear-gradient(180deg, rgba(5,9,22,.5), rgba(5,9,22,.78));
-    -webkit-mask-image: linear-gradient(180deg, transparent 0, #000 14%, #000 86%, transparent 100%);
-            mask-image: linear-gradient(180deg, transparent 0, #000 14%, #000 86%, transparent 100%);
-    opacity: 0; transition: opacity .9s ease; }
-  #story > section.tint-in::before { opacity: 1; }
-  /* the deeper the chapter, the heavier the water veil — the page darkens as you sink */
-  #story > section:nth-child(n+9)::before { background: linear-gradient(180deg, rgba(3,6,16,.62), rgba(3,6,16,.88)); }
-  #story > section:nth-child(n+11)::before { background: linear-gradient(180deg, rgba(2,4,12,.7), rgba(2,4,12,.93)); }
+  /* one continuous water veil over the 3D scene: it deepens smoothly with scroll, no per-section seams */
+  #veil { position: absolute; inset: 0; z-index: 4; pointer-events: none; opacity: 0;
+    background: radial-gradient(120% 80% at 50% 0%, rgba(8,16,34,.55), rgba(3,6,16,.92) 70%), #030610; }
+  /* the hero copy sits on a soft shade so it reads over sun glare */
+  #hero-copy::before { content: ""; position: absolute; inset: -18vh -12vw -10vh -12vw; z-index: -1; pointer-events: none;
+    background: radial-gradient(closest-side, rgba(3,6,16,.62), transparent); }
+  #hero-copy h1, #hero-copy p { text-shadow: 0 2px 18px rgba(0,0,0,.45); }
   .wrap { max-width: 1160px; margin: 0 auto; }
   .kicker { font-size: 12px; letter-spacing: .2em; text-transform: uppercase; color: var(--accent-2); margin-bottom: 16px; }
   h2.title { font-size: clamp(30px, 4.4vw, 56px); font-weight: 500; letter-spacing: -.035em; line-height: 1.05; margin: 0 0 20px; max-width: 760px; }
@@ -315,6 +313,7 @@
       <h2>Below the surface</h2>
       <p>The sensors sit under the waterline, inside a twisted flow-guide.</p>
     </div>
+    <div id="veil" aria-hidden="true"></div>
     <div id="hint">Scroll to dive</div>
     <div id="dive" aria-hidden="true"><u></u><span>Waterline</span><i></i></div>
   </div>
@@ -644,7 +643,7 @@
   const tio = new IntersectionObserver(es => es.forEach(e => {
     if (e.isIntersecting) { e.target.classList.add('tint-in'); tio.unobserve(e.target); }
   }), { rootMargin: '12% 0px' });
-  document.querySelectorAll('#story > section').forEach(s => tio.observe(s));
+
 
   // draw the oxygen curves in when their card scrolls into view (skipped when motion is reduced)
   if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
@@ -2026,7 +2025,7 @@ setStageMode();
 
 const header = document.getElementById('site-header');
 const scroller = document.getElementById('scroller');
-const heroCopy = document.getElementById('hero-copy'), solidCopy = document.getElementById('solid-copy'), hint = document.getElementById('hint');
+const veilEl = document.getElementById('veil'), heroCopy = document.getElementById('hero-copy'), solidCopy = document.getElementById('solid-copy'), hint = document.getElementById('hint');
 const smooth = (a, b, x) => { const t = Math.min(Math.max((x - a) / (b - a), 0), 1); return t * t * (3 - 2 * t); };
 const lerp = THREE.MathUtils.lerp;
 const TAN16 = Math.tan(THREE.MathUtils.degToRad(16));
@@ -2128,7 +2127,8 @@ function tick(static_ = false) {
   heroCopy.style.opacity = 1 - smooth(0.02, 0.1, p);
   heroCopy.classList.toggle('faded', p > 0.08);
   // the stage copies belong to the dive itself: they fade out as the story panels scroll up over them
-  solidCopy.style.opacity = smooth(0.8, 0.95, p) * (1 - smooth(0.02, 0.15, q));
+  veilEl.style.opacity = (0.72 + 0.22 * q) * smooth(0.9, 1.0, p);
+  solidCopy.style.opacity = smooth(0.8, 0.95, p) * (1 - smooth(0.0, 0.006, q));
   solidCopy.classList.toggle('faded', q > 0.1);
   hint.style.opacity = 1 - smooth(0.0, 0.04, p);
   diveEl.style.opacity = (1 - smooth(0.93, 0.99, p)) * (1 - smooth(0.0, 0.08, q));
@@ -2150,7 +2150,7 @@ const diveEl = document.getElementById('dive'), diveDot = diveEl.querySelector('
 const REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
 if (REDUCED) {
   MU.uTime.value = 7.0;                       // one chosen instant of the sea, held still
-  document.querySelectorAll('#story > section').forEach(s => s.classList.add('tint-in'));   // CSS holds the veil at full opacity
+
   const ioOnce = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) e.target.classList.add('in'); }), { threshold: 0.1 });
   document.querySelectorAll('.reveal').forEach(el => ioOnce.observe(el));   // the main observer never unobserves in this branch
   // keep the full cinematic composition — surface, dive, float, light shafts — but render still frames on scroll
