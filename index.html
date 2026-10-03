@@ -92,6 +92,51 @@
   .reveal { opacity: 0; transform: translateY(24px); transition: opacity .8s ease, transform .8s ease; }
   .reveal.in { opacity: 1; transform: none; }
 
+  /* ---------- scroll-driven motion for the story sections ---------- */
+  #story { position: relative; }
+  /* gentle continuous drift on decorative elements (paused when reduced motion is set) */
+  @keyframes floaty { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-9px); } }
+  @keyframes breathe { 0%, 100% { box-shadow: 0 8px 30px var(--glow); } 50% { box-shadow: 0 8px 44px rgba(139,92,246,.55); } }
+  .param .ico, .feature::after { animation: floaty 7s ease-in-out infinite; }
+  .param:nth-child(2n) .ico, .feature:nth-child(2n)::after { animation-delay: -2.3s; }
+  .param:nth-child(3n) .ico { animation-delay: -4.6s; }
+  .param .ico { animation-duration: 8s; }
+  #contact .btn:not(.ghost) { animation: breathe 3.2s ease-in-out infinite; }
+  /* thin accent line that draws itself in under each section title */
+  h2.title.u { position: relative; padding-bottom: 18px; }
+  h2.title.u::after { content: ""; position: absolute; left: 0; bottom: 0; height: 2px; width: min(220px, 40%);
+                      background: linear-gradient(90deg, var(--accent), transparent); border-radius: 2px;
+                      transform: scaleX(0); transform-origin: left; transition: transform 1.1s cubic-bezier(.4,0,.2,1) .15s; }
+  h2.title.u.in::after { transform: scaleX(1); }
+  #solution h2.title.u::after, #contact h2.title.u::after { left: 50%; right: auto; margin-left: -min(110px, 20%); transform-origin: center; }
+  /* cards rise a little further and settle with a soft stagger inside their group */
+  .chart-card.reveal, .reading-card.reveal, .flow.reveal { transform: translateY(36px) scale(.985); }
+  .chart-card.in, .reading-card.in, .flow.in { transform: none; transition-timing-function: cubic-bezier(.22,.8,.3,1); }
+  .params .param:nth-child(2) { transition-delay: 90ms; }
+  .params .param:nth-child(3) { transition-delay: 180ms; }
+  .params .param:nth-child(4) { transition-delay: 270ms; }
+  .params .param:nth-child(5) { transition-delay: 360ms; }
+  .features .feature:nth-child(2) { transition-delay: 100ms; }
+  .features .feature:nth-child(3) { transition-delay: 200ms; }
+  .features .feature:nth-child(4) { transition-delay: 300ms; }
+  .steps .step:nth-child(2) { transition-delay: 120ms; }
+  .steps .step:nth-child(3) { transition-delay: 240ms; }
+  ul.points li:nth-child(2) { transition-delay: 110ms; }
+  ul.points li:nth-child(3) { transition-delay: 220ms; }
+  /* waterline tick travels down past each section as you scroll deeper into the story */
+  #depth-rail { position: fixed; right: max(18px, 2vw); top: 18vh; bottom: 12vh; width: 2px; z-index: 8; pointer-events: none;
+                background: linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,.03));
+                opacity: 0; transition: opacity .5s; }
+  #depth-rail.on { opacity: 1; }
+  #depth-rail i { position: absolute; left: -1px; top: 0; width: 4px; height: 4px; border-radius: 50%;
+                  background: var(--accent-2); box-shadow: 0 0 10px var(--accent-2); transform: translateY(-2px);
+                  transition: top .25s linear; }
+  #depth-rail u { position: absolute; left: -7px; right: -7px; top: 0; height: 1px; background: rgba(255,255,255,.35);
+                  transition: top .25s linear; }
+  #depth-rail span { position: absolute; right: 12px; top: -4px; font-size: 10px; letter-spacing: .18em;
+                     text-transform: uppercase; color: var(--faint); white-space: nowrap; transition: top .25s linear; }
+  @media (max-width: 760px) { #depth-rail { display: none; } }
+
   #measures { background: linear-gradient(180deg, var(--bg) 0%, var(--bg-2) 100%); }
   .params { display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px; margin-top: 56px; }
   .param { padding: 26px 22px; border-radius: 20px; background: var(--panel); border: 1px solid var(--line); transition: border-color .3s, transform .3s; }
@@ -192,6 +237,11 @@
     .reveal { opacity: 1; transform: none; transition: none; }
     .flow .dash, .flow.in .beam:not(.dash) { animation: none; }
     #hint { display: none; }
+    /* everything below keeps the final visual state without movement */
+    .param .ico, .feature::after, #contact .btn:not(.ghost) { animation: none; }
+    h2.title.u::after { transition: none; transform: scaleX(1); }
+    .chart-card.reveal, .reading-card.reveal, .flow.reveal { transform: none; }
+    #depth-rail { display: none; }
   }
 </style>
 <script type="importmap">
@@ -210,6 +260,7 @@
 </header>
 
 <a class="skip" href="#problem">Skip to content</a>
+<div id="depth-rail" aria-hidden="true"><u></u><span>Problem</span><i></i></div>
 <a id="top"></a>
 <div id="scroller">
   <div id="stage">
@@ -228,11 +279,13 @@
   </div>
 </div>
 
+<div id="story">
+
 <section id="problem">
   <div class="wrap split">
     <div>
       <div class="kicker reveal">The problem</div>
-      <h2 class="title reveal">Your next reading is hours away</h2>
+      <h2 class="title u reveal">Your next reading is hours away</h2>
       <p class="lead reveal">Water can turn overnight. A manual measurement tells you how the tank was at one moment — nothing about what happened between two.</p>
       <ul class="points">
         <li class="reveal"><span><b>Spot checks miss the dip.</b> Oxygen falls all night and bottoms out just before dawn.</span></li>
@@ -265,7 +318,7 @@
 <section id="solution">
   <div class="wrap">
     <div class="kicker reveal">The solution</div>
-    <h2 class="title reveal">RoySync closes the gap</h2>
+    <h2 class="title u reveal">RoySync closes the gap</h2>
     <p class="lead reveal">One float on the water, sensors under it, readings every few minutes — day, night, and the hour between.</p>
   </div>
 </section>
@@ -273,7 +326,7 @@
 <section id="measures">
   <div class="wrap">
     <div class="kicker reveal">Sensors</div>
-    <h2 class="title reveal">Five readings that decide whether a tank is healthy</h2>
+    <h2 class="title u reveal">Five readings that decide whether a tank is healthy</h2>
     <p class="lead reveal">One probe, one cable, one dashboard. Each parameter is measured in the water itself and compensated with the others.</p>
     <div class="params">
       <div class="param reveal">
@@ -309,7 +362,7 @@
   <div class="wrap split">
     <div>
       <div class="kicker reveal">Alerts</div>
-      <h2 class="title reveal">Built around the hour fish are lost</h2>
+      <h2 class="title u reveal">Built around the hour fish are lost</h2>
       <p class="lead reveal">Oxygen peaks in the afternoon and falls all night. The lowest point comes just before dawn, when nobody is watching. The probe samples faster as oxygen drops and alerts you at that hour, not in the morning report.</p>
       <ul class="points">
         <li class="reveal"><span><b>Adaptive sampling.</b> Every 15 minutes by day, faster overnight and whenever oxygen is falling toward your limit.</span></li>
@@ -351,7 +404,7 @@
     </div>
     <div>
       <div class="kicker reveal">Data you can trust</div>
-      <h2 class="title reveal">No bare numbers</h2>
+      <h2 class="title u reveal">No bare numbers</h2>
       <p class="lead reveal">Every reading carries its context: a quality flag, the temperature and salinity it was corrected with, how old the calibration is, and which probe took it. Suspicious values are flagged, never silently dropped.</p>
       <ul class="points">
         <li class="reveal"><span><b>Checked on the device</b> for range, sudden jumps and cross-parameter sense.</span></li>
@@ -365,7 +418,7 @@
 <section id="built">
   <div class="wrap">
     <div class="kicker reveal">Design</div>
-    <h2 class="title reveal">Made for months in the tank, not days on the bench</h2>
+    <h2 class="title u reveal">Made for months in the tank, not days on the bench</h2>
     <div class="features">
       <div class="feature reveal">
         <div class="num">01</div>
@@ -394,7 +447,7 @@
 <section id="system">
   <div class="wrap">
     <div class="kicker reveal">The system</div>
-    <h2 class="title reveal">Float to dashboard, one chain</h2>
+    <h2 class="title u reveal">Float to dashboard, one chain</h2>
     <p class="lead reveal">The float carries the solar power and the radio. The hub sits below the waterline with the sensors. One short link connects them; the data leaves by its own.</p>
     <div class="flow reveal" role="img" aria-label="System diagram: the floating unit sends data wirelessly down to the underwater hub, which gathers readings from five sensor heads and streams them to the RoySync cloud for dashboards and alerts">
       <svg viewBox="0 0 880 250">
@@ -437,7 +490,7 @@
 <section id="how">
   <div class="wrap">
     <div class="kicker reveal">How it works</div>
-    <h2 class="title reveal">From tank to phone in three steps</h2>
+    <h2 class="title u reveal">From tank to phone in three steps</h2>
     <div class="steps">
       <div class="step reveal"><h3>Deploy</h3><p>Drop the probe into the tank or pond. No wiring into your plant, no on-site computer.</p></div>
       <div class="step reveal"><h3>Stream</h3><p>Readings go to the RoySync cloud, where every tank appears live on one dashboard.</p></div>
@@ -449,7 +502,7 @@
 <section id="contact">
   <div class="wrap">
     <div class="kicker reveal">Pilot programme</div>
-    <h2 class="title reveal">Put a probe in your water</h2>
+    <h2 class="title u reveal">Put a probe in your water</h2>
     <p class="lead reveal">We're running pilots with aquaculture farms. Tell us about your site and we'll plan one with you.</p>
     <div class="cta-row reveal">
       <a class="btn" href="mailto:info@RoySync.com?subject=Pilot%20request">info@RoySync.com</a>
@@ -457,6 +510,8 @@
     </div>
   </div>
 </section>
+
+</div><!-- /story -->
 
 <footer>
   <div class="wrap">
@@ -488,6 +543,42 @@
     }), { threshold: 0.35 });
     document.querySelectorAll('.chart-card').forEach(c => cio.observe(c));
   }
+
+  // depth rail: after the dive ends, a waterline tick keeps travelling down through the story sections,
+  // naming the chapter you are in — the same idea as the hero's dive rail, continued to the end of the page
+  (() => {
+    const rail = document.getElementById('depth-rail');
+    if (!rail || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    const dot = rail.querySelector('i'), tick = rail.querySelector('u'), label = rail.querySelector('span');
+    const scroller = document.getElementById('scroller');
+    const chapters = [...document.querySelectorAll('#story > section')];
+    let ticking = false;
+    const update = () => {
+      ticking = false;
+      const span = scroller.offsetHeight - innerHeight;
+      const done = -scroller.getBoundingClientRect().top >= span;   // only show once the dive is over
+      rail.classList.toggle('on', done);
+      if (!done) return;
+      const total = document.documentElement.scrollHeight - innerHeight;
+      const p = Math.min(Math.max(scrollY / total, 0), 1);
+      dot.style.top = `${p * 100}%`;
+      tick.style.top = `${p * 100}%`;
+      label.style.top = `calc(${p * 100}% - 4px)`;
+      // the chapter whose midpoint is closest to the middle of the viewport
+      const mid = scrollY + innerHeight / 2;
+      let best = chapters[0], bd = Infinity;
+      for (const s of chapters) {
+        const c = s.offsetTop + s.offsetHeight / 2;
+        const d = Math.abs(c - mid);
+        if (d < bd) { bd = d; best = s; }
+      }
+      const name = best.id === 'contact' ? 'Contact' : best.id.charAt(0).toUpperCase() + best.id.slice(1);
+      if (label.textContent !== name) label.textContent = name;
+    };
+    addEventListener('scroll', () => { if (!ticking) { ticking = true; requestAnimationFrame(update); } }, { passive: true });
+    addEventListener('resize', update);
+    update();
+  })();
 </script>
 
 <script type="module">
