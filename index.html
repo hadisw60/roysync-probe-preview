@@ -24,7 +24,9 @@
   html { scroll-behavior: smooth; }
   html, body { margin: 0; background: var(--bg); color: var(--fg); font-family: Inter, system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
   a { color: inherit; text-decoration: none; }
-  #scroller { position: relative; height: 340vh; }
+  /* the dive is no longer a fixed-length hero: it lasts exactly from the top of the page to the start
+     of the first story section, so scrolling always feels like sinking — never like "waiting for the scene" */
+  #scroller { position: relative; height: 100vh; }
   /* the story keeps flowing underwater: the 3D sea stays behind it, deepening with scroll */
   #stage { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; overflow: hidden; z-index: 0; }
   #story, footer { position: relative; z-index: 2; }
@@ -584,12 +586,13 @@
     let ticking = false;
     const update = () => {
       ticking = false;
-      const span = scroller.offsetHeight - innerHeight;
-      const done = -scroller.getBoundingClientRect().top >= span;   // only show once the dive is over
+      // "the dive is over" = the first story section has reached the top of the viewport (layout-based)
+      const dEnd = scroller.offsetTop + scroller.offsetHeight;
+      const done = scrollY >= dEnd;
       rail.classList.toggle('on', done);
       if (!done) return;
-      const total = document.documentElement.scrollHeight - innerHeight;
-      const p = Math.min(Math.max(scrollY / total, 0), 1);
+      const total = Math.max(1, document.documentElement.scrollHeight - innerHeight - dEnd);
+      const p = Math.min(Math.max((scrollY - dEnd) / total, 0), 1);
       if (REDUCED) return;                       // reduced motion: keep the rail visible, hold the markers still
       dot.style.top = `${p * 100}%`;
       tick.style.top = `${p * 100}%`;
@@ -1970,25 +1973,29 @@ function tick(static_ = false) {
   // one clock for everything the sea moves (waves, ripples, glitter, caustics, foam, the float's bob), slowed for a calm sea
   const seaT = t * SEA_SPEED, seaDt = dt * SEA_SPEED;
   if (!static_) govern(t, rawDt);
-  const span = scroller.offsetHeight - innerHeight;
-  const p = Math.min(Math.max(-scroller.getBoundingClientRect().top / span, 0), 1);
-  // one continuous descent: the hero dive ends at p = 1, but the camera keeps sinking through the whole
-  // story scroll (q = 0..1 across #story/footer), so every section is seen from deeper in the water column
-  const docSpan = Math.max(1, document.documentElement.scrollHeight - innerHeight);
-  const q = Math.min(Math.max((scrollY - span) / (docSpan - span), 0), 1);
+  const span = scroller.offsetHeight - innerHeight;   // dive length: from the top of the page to the first story section
+  const p = Math.min(Math.max(-scroller.getBoundingClientRect().top / Math.max(1, span), 0), 1);
+  // one continuous descent: the hero dive ends exactly where #story begins (dEnd), and from there q = 0..1
+  // tracks the rest of the document, so every section is seen from deeper in the water column —
+  // measured on real layout positions, not fixed vh values, so it stays true as content grows
+  const dEnd = scroller.offsetTop + scroller.offsetHeight;
+  const docSpan = Math.max(1, document.documentElement.scrollHeight - innerHeight - dEnd);
+  const q = Math.min(Math.max((scrollY - dEnd) / docSpan, 0), 1);
   header.classList.toggle('scrolled', scrollY > 40);
 
-  // camera: descend from above the surface to below it, pulling in on the blades; for the last stretch the lens opens
-  // to an underwater wide angle and tilts up, so Snell's window and the refracted sun sit at the top of the frame
-  const dive = smooth(0.08, 0.72, p);
-  const uw = Math.min(smooth(0.45, 0.85, p) + q * 0.15, 1);   // the deep-descent stretch keeps the wide underwater lens
+  // camera: descend from above the surface to below it, pulling in on the blades. The whole hero dive now
+  // lives inside one viewport of scrolling (p = 0..1 ends exactly at #story): break the water around p≈0.45
+  // and be fully underwater by ~0.9 — then for the last stretch the lens opens to an underwater wide angle
+  // and tilts up, so Snell's window and the refracted sun sit at the top of the frame
+  const dive = smooth(0.05, 0.9, p);
+  const uw = Math.min(smooth(0.62, 0.98, p) + q * 0.15, 1);   // the deep-descent stretch keeps the wide underwater lens
   camera.fov = lerp(32, wide ? 50 : 58, uw);
   const halfT = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2));
   // tall screens: back off so the probe fits the width (less as the lens widens)
   const fitW = wide ? 1 : Math.min(2.2, 0.9 / camera.aspect * TAN16 / halfT);
   const dist = lerp(lerp(15.5, 12.5, dive), wide ? 11.5 : 12.5, uw) * fitW * (1 - q * 0.2);   // drift a little closer while sinking
   // after the hero dive the camera keeps sinking through the water column, drifting gently closer to the probe
-  const camY = lerp(lerp(lerp(2.6, -4.6, dive), -5.4, uw), -30, q);
+  const camY = lerp(lerp(lerp(2.6, -4.6, dive), -5.4, uw), -24, q);
   const tgtAir = lerp(-0.2, -1.5, dive);   // under water the camera looks up at the surface
   const pitch = lerp(Math.atan2(tgtAir - camY, dist), THREE.MathUtils.degToRad(wide ? 26.5 : 27.5), uw);
   frame(dive);                             // after the fov: frame() updates the projection
@@ -2030,13 +2037,13 @@ function tick(static_ = false) {
     rideWaves(seaT, 1);
     buoy.rel = buoy.y;
   }
-  heroCopy.style.opacity = 1 - smooth(0.03, 0.14, p);
-  heroCopy.classList.toggle('faded', p > 0.1);
+  heroCopy.style.opacity = 1 - smooth(0.02, 0.1, p);
+  heroCopy.classList.toggle('faded', p > 0.08);
   // the stage copies belong to the dive itself: they fade out as the story panels scroll up over them
-  solidCopy.style.opacity = smooth(0.74, 0.88, p) * (1 - smooth(0.02, 0.22, q));
-  solidCopy.classList.toggle('faded', q > 0.15);
-  hint.style.opacity = 1 - smooth(0.0, 0.05, p);
-  diveEl.style.opacity = (1 - smooth(0.9, 0.99, p)) * (1 - smooth(0.0, 0.12, q));
+  solidCopy.style.opacity = smooth(0.8, 0.95, p) * (1 - smooth(0.02, 0.15, q));
+  solidCopy.classList.toggle('faded', q > 0.1);
+  hint.style.opacity = 1 - smooth(0.0, 0.04, p);
+  diveEl.style.opacity = (1 - smooth(0.93, 0.99, p)) * (1 - smooth(0.0, 0.08, q));
   diveDot.style.top = `${(0.06 + Math.min(p + q * 0.94, 1) * 0.88) * 100}%`;
 
   bakeCaustics();
@@ -2061,7 +2068,8 @@ if (REDUCED) {
   // keep the full cinematic composition — surface, dive, float, light shafts — but render still frames on scroll
   let lastP = -1;
   const stillFrame = () => {
-    const span = scroller.offsetHeight - innerHeight;
+    // same layout-based dive mapping as the animated branch
+    const span = Math.max(1, scroller.offsetHeight - innerHeight);
     const p = Math.min(Math.max(-scroller.getBoundingClientRect().top / span, 0), 1);
     if (Math.abs(p - lastP) < 0.0008) return;
     lastP = p;
