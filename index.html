@@ -340,7 +340,6 @@
       <h2>Below the surface</h2>
       <p>The sensors sit under the waterline, inside a twisted flow-guide.</p>
     </div>
-    <video id="reefvid" muted loop playsinline preload="none" poster="media/reef.jpg" aria-hidden="true"><source src="media/reef.mp4" type="video/mp4"></video>
     <div id="veil" aria-hidden="true"></div>
     <div id="hint">Scroll to dive</div>
     <div id="dive" aria-hidden="true"><u></u><span>Waterline</span><i></i></div>
@@ -835,8 +834,8 @@ const sunCol = new THREE.Color(0xffd6a6);    // a 5° sun seen through ~10 air m
 // open-ocean optics (Jerlov type I) per metre × 0.0793 m per unit: red is gone within a few metres, blue carries for tens
 const SIGMA = new THREE.Vector3(0.035, 0.008, 0.005);  // extinction per unit
 const KD = new THREE.Vector3(0.03, 0.006, 0.003);      // how fast daylight fades with depth
-const LHZ0 = new THREE.Vector3(0.035, 0.34, 0.6), LHZ_REEF = new THREE.Vector3(0.03, 0.62, 1.05);
-const LDN0 = new THREE.Vector3(0.003, 0.03, 0.075), LDN_REEF = new THREE.Vector3(0.01, 0.15, 0.28);
+const LHZ0 = new THREE.Vector3(0.035, 0.34, 0.6), LHZ_REEF = new THREE.Vector3(0.008, 0.1, 0.24);
+const LDN0 = new THREE.Vector3(0.003, 0.03, 0.075), LDN_REEF = new THREE.Vector3(0.001, 0.008, 0.028);
 const MU = {
   uTime: { value: 0 },
   uEye: { value: new THREE.Vector3() },       // optical eye: y clamped to the side of the surface the eye is on
@@ -2186,7 +2185,7 @@ setStageMode();
 
 const header = document.getElementById('site-header');
 const scroller = document.getElementById('scroller');
-const reefVid = document.getElementById('reefvid'), veilEl = document.getElementById('veil'), heroCopy = document.getElementById('hero-copy'), solidCopy = document.getElementById('solid-copy'), hint = document.getElementById('hint');
+const veilEl = document.getElementById('veil'), heroCopy = document.getElementById('hero-copy'), solidCopy = document.getElementById('solid-copy'), hint = document.getElementById('hint');
 const smooth = (a, b, x) => { const t = Math.min(Math.max((x - a) / (b - a), 0), 1); return t * t * (3 - 2 * t); };
 const lerp = THREE.MathUtils.lerp;
 const TAN16 = Math.tan(THREE.MathUtils.degToRad(16));
@@ -2248,7 +2247,7 @@ function tick(static_ = false) {
   // after the hero dive the camera keeps sinking through the water column, drifting gently closer to the probe
   const camY = lerp(lerp(lerp(2.6, -4.6, dive), -5.4, uw), REEF_Y + 7, deep);
   const tgtAir = lerp(-0.2, -1.5, dive);   // under water the camera looks up at the surface
-  const pitch = lerp(lerp(Math.atan2(tgtAir - camY, dist), THREE.MathUtils.degToRad(wide ? 26.5 : 27.5), uw), 0.08, reefV);   // at the bottom, look out level into open water, as the footage does
+  const pitch = lerp(lerp(Math.atan2(tgtAir - camY, dist), THREE.MathUtils.degToRad(wide ? 26.5 : 27.5), uw), 0.5, reefV);    // at the bottom, look up toward the faint light far above
   frame(dive);                             // after the fov: frame() updates the projection
   camera.position.set(0, camY, dist);
   camera.lookAt(0, camY + dist * Math.tan(pitch), 0);
@@ -2259,17 +2258,16 @@ function tick(static_ = false) {
 
   MU.uTime.value = seaT;
   // murkier water the deeper you scroll: keeps the story panels readable and makes the descent feel real
-  MU.uSigma.value.copy(SIGMA).multiplyScalar(1 / fitW * (1 + deep * 0.25) * (1 - 0.45 * sunlit) * (1 - 0.4 * reefV));
+  MU.uSigma.value.copy(SIGMA).multiplyScalar(1 / fitW * (1 + deep * 0.25) * (1 - 0.15 * sunlit) * (1 + 0.3 * reefV));
   MU.uDome.value = DOME_R * fitW;
   snowU.uFocusD.value = dist;
   volU.uFrame.value = (volU.uFrame.value + 1) % 4096;
   backdrop.position.copy(camera.position);
   finish.uniforms.uTime.value = t;
-  finish.uniforms.uExposure.value = lerp(0.5, 0.62, smooth(0.2, -3.0, camY)) * (1 + 0.55 * sunlit + 0.25 * reefV);
+  finish.uniforms.uExposure.value = lerp(0.5, 0.62, smooth(0.2, -3.0, camY)) * (1 + 0.15 * sunlit);
   fishU.uFishT.value = t;
   MU.uLhz.value.lerpVectors(LHZ0, LHZ_REEF, reefV);
   MU.uLdn.value.lerpVectors(LDN0, LDN_REEF, reefV);
-  MU.uKd.value.copy(KD).multiplyScalar(1 - 0.6 * reefV);
   // the school rises into view once the camera is well under, and swims ahead of the lens all the way down
   // fish removed: updateFish(t, Math.min(dt, 0.1), 0, lerp(-70, camY + lerp(4, 5, reefV), smooth(0.28, 0.4, p)), -8, 9 * Math.min(1, camera.aspect));
 
@@ -2297,11 +2295,6 @@ function tick(static_ = false) {
   heroCopy.style.opacity = 1 - smooth(0.02, 0.1, p);
   heroCopy.classList.toggle('faded', p > 0.08);
   // the stage copies belong to the dive itself: they fade out as the story panels scroll up over them
-  const vidA = smooth(0.86, 0.96, p);
-  reefVid.style.opacity = vidA;
-  const vk = Math.max(0, (scrollY - span) / innerHeight);   // how far past the dive, in screens
-  reefVid.style.transform = `translate3d(0, ${(-vk * 4).toFixed(2)}vh, 0) scale(${(1.18 - 0.14 * smooth(0.86, 1, p) + Math.min(vk, 6) * 0.015).toFixed(4)})`;
-  if (vidA > 0 && reefVid.paused) reefVid.play().catch(() => {}); else if (vidA === 0 && !reefVid.paused) reefVid.pause();
   veilEl.style.opacity = (0.72 + 0.22 * q) * smooth(0.0, 0.8, (scrollY - span) / innerHeight);   // only as the story panels arrive
   solidCopy.style.opacity = smooth(0.25, 0.3, p) * (1 - smooth(0.36, 0.41, p));
   solidCopy.classList.toggle('faded', q > 0.1);
@@ -2318,7 +2311,6 @@ function tick(static_ = false) {
     lastQ = q;
     if (q > 0 && ((volU.uFrame.value & 1) === 0)) return;                      // half-rate behind the story
   }
-  if (vidA >= 0.999) return;                 // the footage covers the frame: let the GPU decode video instead
   composer.render();
 }
 let lastQ = -1;
