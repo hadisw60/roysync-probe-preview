@@ -92,6 +92,8 @@
      no opaque background of their own; the depth tint behind them is applied by JS as they scroll in. */
   section { position: relative; padding: 120px 6vw; }
   /* one continuous water veil over the 3D scene: it deepens smoothly with scroll, no per-section seams */
+  /* real reef footage: the dive ends by dissolving the 3D reef into it */
+  #reefvid { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 3; opacity: 0; pointer-events: none; }
   #veil { position: absolute; inset: 0; z-index: 4; pointer-events: none; opacity: 0;
     background: radial-gradient(120% 80% at 50% 0%, rgba(8,16,34,.55), rgba(3,6,16,.92) 70%), #030610; }
   /* the hero copy sits on a soft shade so it reads over sun glare */
@@ -313,6 +315,7 @@
       <h2>Below the surface</h2>
       <p>The sensors sit under the waterline, inside a twisted flow-guide.</p>
     </div>
+    <video id="reefvid" muted loop playsinline preload="none" poster="media/reef.jpg" aria-hidden="true"><source src="media/reef.mp4" type="video/mp4"></video>
     <div id="veil" aria-hidden="true"></div>
     <div id="hint">Scroll to dive</div>
     <div id="dive" aria-hidden="true"><u></u><span>Waterline</span><i></i></div>
@@ -2241,7 +2244,7 @@ setStageMode();
 
 const header = document.getElementById('site-header');
 const scroller = document.getElementById('scroller');
-const veilEl = document.getElementById('veil'), heroCopy = document.getElementById('hero-copy'), solidCopy = document.getElementById('solid-copy'), hint = document.getElementById('hint');
+const reefVid = document.getElementById('reefvid'), veilEl = document.getElementById('veil'), heroCopy = document.getElementById('hero-copy'), solidCopy = document.getElementById('solid-copy'), hint = document.getElementById('hint');
 const smooth = (a, b, x) => { const t = Math.min(Math.max((x - a) / (b - a), 0), 1); return t * t * (3 - 2 * t); };
 const lerp = THREE.MathUtils.lerp;
 const TAN16 = Math.tan(THREE.MathUtils.degToRad(16));
@@ -2353,6 +2356,9 @@ function tick(static_ = false) {
   heroCopy.style.opacity = 1 - smooth(0.02, 0.1, p);
   heroCopy.classList.toggle('faded', p > 0.08);
   // the stage copies belong to the dive itself: they fade out as the story panels scroll up over them
+  const vidA = smooth(0.86, 0.96, p);
+  reefVid.style.opacity = vidA;
+  if (vidA > 0 && reefVid.paused) reefVid.play().catch(() => {}); else if (vidA === 0 && !reefVid.paused) reefVid.pause();
   veilEl.style.opacity = (0.72 + 0.22 * q) * smooth(0.0, 0.8, (scrollY - span) / innerHeight);   // only as the story panels arrive
   solidCopy.style.opacity = smooth(0.25, 0.3, p) * (1 - smooth(0.36, 0.41, p));
   solidCopy.classList.toggle('faded', q > 0.1);
