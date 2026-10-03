@@ -2306,7 +2306,7 @@ function tick(static_ = false) {
     const o = smooth(a0, a1, p) * (p < b1 ? 1 : 0);   // later clips sit on top: an earlier one stays solid until it is fully covered
     v.style.opacity = o.toFixed(3);
     const k = Math.min(Math.max((p - a0) / (b1 - a0), 0), 1.4);
-    v.style.transform = `scale(${(1.12 - 0.1 * k).toFixed(4)})`;
+    v.style.transform = `scale(${(1.05 - 0.05 * Math.min(k, 1)).toFixed(4)})`;   // a gentle push-in, never enlarged much past the 1080p source
     if (!v.src && p > a0 - 0.12) { v.preload = 'auto'; v.src = v.dataset.src; }   // fetch a little before it is needed
     if (o > 0.001) { if (v.paused) v.play().catch(() => {}); }
     else if (!v.paused) v.pause();
