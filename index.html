@@ -26,7 +26,7 @@
   a { color: inherit; text-decoration: none; }
   /* the dive is no longer a fixed-length hero: it lasts exactly from the top of the page to the start
      of the first story section, so scrolling always feels like sinking — never like "waiting for the scene" */
-  #scroller { position: relative; height: 100vh; }
+  #scroller { position: relative; height: 640vh; }
   /* the story keeps flowing underwater: the 3D sea stays behind it, deepening with scroll */
   #stage { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; overflow: hidden; z-index: 0; }
   #story, footer { position: relative; z-index: 2; }
@@ -704,7 +704,7 @@
 <script type="module">
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/GLTFLoader.js';
-import { toCreasedNormals, mergeVertices } from 'three/addons/BufferGeometryUtils.js';
+import { toCreasedNormals, mergeVertices, mergeGeometries } from 'three/addons/BufferGeometryUtils.js';
 import { Water } from 'three/examples/jsm/objects/Water.js';
 import { Sky } from 'three/examples/jsm/objects/Sky.js';
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
@@ -1454,6 +1454,140 @@ function patchProbe(sh) {
 }
 MATS.head.onBeforeCompile = MATS.paye.onBeforeCompile = patchProbe;
 
+// ---------------- fish cruising in the open water of the dive ----------------
+const fishU = { uFishT: { value: 0 } };
+const fishMat = new THREE.MeshStandardMaterial({ side: THREE.DoubleSide });   // textures come from assets/fish.glb
+fishMat.onBeforeCompile = sh => {
+  patchProbe(sh);
+  Object.assign(sh.uniforms, fishU);
+  sh.vertexShader = 'attribute float aPhase;\nuniform float uFishT;\n' + sh.vertexShader
+    .replace('#include <begin_vertex>', `#include <begin_vertex>
+      float sw = clamp(0.5 - transformed.z, 0.0, 1.4);
+      transformed.x += 0.06 * sw * sw * sin(8.0 * transformed.z - uFishT * 6.5 + aPhase);`)
+    .replace('vec4 wApp = modelMatrix * vec4(transformed, 1.0);', 'vec4 wApp = modelMatrix * instanceMatrix * vec4(transformed, 1.0);');
+};
+const N_FISH = 60;
+let fishMesh = null;
+const school = { pos: new Float32Array(N_FISH * 3), vel: new Float32Array(N_FISH * 3), off: new Float32Array(N_FISH * 3), size: new Float32Array(N_FISH), ready: false };
+const fPhase = new Float32Array(N_FISH);
+for (let i = 0; i < N_FISH; i++) {
+  let x, y, z;
+  do { x = Math.random() * 2 - 1; y = Math.random() * 2 - 1; z = Math.random() * 2 - 1; } while (x * x + y * y + z * z > 1);
+  school.off.set([x * 7.0, y * 2.2, z * 9.0], i * 3);
+  school.size[i] = 3.2 * (0.85 + 0.3 * Math.random());
+  fPhase[i] = Math.random() * Math.PI * 2;
+}
+new GLTFLoader().load('assets/fish.glb', gltf => {
+  let src = null;
+  gltf.scene.traverse(o => { if (o.isMesh && !src) src = o; });
+  const g = src.geometry.clone();
+  g.rotateY(Math.PI);
+  g.translate(0, -0.1435, 0.0035);
+  g.scale(1.555 * 0.85, 1.555 * 0.7, 1.555);
+  const m = src.material;
+  Object.assign(fishMat, { map: m.map, normalMap: m.normalMap, aoMap: m.aoMap, roughnessMap: m.roughnessMap, metalnessMap: m.metalnessMap,
+    roughness: m.roughness, metalness: m.metalness });
+  fishMat.needsUpdate = true;
+  fishMesh = new THREE.InstancedMesh(g, fishMat, N_FISH);
+  fishMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+  fishMesh.geometry.setAttribute('aPhase', new THREE.InstancedBufferAttribute(fPhase, 1));
+  fishMesh.frustumCulled = false;
+  fishMesh.layers.set(L_UNDER);
+  scene.add(fishMesh);
+});
+const _fo = new THREE.Object3D(), _fv = new THREE.Vector3(), _ft = new THREE.Vector3(), _fc = new THREE.Vector3(), _fh = new THREE.Vector3();
+function updateFish(t, dt, sx, sy0, sz, ampX) {
+  const a = t * 0.08;
+  _fc.set(sx + ampX * Math.sin(a), sy0 + 1.2 * Math.sin(t * 0.31), sz + 4 * Math.cos(a));
+  _fh.set(ampX * Math.cos(a), 0, -4 * Math.sin(a)).normalize();
+  const yaw = Math.atan2(_fh.x, _fh.z), cyw = Math.cos(yaw), syw = Math.sin(yaw);
+  const P = school.pos, V = school.vel, O = school.off, k = 1 - Math.exp(-dt * 1.6);
+  for (let i = 0; i < N_FISH; i++) {
+    const i3 = i * 3;
+    const ox = O[i3] + 1.6 * Math.sin(t * 0.17 + i), oy = O[i3 + 1] + 0.6 * Math.sin(t * 0.13 + i * 1.7), oz = O[i3 + 2] + 1.6 * Math.cos(t * 0.11 + i * 2.3);
+    _ft.set(_fc.x + ox * cyw + oz * syw, _fc.y + oy, _fc.z - ox * syw + oz * cyw);
+    if (!school.ready) { P[i3] = _ft.x; P[i3 + 1] = _ft.y; P[i3 + 2] = _ft.z; V[i3] = _fh.x * 2.4; V[i3 + 2] = _fh.z * 2.4; }
+    const dx = (_ft.x - P[i3]) * 0.6 + _fh.x * 1.3, dy = (_ft.y - P[i3 + 1]) * 0.6, dz = (_ft.z - P[i3 + 2]) * 0.6 + _fh.z * 1.3;
+    V[i3] += (dx - V[i3]) * k; V[i3 + 1] += (dy - V[i3 + 1]) * k; V[i3 + 2] += (dz - V[i3 + 2]) * k;
+    P[i3] += V[i3] * dt; P[i3 + 1] += V[i3 + 1] * dt; P[i3 + 2] += V[i3 + 2] * dt;
+    _fo.position.set(P[i3], P[i3 + 1], P[i3 + 2]);
+    _fo.lookAt(_fv.set(P[i3] + V[i3], P[i3 + 1] + V[i3 + 1] * 0.5, P[i3 + 2] + V[i3 + 2]));
+    _fo.scale.setScalar(school.size[i]);
+    _fo.updateMatrix();
+    if (fishMesh) fishMesh.setMatrixAt(i, _fo.matrix);
+  }
+  school.ready = true;
+  if (fishMesh) fishMesh.instanceMatrix.needsUpdate = true;
+}
+
+// ---------------- a coral reef on the sand at the bottom of the dive ----------------
+const REEF_Y = -24;
+{
+  const rnd = (() => { let a = 7; return () => ((a = (a * 16807) % 2147483647) / 2147483647); })();
+  const PAL = [0xff7a59, 0xff5d8f, 0xb08cff, 0xffc94d, 0x5fd3a5, 0xe9603f, 0xf2a3c0, 0x7fb7ff].map(c => new THREE.Color(c));
+  const parts = [], col = new THREE.Color(), m4 = new THREE.Matrix4(), q4 = new THREE.Quaternion(), e4 = new THREE.Euler(), v4 = new THREE.Vector3(), s4 = new THREE.Vector3();
+  const add = (g, c, x, y, z, rx, ry, rz, sx, sy, sz) => {
+    g = g.index ? g.toNonIndexed() : g;
+    g.deleteAttribute('uv');
+    const n = g.attributes.position.count, cols = new Float32Array(n * 3);
+    for (let i = 0; i < n; i++) { const f = 0.85 + 0.3 * rnd(); cols[i * 3] = c.r * f; cols[i * 3 + 1] = c.g * f; cols[i * 3 + 2] = c.b * f; }
+    g.setAttribute('color', new THREE.BufferAttribute(cols, 3));
+    g.applyMatrix4(m4.compose(v4.set(x, y, z), q4.setFromEuler(e4.set(rx, ry, rz)), s4.set(sx, sy, sz)));
+    parts.push(g);
+  };
+  // branching coral: tapered limbs that fork upward
+  const branch = (x, y, z, dir, len, r, depth, c) => {
+    const g = new THREE.CylinderGeometry(r * 0.7, r, len, 6, 1, false);
+    g.translate(0, len / 2, 0);
+    g.applyQuaternion(q4.setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir));
+    add(g, c, x, y, z, 0, 0, 0, 1, 1, 1);
+    if (depth === 0) return;
+    const ex = x + dir.x * len, ey = y + dir.y * len, ez = z + dir.z * len;
+    const kids = 2 + (rnd() < 0.4 ? 1 : 0);
+    for (let i = 0; i < kids; i++) {
+      const d = new THREE.Vector3(dir.x + (rnd() - 0.5) * 1.1, dir.y + 0.35, dir.z + (rnd() - 0.5) * 1.1).normalize();
+      branch(ex, ey, ez, d, len * 0.78, r * 0.72, depth - 1, c);
+    }
+  };
+  const up = new THREE.Vector3(0, 1, 0);
+  for (let i = 0; i < 280; i++) {
+    const ang = rnd() * Math.PI * 2, rad = 1.5 + Math.sqrt(rnd()) * 20;
+    const x = Math.cos(ang) * rad * 1.3, z = -18 + Math.sin(ang) * rad, y = REEF_Y + (rnd() - 0.5) * 0.4;
+    const c = PAL[(rnd() * PAL.length) | 0], kind = rnd();
+    if (kind < 0.3) branch(x, y, z, up, 0.6 + rnd() * 0.5, 0.1, 3, c);
+    else if (kind < 0.5) {                                  // brain / boulder coral
+      const g = new THREE.SphereGeometry(1, 16, 10, 0, Math.PI * 2, 0, Math.PI / 2);
+      const pos = g.attributes.position;
+      for (let j = 0; j < pos.count; j++) { const f = 1 + 0.06 * Math.sin(pos.getX(j) * 9) * Math.sin(pos.getZ(j) * 9); pos.setXYZ(j, pos.getX(j) * f, pos.getY(j) * f, pos.getZ(j) * f); }
+      g.computeVertexNormals();
+      const sc = 0.8 + rnd() * 1.4;
+      add(g, c, x, y, z, 0, rnd() * 6, 0, sc, sc * (0.55 + rnd() * 0.3), sc);
+    } else if (kind < 0.68) {                               // a second, taller kind of branching coral
+      branch(x, y, z, up, 0.8 + rnd() * 0.6, 0.08, 4, c);
+    } else if (kind < 0.84) {                               // tube sponges
+      for (let k = 0; k < 4; k++) {
+        const h = 0.8 + rnd() * 1.4;
+        add(new THREE.CylinderGeometry(0.22, 0.17, h, 9, 1, true).translate(0, h / 2, 0), c, x + (rnd() - 0.5) * 0.9, y, z + (rnd() - 0.5) * 0.9, (rnd() - 0.5) * 0.3, 0, (rnd() - 0.5) * 0.3, 1, 1, 1);
+      }
+    } else {                                                // rocks the reef grows on
+      const sc = 1 + rnd() * 2.2;
+      const g = new THREE.SphereGeometry(1, 14, 10), pos = g.attributes.position;
+      for (let j = 0; j < pos.count; j++) { const f = 1 + 0.18 * Math.sin(pos.getX(j) * 3.1 + i) * Math.cos(pos.getZ(j) * 2.7 - i); pos.setXYZ(j, pos.getX(j) * f, pos.getY(j) * f, pos.getZ(j) * f); }
+      g.computeVertexNormals();
+      add(g, col.setRGB(0.4, 0.38, 0.33), x, y - 0.3, z, 0, rnd() * 6, 0, sc, sc * 0.45, sc);
+    }
+  }
+  const sand = new THREE.CircleGeometry(90, 48).rotateX(-Math.PI / 2);
+  add(sand, col.setRGB(0.55, 0.5, 0.4), 0, REEF_Y - 0.05, -10, 0, 0, 0, 1, 1, 1);
+  const reefMat = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.9, metalness: 0, side: THREE.DoubleSide });
+  reefMat.onBeforeCompile = patchProbe;
+  const reef = new THREE.Mesh(mergeGeometries(parts), reefMat);
+  reef.layers.set(L_UNDER);
+  reef.frustumCulled = false;
+  scene.add(reef);
+}
+
+
 const WATERLINE_MM = 100;   // CAD height (mm) that sits at the water surface: the middle of the collar
 const HEIGHT = 6.4;
 let TOP = 1.6, BOTTOM = -4.8;
@@ -2074,17 +2208,20 @@ function tick(static_ = false) {
   // lives inside one viewport of scrolling (p = 0..1 ends exactly at #story): break the water around p≈0.45
   // and be fully underwater by ~0.9 — then for the last stretch the lens opens to an underwater wide angle
   // and tilts up, so Snell's window and the refracted sun sit at the top of the frame
-  const dive = smooth(0.05, 0.9, p);
-  const uw = Math.min(smooth(0.62, 0.98, p) + q * 0.15, 1);   // the deep-descent stretch keeps the wide underwater lens
+  const dive = smooth(0.03, 0.2, p);                     // break the surface in the first fifth
+  const uw = smooth(0.13, 0.24, p);
+  const deep = smooth(0.24, 0.97, p);                    // then sink: fish, sunlit water, the reef
+  const sunlit = smooth(0.44, 0.54, p) * (1 - smooth(0.64, 0.74, p));
+  const reefV = smooth(0.72, 0.97, p);   // the deep-descent stretch keeps the wide underwater lens
   camera.fov = lerp(32, wide ? 50 : 58, uw);
   const halfT = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2));
   // tall screens: back off so the probe fits the width (less as the lens widens)
   const fitW = wide ? 1 : Math.min(2.2, 0.9 / camera.aspect * TAN16 / halfT);
-  const dist = lerp(lerp(15.5, 12.5, dive), wide ? 11.5 : 12.5, uw) * fitW * (1 - q * 0.2);   // drift a little closer while sinking
+  const dist = lerp(lerp(15.5, 12.5, dive), wide ? 11.5 : 12.5, uw) * fitW * (1 - deep * 0.2);   // drift a little closer while sinking
   // after the hero dive the camera keeps sinking through the water column, drifting gently closer to the probe
-  const camY = lerp(lerp(lerp(2.6, -4.6, dive), -5.4, uw), -24, q);
+  const camY = lerp(lerp(lerp(2.6, -4.6, dive), -5.4, uw), REEF_Y + 7, deep);
   const tgtAir = lerp(-0.2, -1.5, dive);   // under water the camera looks up at the surface
-  const pitch = lerp(Math.atan2(tgtAir - camY, dist), THREE.MathUtils.degToRad(wide ? 26.5 : 27.5), uw);
+  const pitch = lerp(lerp(Math.atan2(tgtAir - camY, dist), THREE.MathUtils.degToRad(wide ? 26.5 : 27.5), uw), -0.42, reefV);   // at the reef, look down onto it
   frame(dive);                             // after the fov: frame() updates the projection
   camera.position.set(0, camY, dist);
   camera.lookAt(0, camY + dist * Math.tan(pitch), 0);
@@ -2095,13 +2232,16 @@ function tick(static_ = false) {
 
   MU.uTime.value = seaT;
   // murkier water the deeper you scroll: keeps the story panels readable and makes the descent feel real
-  MU.uSigma.value.copy(SIGMA).multiplyScalar(1 / fitW * (1 + q * 0.9));
+  MU.uSigma.value.copy(SIGMA).multiplyScalar(1 / fitW * (1 + deep * 0.25) * (1 - 0.45 * sunlit) * (1 - 0.15 * reefV));
   MU.uDome.value = DOME_R * fitW;
   snowU.uFocusD.value = dist;
   volU.uFrame.value = (volU.uFrame.value + 1) % 4096;
   backdrop.position.copy(camera.position);
   finish.uniforms.uTime.value = t;
-  finish.uniforms.uExposure.value = lerp(0.5, 0.62, smooth(0.2, -3.0, camY));
+  finish.uniforms.uExposure.value = lerp(0.5, 0.62, smooth(0.2, -3.0, camY)) * (1 + 0.55 * sunlit + 0.25 * reefV);
+  fishU.uFishT.value = t;
+  // the school rises into view once the camera is well under, and swims ahead of the lens all the way down
+  updateFish(t, Math.min(dt, 0.1), 0, lerp(-70, camY + lerp(4, 5, reefV), smooth(0.28, 0.4, p)), -8, 9 * Math.min(1, camera.aspect));
 
   // slow, calm turn: ~3 minutes per revolution, plus a small turn with scroll
   rot = lerp(rot, t * 0.035 + p * Math.PI * 0.3 + userRot, 0.04);
@@ -2127,8 +2267,8 @@ function tick(static_ = false) {
   heroCopy.style.opacity = 1 - smooth(0.02, 0.1, p);
   heroCopy.classList.toggle('faded', p > 0.08);
   // the stage copies belong to the dive itself: they fade out as the story panels scroll up over them
-  veilEl.style.opacity = (0.72 + 0.22 * q) * smooth(0.9, 1.0, p);
-  solidCopy.style.opacity = smooth(0.8, 0.95, p) * (1 - smooth(0.0, 0.006, q));
+  veilEl.style.opacity = (0.72 + 0.22 * q) * smooth(0.0, 0.8, (scrollY - span) / innerHeight);   // only as the story panels arrive
+  solidCopy.style.opacity = smooth(0.25, 0.3, p) * (1 - smooth(0.36, 0.41, p));
   solidCopy.classList.toggle('faded', q > 0.1);
   hint.style.opacity = 1 - smooth(0.0, 0.04, p);
   diveEl.style.opacity = (1 - smooth(0.93, 0.99, p)) * (1 - smooth(0.0, 0.08, q));
