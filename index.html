@@ -93,7 +93,7 @@
   section { position: relative; padding: 120px 6vw; }
   /* one continuous water veil over the 3D scene: it deepens smoothly with scroll, no per-section seams */
   /* real reef footage: the dive ends by dissolving the 3D reef into it */
-  #reefvid { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 3; opacity: 0; pointer-events: none; will-change: transform, opacity; transform-origin: 50% 40%; }
+  .uwv { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 3; opacity: 0; pointer-events: none; will-change: transform, opacity; transform-origin: 50% 45%; background: #04122a; }
   #veil { position: absolute; inset: 0; z-index: 4; pointer-events: none; opacity: 0;
     background: radial-gradient(120% 80% at 50% 0%, rgba(8,16,34,.55), rgba(3,6,16,.92) 70%), #030610; }
   /* the hero copy sits on a soft shade so it reads over sun glare */
@@ -340,6 +340,9 @@
       <h2>Below the surface</h2>
       <p>The sensors sit under the waterline, inside a twisted flow-guide.</p>
     </div>
+    <video class="uwv" muted loop playsinline preload="none" data-src="media/uw-rays.mp4" aria-hidden="true"></video>
+    <video class="uwv" muted loop playsinline preload="none" data-src="media/uw-reef.mp4" aria-hidden="true"></video>
+    <video class="uwv" muted loop playsinline preload="none" data-src="media/uw-turtle.mp4" aria-hidden="true"></video>
     <div id="veil" aria-hidden="true"></div>
     <div id="hint">Scroll to dive</div>
     <div id="dive" aria-hidden="true"><u></u><span>Waterline</span><i></i></div>
@@ -1609,108 +1612,8 @@ function updateFish(t, dt, sx, sy0, sz, ampX) {
   if (fishMesh) fishMesh.instanceMatrix.needsUpdate = true;
 }
 
-// ---------------- a coral reef on the sand at the bottom of the dive ----------------
+// the deep part of the dive is real underwater footage (see #stage .uwv); the 3D scene hands over to it
 const REEF_Y = -24;
-{
-  const rnd = (() => { let a = 7; return () => ((a = (a * 16807) % 2147483647) / 2147483647); })();
-  const PAL = [0xff7a59, 0xff5d8f, 0xb08cff, 0xffc94d, 0x5fd3a5, 0xe9603f, 0xf2a3c0, 0x7fb7ff].map(c => new THREE.Color(c));
-  const parts = [], col = new THREE.Color(), m4 = new THREE.Matrix4(), q4 = new THREE.Quaternion(), e4 = new THREE.Euler(), v4 = new THREE.Vector3(), s4 = new THREE.Vector3();
-  const add = (g, c, x, y, z, rx, ry, rz, sx, sy, sz) => {
-    g = g.index ? g.toNonIndexed() : g;
-    g.deleteAttribute('uv');
-    const n = g.attributes.position.count, cols = new Float32Array(n * 3);
-    for (let i = 0; i < n; i++) { const f = 0.85 + 0.3 * rnd(); cols[i * 3] = c.r * f; cols[i * 3 + 1] = c.g * f; cols[i * 3 + 2] = c.b * f; }
-    g.setAttribute('color', new THREE.BufferAttribute(cols, 3));
-    g.applyMatrix4(m4.compose(v4.set(x, y, z), q4.setFromEuler(e4.set(rx, ry, rz)), s4.set(sx, sy, sz)));
-    parts.push(g);
-  };
-  // branching coral: tapered limbs that fork upward
-  const branch = (x, y, z, dir, len, r, depth, c) => {
-    const g = new THREE.CylinderGeometry(r * 0.7, r, len, 6, 1, false);
-    g.translate(0, len / 2, 0);
-    g.applyQuaternion(q4.setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir));
-    add(g, c, x, y, z, 0, 0, 0, 1, 1, 1);
-    if (depth === 0) return;
-    const ex = x + dir.x * len, ey = y + dir.y * len, ez = z + dir.z * len;
-    const kids = 2 + (rnd() < 0.4 ? 1 : 0);
-    for (let i = 0; i < kids; i++) {
-      const d = new THREE.Vector3(dir.x + (rnd() - 0.5) * 1.1, dir.y + 0.35, dir.z + (rnd() - 0.5) * 1.1).normalize();
-      branch(ex, ey, ez, d, len * 0.78, r * 0.72, depth - 1, c);
-    }
-  };
-  const up = new THREE.Vector3(0, 1, 0);
-  for (let i = 0; i < 40; i++) {
-    const ang = rnd() * Math.PI * 2, rad = 1.5 + Math.sqrt(rnd()) * 20;
-    const x = Math.cos(ang) * rad * 1.3, z = -18 + Math.sin(ang) * rad, y = REEF_Y + (rnd() - 0.5) * 0.4;
-    const c = PAL[(rnd() * PAL.length) | 0], kind = 0.9;
-    if (kind < 0.3) branch(x, y, z, up, 0.6 + rnd() * 0.5, 0.1, 3, c);
-    else if (kind < 0.5) {                                  // brain / boulder coral
-      const g = new THREE.SphereGeometry(1, 16, 10, 0, Math.PI * 2, 0, Math.PI / 2);
-      const pos = g.attributes.position;
-      for (let j = 0; j < pos.count; j++) { const f = 1 + 0.06 * Math.sin(pos.getX(j) * 9) * Math.sin(pos.getZ(j) * 9); pos.setXYZ(j, pos.getX(j) * f, pos.getY(j) * f, pos.getZ(j) * f); }
-      g.computeVertexNormals();
-      const sc = 0.8 + rnd() * 1.4;
-      add(g, c, x, y, z, 0, rnd() * 6, 0, sc, sc * (0.55 + rnd() * 0.3), sc);
-    } else if (kind < 0.68) {                               // a second, taller kind of branching coral
-      branch(x, y, z, up, 0.8 + rnd() * 0.6, 0.08, 4, c);
-    } else if (kind < 0.84) {                               // tube sponges
-      for (let k = 0; k < 4; k++) {
-        const h = 0.8 + rnd() * 1.4;
-        add(new THREE.CylinderGeometry(0.22, 0.17, h, 9, 1, true).translate(0, h / 2, 0), c, x + (rnd() - 0.5) * 0.9, y, z + (rnd() - 0.5) * 0.9, (rnd() - 0.5) * 0.3, 0, (rnd() - 0.5) * 0.3, 1, 1, 1);
-      }
-    } else {                                                // rocks the reef grows on
-      const sc = 1 + rnd() * 2.2;
-      const g = new THREE.SphereGeometry(1, 14, 10), pos = g.attributes.position;
-      for (let j = 0; j < pos.count; j++) { const f = 1 + 0.18 * Math.sin(pos.getX(j) * 3.1 + i) * Math.cos(pos.getZ(j) * 2.7 - i); pos.setXYZ(j, pos.getX(j) * f, pos.getY(j) * f, pos.getZ(j) * f); }
-      g.computeVertexNormals();
-      add(g, col.setRGB(0.26, 0.25, 0.22), x, y - 0.3, z, 0, rnd() * 6, 0, sc, sc * 0.45, sc);
-    }
-  }
-  const sand = new THREE.CircleGeometry(90, 48).rotateX(-Math.PI / 2);
-  add(sand, col.setRGB(0.55, 0.5, 0.4), 0, REEF_Y - 0.05, -10, 0, 0, 0, 1, 1, 1);
-  const reefMat = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.9, metalness: 0, side: THREE.DoubleSide });
-  reefMat.onBeforeCompile = patchProbe;
-  const reef = new THREE.Mesh(mergeGeometries(parts), reefMat);
-  reef.layers.set(L_UNDER);
-  reef.frustumCulled = false;
-  scene.add(reef);
-
-  // real coral: CC0 museum scans (Smithsonian NMNH), bleached skeletons tinted per instance with living colours
-  const SPECIES = [['acropora', 40, 4.2], ['pocillopora', 46, 2.6], ['porites', 30, 3.4], ['agaricia', 30, 3.2], ['favia', 30, 2.8]];
-  const LIVE = [0xff8a6b, 0xff6f9c, 0xc49bff, 0xffd36e, 0x7fe0b4, 0xf0a070, 0xa8d8ff, 0xe8e0c8].map(c => new THREE.Color(c));
-  const loader = new GLTFLoader();
-  SPECIES.forEach(([name, count, size]) => loader.load(`assets/coral-${name}.glb`, gltf => {
-    let src = null;
-    gltf.scene.traverse(o => { if (o.isMesh && !src) src = o; });
-    const g = src.geometry.clone();
-    g.computeBoundingBox();
-    const bb = g.boundingBox, ext = bb.getSize(new THREE.Vector3()), k = 1 / Math.max(ext.x, ext.y, ext.z);
-    g.translate(-(bb.min.x + bb.max.x) / 2, -bb.min.y, -(bb.min.z + bb.max.z) / 2);
-    g.scale(k, k, k);
-    const mat = new THREE.MeshStandardMaterial({ map: src.material.map, roughness: 0.8, metalness: 0, emissive: 0x0a1418 });
-    mat.onBeforeCompile = sh => {
-      patchProbe(sh);
-      sh.vertexShader = sh.vertexShader.replace('vec4 wApp = modelMatrix * vec4(transformed, 1.0);', 'vec4 wApp = modelMatrix * instanceMatrix * vec4(transformed, 1.0);');
-    };
-    const im = new THREE.InstancedMesh(g, mat, count), o = new THREE.Object3D();
-    for (let i = 0; i < count; i++) {
-      const ang = rnd() * Math.PI * 2, rad = 1.5 + Math.sqrt(rnd()) * 20;
-      const sc = size * (0.6 + rnd() * 0.9);
-      o.position.set(Math.cos(ang) * rad * 1.3, REEF_Y - (name === 'porites' || name === 'favia' ? 0.3 : 0.12) * sc, -18 + Math.sin(ang) * rad);   // sink the museum mount into the sand
-      o.rotation.set((rnd() - 0.5) * 0.25, rnd() * Math.PI * 2, (rnd() - 0.5) * 0.25);
-      o.scale.setScalar(sc);
-      o.updateMatrix();
-      im.setMatrixAt(i, o.matrix);
-      im.setColorAt(i, LIVE[(rnd() * LIVE.length) | 0]);
-    }
-    im.layers.set(L_UNDER);
-    im.frustumCulled = false;
-    scene.add(im);
-  }));
-}
-
-
-
 
 const WATERLINE_MM = 100;   // CAD height (mm) that sits at the water surface: the middle of the collar
 const HEIGHT = 6.4;
@@ -2283,7 +2186,7 @@ setStageMode();
 
 const header = document.getElementById('site-header');
 const scroller = document.getElementById('scroller');
-const veilEl = document.getElementById('veil'), heroCopy = document.getElementById('hero-copy'), solidCopy = document.getElementById('solid-copy'), hint = document.getElementById('hint');
+const uwVids = [...document.querySelectorAll('#stage .uwv')], veilEl = document.getElementById('veil'), heroCopy = document.getElementById('hero-copy'), solidCopy = document.getElementById('solid-copy'), hint = document.getElementById('hint');
 const smooth = (a, b, x) => { const t = Math.min(Math.max((x - a) / (b - a), 0), 1); return t * t * (3 - 2 * t); };
 const lerp = THREE.MathUtils.lerp;
 const TAN16 = Math.tan(THREE.MathUtils.degToRad(16));
@@ -2394,6 +2297,21 @@ function tick(static_ = false) {
   heroCopy.style.opacity = 1 - smooth(0.02, 0.1, p);
   heroCopy.classList.toggle('faded', p > 0.08);
   // the stage copies belong to the dive itself: they fade out as the story panels scroll up over them
+  // the deep dive in real footage: sunbeams, then the coral reef, then a turtle over the reef. Each clip dissolves
+  // into the next with the scroll, and slowly pushes in while it is on screen, so it reads as one continuous descent
+  const UW = [[0.34, 0.42, 0.58, 0.64], [0.58, 0.64, 0.8, 0.86], [0.8, 0.86, 2, 2]];
+  let vidTop = 0;
+  uwVids.forEach((v, i) => {
+    const [a0, a1, b0, b1] = UW[i];
+    const o = smooth(a0, a1, p) * (p < b1 ? 1 : 0);   // later clips sit on top: an earlier one stays solid until it is fully covered
+    v.style.opacity = o.toFixed(3);
+    const k = Math.min(Math.max((p - a0) / (b1 - a0), 0), 1.4);
+    v.style.transform = `scale(${(1.12 - 0.1 * k).toFixed(4)})`;
+    if (!v.src && p > a0 - 0.12) { v.preload = 'auto'; v.src = v.dataset.src; }   // fetch a little before it is needed
+    if (o > 0.001) { if (v.paused) v.play().catch(() => {}); }
+    else if (!v.paused) v.pause();
+    vidTop = Math.max(vidTop, i === 0 ? o : smooth(a0, a1, p));
+  });
   veilEl.style.opacity = (0.72 + 0.22 * q) * smooth(0.0, 0.8, (scrollY - span) / innerHeight);   // only as the story panels arrive
   solidCopy.style.opacity = smooth(0.25, 0.3, p) * (1 - smooth(0.36, 0.41, p));
   solidCopy.classList.toggle('faded', q > 0.1);
@@ -2410,6 +2328,7 @@ function tick(static_ = false) {
     lastQ = q;
     if (q > 0 && ((volU.uFrame.value & 1) === 0)) return;                      // half-rate behind the story
   }
+  if (vidTop >= 0.999) return;                // real footage fills the frame: skip the 3D render
   composer.render();
 }
 let lastQ = -1;
