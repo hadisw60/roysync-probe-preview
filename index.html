@@ -790,6 +790,8 @@ const sunCol = new THREE.Color(0xffd6a6);    // a 5° sun seen through ~10 air m
 // open-ocean optics (Jerlov type I) per metre × 0.0793 m per unit: red is gone within a few metres, blue carries for tens
 const SIGMA = new THREE.Vector3(0.035, 0.008, 0.005);  // extinction per unit
 const KD = new THREE.Vector3(0.03, 0.006, 0.003);      // how fast daylight fades with depth
+const LHZ0 = new THREE.Vector3(0.035, 0.34, 0.6), LHZ_REEF = new THREE.Vector3(0.03, 0.62, 1.05);
+const LDN0 = new THREE.Vector3(0.003, 0.03, 0.075), LDN_REEF = new THREE.Vector3(0.01, 0.15, 0.28);
 const MU = {
   uTime: { value: 0 },
   uEye: { value: new THREE.Vector3() },       // optical eye: y clamped to the side of the surface the eye is on
@@ -1494,8 +1496,55 @@ new GLTFLoader().load('assets/fish.glb', gltf => {
   fishMesh.frustumCulled = false;
   fishMesh.layers.set(L_UNDER);
   scene.add(fishMesh);
+  makeReefFish(g);
 });
 const _fo = new THREE.Object3D(), _fv = new THREE.Vector3(), _ft = new THREE.Vector3(), _fc = new THREE.Vector3(), _fh = new THREE.Vector3();
+const N_REEF = 260;
+let reefFish = null;
+const rschool = { pos: new Float32Array(N_REEF * 3), vel: new Float32Array(N_REEF * 3), off: new Float32Array(N_REEF * 3), size: new Float32Array(N_REEF), ready: false };
+const rPhase = new Float32Array(N_REEF);
+for (let i = 0; i < N_REEF; i++) {
+  let x, y, z;
+  do { x = Math.random() * 2 - 1; y = Math.random() * 2 - 1; z = Math.random() * 2 - 1; } while (x * x + y * y + z * z > 1);
+  rschool.off.set([x * 16, y * 3.2, z * 12], i * 3);         // a loose cloud hovering over the reef, as anthias do
+  rschool.size[i] = 0.72 * (0.75 + 0.5 * Math.random());
+  rPhase[i] = Math.random() * Math.PI * 2;
+}
+const reefFishMat = new THREE.MeshStandardMaterial({ color: 0xffa04a, emissive: 0x6a2a08, side: THREE.DoubleSide, roughness: 0.45, metalness: 0.1 });
+reefFishMat.onBeforeCompile = fishMat.onBeforeCompile;
+const reefFishColors = [0xff7a2e, 0xff9548, 0xffa060, 0xff6a3a, 0xf58a8a].map(c => new THREE.Color(c));
+function makeReefFish(g) {
+  reefFish = new THREE.InstancedMesh(g, reefFishMat, N_REEF);
+  reefFish.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+  reefFish.geometry = g.clone();
+  reefFish.geometry.setAttribute('aPhase', new THREE.InstancedBufferAttribute(rPhase, 1));
+  for (let i = 0; i < N_REEF; i++) reefFish.setColorAt(i, reefFishColors[i % reefFishColors.length]);
+  reefFish.frustumCulled = false;
+  reefFish.layers.set(L_UNDER);
+  scene.add(reefFish);
+}
+function updateReefFish(t, dt, cx, cy, cz) {
+  // each fish hovers around its own slot over the reef, drifting and darting a little; the cloud slowly turns
+  const P = rschool.pos, V = rschool.vel, O = rschool.off, k = 1 - Math.exp(-dt * 2.2), a = t * 0.05;
+  const ca = Math.cos(a), sa = Math.sin(a);
+  for (let i = 0; i < N_REEF; i++) {
+    const i3 = i * 3;
+    const ox = O[i3] + 0.8 * Math.sin(t * 0.5 + i * 1.3), oy = O[i3 + 1] + 0.4 * Math.sin(t * 0.37 + i), oz = O[i3 + 2] + 0.8 * Math.cos(t * 0.43 + i * 2.1);
+    _ft.set(cx + ox * ca + oz * sa, cy + oy, cz - ox * sa + oz * ca);
+    if (!rschool.ready) { P[i3] = _ft.x; P[i3 + 1] = _ft.y; P[i3 + 2] = _ft.z; V[i3] = 0.3; }
+    V[i3] += ((_ft.x - P[i3]) * 1.2 - V[i3]) * k; V[i3 + 1] += ((_ft.y - P[i3 + 1]) * 1.2 - V[i3 + 1]) * k; V[i3 + 2] += ((_ft.z - P[i3 + 2]) * 1.2 - V[i3 + 2]) * k;
+    P[i3] += V[i3] * dt; P[i3 + 1] += V[i3 + 1] * dt; P[i3 + 2] += V[i3 + 2] * dt;
+    _fo.position.set(P[i3], P[i3 + 1], P[i3 + 2]);
+    const sp = Math.hypot(V[i3], V[i3 + 2]);
+    _fv.set(P[i3] + (sp > 0.05 ? V[i3] : Math.sin(i)), P[i3 + 1], P[i3 + 2] + (sp > 0.05 ? V[i3 + 2] : Math.cos(i)));
+    _fo.lookAt(_fv);
+    _fo.scale.setScalar(rschool.size[i]);
+    _fo.updateMatrix();
+    if (reefFish) reefFish.setMatrixAt(i, _fo.matrix);
+  }
+  rschool.ready = true;
+  if (reefFish) reefFish.instanceMatrix.needsUpdate = true;
+}
 function updateFish(t, dt, sx, sy0, sz, ampX) {
   const a = t * 0.08;
   _fc.set(sx + ampX * Math.sin(a), sy0 + 1.2 * Math.sin(t * 0.31), sz + 4 * Math.cos(a));
@@ -2254,7 +2303,7 @@ function tick(static_ = false) {
   // after the hero dive the camera keeps sinking through the water column, drifting gently closer to the probe
   const camY = lerp(lerp(lerp(2.6, -4.6, dive), -5.4, uw), REEF_Y + 7, deep);
   const tgtAir = lerp(-0.2, -1.5, dive);   // under water the camera looks up at the surface
-  const pitch = lerp(lerp(Math.atan2(tgtAir - camY, dist), THREE.MathUtils.degToRad(wide ? 26.5 : 27.5), uw), -0.42, reefV);   // at the reef, look down onto it
+  const pitch = lerp(lerp(Math.atan2(tgtAir - camY, dist), THREE.MathUtils.degToRad(wide ? 26.5 : 27.5), uw), -0.24, reefV);   // at the reef, look down onto it
   frame(dive);                             // after the fov: frame() updates the projection
   camera.position.set(0, camY, dist);
   camera.lookAt(0, camY + dist * Math.tan(pitch), 0);
@@ -2265,7 +2314,7 @@ function tick(static_ = false) {
 
   MU.uTime.value = seaT;
   // murkier water the deeper you scroll: keeps the story panels readable and makes the descent feel real
-  MU.uSigma.value.copy(SIGMA).multiplyScalar(1 / fitW * (1 + deep * 0.25) * (1 - 0.45 * sunlit) * (1 - 0.15 * reefV));
+  MU.uSigma.value.copy(SIGMA).multiplyScalar(1 / fitW * (1 + deep * 0.25) * (1 - 0.45 * sunlit) * (1 - 0.4 * reefV));
   MU.uDome.value = DOME_R * fitW;
   snowU.uFocusD.value = dist;
   volU.uFrame.value = (volU.uFrame.value + 1) % 4096;
@@ -2273,6 +2322,10 @@ function tick(static_ = false) {
   finish.uniforms.uTime.value = t;
   finish.uniforms.uExposure.value = lerp(0.5, 0.62, smooth(0.2, -3.0, camY)) * (1 + 0.55 * sunlit + 0.25 * reefV);
   fishU.uFishT.value = t;
+  if (reefV > 0.001 || p > 0.6) updateReefFish(t, Math.min(dt, 0.1), 0, REEF_Y + 4.5, -7);
+  MU.uLhz.value.lerpVectors(LHZ0, LHZ_REEF, reefV);
+  MU.uLdn.value.lerpVectors(LDN0, LDN_REEF, reefV);
+  MU.uKd.value.copy(KD).multiplyScalar(1 - 0.6 * reefV);
   // the school rises into view once the camera is well under, and swims ahead of the lens all the way down
   updateFish(t, Math.min(dt, 0.1), 0, lerp(-70, camY + lerp(4, 5, reefV), smooth(0.28, 0.4, p)), -8, 9 * Math.min(1, camera.aspect));
 
