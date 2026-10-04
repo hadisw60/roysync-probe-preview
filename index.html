@@ -30,6 +30,8 @@
   /* the story keeps flowing underwater: the 3D sea stays behind it, deepening with scroll */
   #stage { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; overflow: hidden; z-index: 0; }
   #story, footer { position: relative; z-index: 2; }
+  #story { margin-top: -520vh; }   /* overlap the 640vh dive: text comes in while you sink */
+  #story h2.title, #story p.lead, #story h3 { text-shadow: 0 2px 16px rgba(0,0,0,.55); }
   #stage canvas { display: block; width: 100%; height: 100%; }
   /* soft shade behind the text so it stays readable over a bright sky */
   #stage::before { content: ""; position: absolute; inset: 0; z-index: 3; pointer-events: none;
@@ -66,7 +68,7 @@
   #hero-copy { left: 6vw; bottom: 13vh; max-width: 680px; }
   .eyebrow { display: inline-flex; align-items: center; gap: 8px; font-size: 12px; letter-spacing: .18em; text-transform: uppercase; color: var(--accent-2); margin-bottom: 20px; }
   .eyebrow::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--accent-2); box-shadow: 0 0 12px var(--accent-2); }
-  #hero-copy h1 { font-size: clamp(36px, 5.2vw, 76px); font-weight: 500; line-height: 1.02; letter-spacing: -.04em; margin: 0 0 20px; }
+  #hero-copy h1 { font-size: clamp(30px, 3.8vw, 54px); font-weight: 500; line-height: 1.02; letter-spacing: -.04em; margin: 0 0 20px; }
   #hero-copy h1 em { font-style: normal; background: linear-gradient(90deg, var(--accent-2), #e9d5ff); -webkit-background-clip: text; background-clip: text; color: transparent; }
   #hero-copy p { color: var(--muted); font-size: 17px; line-height: 1.55; margin: 0 0 26px; max-width: 520px; }
   #hero-copy .cta-row { display: flex; gap: 12px; flex-wrap: wrap; }
@@ -106,7 +108,7 @@
   .tv { text-align: center; padding: 30px 14px 26px; border-radius: 18px; background: rgba(12,16,34,.45); border: 1px solid rgba(255,255,255,.07);
         backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
   .tv svg { width: min(140px, 70%); height: auto; display: block; margin: 0 auto 16px; overflow: visible; }
-  .tv h3 { margin: 0 0 6px; font-size: 17px; font-weight: 500; }
+  .tv h3 { margin: 0 0 6px; font-size: 15px; font-weight: 500; }
   .tv span { font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
   .tv .ring, .tv .wave { fill: none; stroke: rgba(255,255,255,.88); stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
   .tv .draw { fill: none; stroke: var(--accent-2); stroke-width: 3.2; stroke-linecap: round; stroke-linejoin: round;
@@ -128,8 +130,8 @@
   .wrap { max-width: 1160px; margin: 0 auto; }
   #story .kicker { display: none; }
   .kicker { font-size: 12px; letter-spacing: .2em; text-transform: uppercase; color: var(--accent-2); margin-bottom: 16px; }
-  h2.title { font-size: clamp(30px, 4.4vw, 56px); font-weight: 500; letter-spacing: -.035em; line-height: 1.05; margin: 0 0 20px; max-width: 760px; }
-  p.lead { color: var(--muted); font-size: 18px; line-height: 1.6; max-width: 620px; margin: 0; }
+  h2.title { font-size: clamp(24px, 2.9vw, 40px); font-weight: 500; letter-spacing: -.035em; line-height: 1.05; margin: 0 0 20px; max-width: 760px; }
+  p.lead { color: var(--muted); font-size: 16px; line-height: 1.6; max-width: 620px; margin: 0; }
   .reveal { opacity: 0; transform: translateY(24px); transition: opacity .8s ease, transform .8s ease; }
   .reveal.in { opacity: 1; transform: none; }
 
@@ -562,6 +564,17 @@
   });
   const io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } }), { threshold: 0.15 });
   document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+
+  // the dive lasts as long as the story: the text rides over the descent from the first screen to the last section
+  const fitDive = () => {
+    const sc = document.getElementById('scroller'), st = document.getElementById('story');
+    const H = Math.max(st.offsetHeight * 0.9, innerHeight * 3) + innerHeight;
+    sc.style.height = H + 'px';
+    st.style.marginTop = (innerHeight * 1.1 - H) + 'px';
+  };
+  fitDive();
+  addEventListener('resize', fitDive);
+  addEventListener('load', fitDive);
 
   // depth tint: each story section fades its dark water veil in as it scrolls up into view,
   // so the sections read as lit panels inside one continuous underwater scene
@@ -2190,8 +2203,8 @@ function tick(static_ = false) {
     else if (!v.paused) v.pause();
     vidTop = Math.max(vidTop, i === 0 ? o : smooth(a0, a1, p));
   });
-  veilEl.style.opacity = (0.72 + 0.22 * q) * smooth(0.0, 0.8, (scrollY - span) / innerHeight);   // only as the story panels arrive
-  solidCopy.style.opacity = smooth(0.25, 0.3, p) * (1 - smooth(0.36, 0.41, p));
+  veilEl.style.opacity = Math.max(0.32 * smooth(0.1, 0.18, p), (0.72 + 0.22 * q) * smooth(0.0, 0.8, (scrollY - span) / innerHeight));   // light shade while text rides over the dive
+  solidCopy.style.opacity = 0;
   solidCopy.classList.toggle('faded', q > 0.1);
   hint.style.opacity = 1 - smooth(0.0, 0.04, p);
   diveEl.style.opacity = (1 - smooth(0.93, 0.99, p)) * (1 - smooth(0.0, 0.08, q));
