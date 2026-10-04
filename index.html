@@ -2096,17 +2096,6 @@ function tick(static_ = false) {
   }
   composer.render();
 }
-{
-  const sc = document.getElementById('scroller');
-  addEventListener('scroll', () => {
-    const span = Math.max(1, sc.offsetHeight - innerHeight);
-    const p = Math.min(Math.max(-sc.getBoundingClientRect().top / span, 0), 1);
-    const dEnd = sc.offsetTop + sc.offsetHeight;
-    const docSpan = Math.max(1, document.documentElement.scrollHeight - innerHeight - dEnd);
-    const q = Math.min(Math.max((scrollY - dEnd) / docSpan, 0), 1);
-    setTail(p, q);
-  }, { passive: true });
-}
 let lastQ = -1;
 const diveEl = document.getElementById('dive'), diveDot = diveEl.querySelector('i');
 const REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
