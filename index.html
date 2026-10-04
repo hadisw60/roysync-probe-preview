@@ -75,12 +75,6 @@
   #hero-copy .cta-row { display: flex; gap: 12px; flex-wrap: wrap; }
   #solid-copy { display: none; }
   .beat { left: 6vw; bottom: 14vh; max-width: 520px; opacity: 0; pointer-events: none; }
-  /* the final beat is pinned to the end of the dive instead of fading with it, so it rides over the
-     trust and contact panels — a closing line for the whole page, not just the hero */
-  .beat.tail { position: fixed; z-index: 7; transition: opacity .35s; }
-  /* the tail beat sits over the story panels, so it needs a stronger shade to stay readable */
-  .beat.tail::before { content: ""; position: absolute; inset: -24px -30vw -20px -30vw; z-index: -1; pointer-events: none;
-    background: radial-gradient(60% 90% at 30% 50%, rgba(3,6,16,.5), transparent); }
   .beat h2 { font-size: clamp(24px, 2.9vw, 40px); font-weight: 500; letter-spacing: -.03em; line-height: 1.1; margin: 0 0 12px; text-shadow: 0 2px 18px rgba(0,0,0,.6); }
   .beat p { color: #dfe6f2; font-size: 16px; line-height: 1.55; margin: 0; text-shadow: 0 2px 14px rgba(0,0,0,.6); }
   @media (max-width: 760px) { .beat { left: 16px; right: 16px; bottom: 9vh; text-align: center; } }
@@ -332,10 +326,6 @@
 </head>
 <body>
 
-<div class="copy beat tail" id="tail-beat" aria-hidden="false">
-  <h2>Works on any farm</h2>
-  <p>Solar powered, nothing to wire. It reports over satellite, Wi-Fi or LTE.</p>
-</div>
 <header id="site-header" role="banner">
   <nav aria-label="Primary" style="display:contents">
   <a class="logo" href="#top" aria-label="RoySync Gen2 home">
@@ -371,6 +361,10 @@
     <div class="copy beat" data-in="0.62" data-out="0.78">
       <h2>When oxygen drops, it acts</h2>
       <p>It turns the aerator on first, then sends you a message. You don't have to be awake.</p>
+    </div>
+    <div class="copy beat" data-in="0.84" data-out="1.01">
+      <h2>Works on any farm</h2>
+      <p>Solar powered, nothing to wire. It reports over satellite, Wi-Fi or LTE.</p>
     </div>
     <div class="copy" id="solid-copy"></div>
     <video class="uwv" muted loop playsinline preload="none" data-src="media/uw-rays.mp4" aria-hidden="true"></video>
@@ -2080,9 +2074,6 @@ function tick(static_ = false) {
   });
   veilEl.style.opacity = Math.max(0.32 * smooth(0.1, 0.18, p), (0.72 + 0.22 * q) * smooth(0.0, 0.8, (scrollY - span) / innerHeight));   // light shade while text rides over the dive
   beats.forEach(el => { const a = +el.dataset.in, b = +el.dataset.out; el.style.opacity = (smooth(a, a + 0.03, p) * (1 - smooth(b - 0.03, b, p))).toFixed(3); });
-  // the tail beat is the page's closing line: it stays once revealed and rides over the story panels,
-  // fading out only near the very bottom so the contact CTA gets the last word
-  setTail(p, q);
   solidCopy.classList.toggle('faded', q > 0.1);
   hint.style.opacity = 1 - smooth(0.0, 0.04, p);
   diveEl.style.opacity = (1 - smooth(0.93, 0.99, p)) * (1 - smooth(0.0, 0.08, q));
@@ -2097,17 +2088,13 @@ function tick(static_ = false) {
     lastQ = q;
     if (q > 0 && ((volU.uFrame.value & 1) === 0)) return;                      // half-rate behind the story
   }
-  if (vidTop >= 0.999) return;                // real footage fills the frame: skip the 3D render
+  if (vidTop >= 0.999) {
+    // the fixed sea has scrolled out of view — one cheap direct style write keeps the last dive beat
+    // fading with the rest instead of sticking over the story panels
+    if (scrollY > span + innerHeight * 2) beats.forEach(el => { if (el.style.opacity !== '0') el.style.opacity = '0'; });
+    return;                // real footage fills the frame: skip the 3D render
+  }
   composer.render();
-}
-// the final dive beat lives outside #stage (position: fixed must not sit under transformed/filtered
-// ancestors), but its timing still follows the dive: reveal at the end of the hero descent, hold while
-// the story scrolls, fade near the very bottom so the contact section gets the last word
-const tailEl = document.getElementById('tail-beat');
-let tailP = -1;
-function setTail(p, q) {
-  const o = (smooth(0.84, 0.87, p) * (1 - smooth(0.9, 1, q))).toFixed(3);
-  if (o !== tailP) { tailP = o; tailEl.style.opacity = o; }
 }
 {
   const sc = document.getElementById('scroller');
