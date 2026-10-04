@@ -2073,7 +2073,7 @@ function tick(static_ = false) {
     vidTop = Math.max(vidTop, i === 0 ? o : smooth(a0, a1, p));
   });
   veilEl.style.opacity = Math.max(0.32 * smooth(0.1, 0.18, p), (0.72 + 0.22 * q) * smooth(0.0, 0.8, (scrollY - span) / innerHeight));   // light shade while text rides over the dive
-  beats.forEach(el => { const a = +el.dataset.in, b = +el.dataset.out; el.style.opacity = (smooth(a, a + 0.03, p) * (1 - smooth(b - 0.03, b, p))).toFixed(3); });
+  beats.forEach(el => { const a = +el.dataset.in, b = +el.dataset.out; el.style.opacity = (smooth(a, a + 0.03, p) * (1 - smooth(b - 0.03, b, p)) * (1 - smooth(0, 0.3, (scrollY - span) / innerHeight))).toFixed(3); });   // gone before the closing panels arrive
   solidCopy.classList.toggle('faded', q > 0.1);
   hint.style.opacity = 1 - smooth(0.0, 0.04, p);
   diveEl.style.opacity = (1 - smooth(0.93, 0.99, p)) * (1 - smooth(0.0, 0.08, q));
