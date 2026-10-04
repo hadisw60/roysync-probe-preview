@@ -113,12 +113,15 @@
   /* capabilities, bluesonde-style: one centred column, a big white mark, a title and one quiet line each */
   #trust { background: #05070f; padding: 140px 6vw 60px; }
   #trust .wrap { max-width: 640px; margin: 0 auto; text-align: center; }
-  #trust .wrap h2.title { margin: 0 auto 90px; }
-  .caps { display: flex; flex-direction: column; gap: 96px; }
-  .cap { display: flex; flex-direction: column; align-items: center; }
-  .cap svg { width: 52px; height: 52px; color: #fff; margin-bottom: 22px; }
-  .cap h3 { margin: 0 0 8px; font-size: clamp(20px, 2.2vw, 26px); font-weight: 500; letter-spacing: -.01em; color: #fff; }
-  .cap p { margin: 0; font-size: 15px; line-height: 1.6; color: #a9a6b8; max-width: 440px; }
+  #trust .wrap h2.title { margin: 0 auto; }
+  .caps { display: flex; flex-direction: column; }
+  /* each capability gets the whole screen: it fades and settles in at the centre, then leaves as the next arrives */
+  .cap { min-height: 88vh; display: flex; flex-direction: column; align-items: center; justify-content: center;
+         opacity: 0; transform: translateY(40px) scale(.96); transition: opacity .9s ease, transform 1s cubic-bezier(.2,.8,.2,1); }
+  .cap.on { opacity: 1; transform: none; }
+  .cap svg { width: clamp(64px, 8vw, 96px); height: auto; color: #fff; margin-bottom: 28px; }
+  .cap h3 { margin: 0 0 12px; font-size: clamp(26px, 3.4vw, 44px); font-weight: 500; letter-spacing: -.01em; color: #fff; }
+  .cap p { margin: 0; font-size: clamp(15px, 1.4vw, 18px); line-height: 1.6; color: #a9a6b8; max-width: 440px; }
   #trust h2.title, #contact h2.title { font-size: clamp(24px, 2.9vw, 40px); font-weight: 500; letter-spacing: -.03em; line-height: 1.1; margin: 0 0 12px; }
   #contact { text-align: left; }
   #contact h2.title, #contact p.lead { margin-left: 0; margin-right: 0; }
@@ -396,12 +399,12 @@
   <div class="wrap">
     <h2 class="title reveal">Capabilities</h2>
     <div class="caps">
-      <div class="cap reveal"><svg viewBox="0 0 48 48" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M27 4 11 27h12l-3 17 17-24H25z" fill="currentColor" stroke="none"/></svg><h3>Onboard power</h3><p>Solar panel &amp; battery</p></div>
-      <div class="cap reveal"><svg viewBox="0 0 48 48" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="24" cy="24" r="17"/><path d="M7 24h34M24 7v34" stroke-dasharray="3 4"/></svg><h3>Compact construction</h3><p>About 200 mm in diameter</p></div>
-      <div class="cap reveal"><svg viewBox="0 0 48 48" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M24 30v12M17 42h14"/><circle cx="24" cy="26" r="3" fill="currentColor"/><path d="M16 18a11 11 0 0 1 16 0M10 12a19 19 0 0 1 28 0"/></svg><h3>Seamless connectivity</h3><p>Satellite | Wi-Fi | LTE</p></div>
-      <div class="cap reveal"><svg viewBox="0 0 48 48" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M24 5s12 13 12 22a12 12 0 0 1-24 0c0-9 12-22 12-22z"/><path d="M19 28h10"/></svg><h3>Eight sensors</h3><p>Oxygen | pH | Conductivity | Temperature | Turbidity | and more</p></div>
-      <div class="cap reveal"><svg viewBox="0 0 48 48" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M24 8v6M24 34v6M8 24h6M34 24h6M12.7 12.7l4.2 4.2M31.1 31.1l4.2 4.2M12.7 35.3l4.2-4.2M31.1 16.9l4.2-4.2"/><circle cx="24" cy="24" r="6"/></svg><h3>Acts on its own</h3><p>Switches on the aeration when oxygen falls</p></div>
-      <div class="cap reveal"><svg viewBox="0 0 48 48" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="24" cy="24" r="17"/><path d="m16 24 6 6 11-12"/></svg><h3>Registered design</h3><p>Reg. No. 6535677</p></div>
+      <div class="cap"><svg viewBox="0 0 48 48" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M27 4 11 27h12l-3 17 17-24H25z" fill="currentColor" stroke="none"/></svg><h3>Onboard power</h3><p>Solar panel &amp; battery</p></div>
+      <div class="cap"><svg viewBox="0 0 48 48" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="24" cy="24" r="17"/><path d="M7 24h34M24 7v34" stroke-dasharray="3 4"/></svg><h3>Compact construction</h3><p>About 200 mm in diameter</p></div>
+      <div class="cap"><svg viewBox="0 0 48 48" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M24 30v12M17 42h14"/><circle cx="24" cy="26" r="3" fill="currentColor"/><path d="M16 18a11 11 0 0 1 16 0M10 12a19 19 0 0 1 28 0"/></svg><h3>Seamless connectivity</h3><p>Satellite | Wi-Fi | LTE</p></div>
+      <div class="cap"><svg viewBox="0 0 48 48" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M24 5s12 13 12 22a12 12 0 0 1-24 0c0-9 12-22 12-22z"/><path d="M19 28h10"/></svg><h3>Eight sensors</h3><p>Oxygen | pH | Conductivity | Temperature | Turbidity | and more</p></div>
+      <div class="cap"><svg viewBox="0 0 48 48" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M24 8v6M24 34v6M8 24h6M34 24h6M12.7 12.7l4.2 4.2M31.1 31.1l4.2 4.2M12.7 35.3l4.2-4.2M31.1 16.9l4.2-4.2"/><circle cx="24" cy="24" r="6"/></svg><h3>Acts on its own</h3><p>Switches on the aeration when oxygen falls</p></div>
+      <div class="cap"><svg viewBox="0 0 48 48" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="24" cy="24" r="17"/><path d="m16 24 6 6 11-12"/></svg><h3>Registered design</h3><p>Reg. No. 6535677</p></div>
     </div>
   </div>
 </section>
@@ -433,6 +436,8 @@
   });
   const io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } }), { threshold: 0.15 });
   document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+  const capIO = new IntersectionObserver(es => es.forEach(e => e.target.classList.toggle('on', e.isIntersecting)), { rootMargin: '-30% 0px -30% 0px' });
+  document.querySelectorAll('.cap').forEach(el => capIO.observe(el));
 
   // trust strip: the three marks rise as one line, a beat apart — quiet, not staggered confetti
   document.querySelectorAll('.tvis .tv').forEach((el, i) => { el.style.transitionDelay = (i * 0.12) + 's'; });
