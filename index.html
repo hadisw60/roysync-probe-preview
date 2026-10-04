@@ -30,7 +30,6 @@
   /* the story keeps flowing underwater: the 3D sea stays behind it, deepening with scroll */
   #stage { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; overflow: hidden; z-index: 0; }
   #story, footer { position: relative; z-index: 2; }
-  #story { margin-top: -520vh; }   /* overlap the 640vh dive: text comes in while you sink */
   #story h2.title, #story p.lead, #story h3 { text-shadow: 0 2px 16px rgba(0,0,0,.55); }
   #stage canvas { display: block; width: 100%; height: 100%; }
   /* soft shade behind the text so it stays readable over a bright sky */
@@ -72,7 +71,11 @@
   #hero-copy h1 em { font-style: normal; background: linear-gradient(90deg, var(--accent-2), #e9d5ff); -webkit-background-clip: text; background-clip: text; color: transparent; }
   #hero-copy p { color: var(--muted); font-size: 17px; line-height: 1.55; margin: 0 0 26px; max-width: 520px; }
   #hero-copy .cta-row { display: flex; gap: 12px; flex-wrap: wrap; }
-  #solid-copy { left: 6vw; bottom: 13vh; max-width: 440px; opacity: 0; pointer-events: none; }
+  #solid-copy { display: none; }
+  .beat { left: 6vw; bottom: 14vh; max-width: 520px; opacity: 0; pointer-events: none; }
+  .beat h2 { font-size: clamp(24px, 2.9vw, 40px); font-weight: 500; letter-spacing: -.03em; line-height: 1.1; margin: 0 0 12px; text-shadow: 0 2px 18px rgba(0,0,0,.6); }
+  .beat p { color: #dfe6f2; font-size: 16px; line-height: 1.55; margin: 0; text-shadow: 0 2px 14px rgba(0,0,0,.6); }
+  @media (max-width: 760px) { .beat { left: 16px; right: 16px; bottom: 9vh; text-align: center; } }
   #solid-copy h2 { font-size: clamp(28px, 4vw, 50px); font-weight: 500; letter-spacing: -.03em; margin: 0 0 12px; }
   #solid-copy p { color: var(--muted); font-size: 16px; line-height: 1.55; margin: 0; }
   #hint { position: absolute; bottom: 22px; left: 50%; transform: translateX(-50%); font-size: 11px;
@@ -339,10 +342,23 @@
         <a class="btn ghost" href="#solution">See how it works</a>
       </div>
     </div>
-    <div class="copy" id="solid-copy">
-      <h2>Below the surface</h2>
-      <p>The sensors work under the waterline, where your fish live.</p>
+    <div class="copy beat" data-in="0.22" data-out="0.36">
+      <h2>Eight sensors, under the waterline</h2>
+      <p>Oxygen, pH, temperature and more, measured right where your fish live.</p>
     </div>
+    <div class="copy beat" data-in="0.42" data-out="0.56">
+      <h2>Most fish are lost before sunrise</h2>
+      <p>Oxygen drops slowly all night. By the morning check, it's often too late.</p>
+    </div>
+    <div class="copy beat" data-in="0.62" data-out="0.78">
+      <h2>When oxygen drops, it acts</h2>
+      <p>It turns the aerator on first, then sends you a message. You don't have to be awake.</p>
+    </div>
+    <div class="copy beat" data-in="0.84" data-out="1.01">
+      <h2>Works on any farm</h2>
+      <p>Solar powered, nothing to wire. It reports over satellite, Wi-Fi or LTE.</p>
+    </div>
+    <div class="copy" id="solid-copy"></div>
     <video class="uwv" muted loop playsinline preload="none" data-src="media/uw-rays.mp4" aria-hidden="true"></video>
     <video class="uwv" muted loop playsinline preload="none" data-src="media/uw-reef.mp4" aria-hidden="true"></video>
     <video class="uwv" muted loop playsinline preload="none" data-src="media/uw-turtle.mp4" aria-hidden="true"></video>
@@ -353,152 +369,6 @@
 </div>
 
 <div id="story">
-
-<section id="problem">
-  <div class="wrap split">
-    <div>
-      <div class="kicker reveal">The problem</div>
-      <h2 class="title u reveal">Most fish are lost before sunrise</h2>
-      <p class="lead reveal">Oxygen drops slowly all night. By the time someone checks in the morning, it's often too late.</p>
-    </div>
-    <div class="chart-card reveal">
-      <div class="cap"><span><b>Tank oxygen</b> · spot checks vs. reality</span><span>mg/L</span></div>
-      <svg viewBox="0 0 520 260" role="img" aria-label="A continuous dissolved-oxygen curve falling below the alert threshold overnight while four manual spot checks all sit above it">
-        <defs>
-          <linearGradient id="gapg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fbbf24" stop-opacity=".14"/><stop offset="1" stop-color="#fbbf24" stop-opacity="0"/></linearGradient>
-        </defs>
-        <g stroke="rgba(255,255,255,.06)"><line x1="0" y1="40" x2="520" y2="40"/><line x1="0" y1="100" x2="520" y2="100"/><line x1="0" y1="160" x2="520" y2="160"/><line x1="0" y1="220" x2="520" y2="220"/></g>
-        <rect x="0" y="185" width="520" height="55" fill="url(#gapg)"/>
-        <path d="M0 120 C 60 70, 110 40, 160 45 S 260 110, 320 170 S 390 212, 410 205 S 470 140, 520 110" fill="none" stroke="#a78bfa" stroke-width="3" stroke-linecap="round"/>
-        <line x1="0" y1="185" x2="520" y2="185" stroke="#fbbf24" stroke-width="1.5" stroke-dasharray="6 6"/>
-        <text x="8" y="178" fill="#fbbf24" font-size="12" font-family="Inter, sans-serif">alert threshold</text>
-        <g fill="#f3f1fa" stroke="#0d0b1a" stroke-width="2">
-          <circle cx="30" cy="112" r="6"/><circle cx="160" cy="45" r="6"/><circle cx="300" cy="150" r="6"/><circle cx="500" cy="116" r="6"/>
-        </g>
-        <text x="260" y="232" fill="#fbbf24" font-size="12" font-family="Inter, sans-serif" text-anchor="middle">the gap only shows up on the curve</text>
-        <g fill="#6f6a86" font-size="11" font-family="Inter, sans-serif"><text x="0" y="258">08:00</text><text x="120" y="258">14:00</text><text x="250" y="258">20:00</text><text x="375" y="258">02:00</text><text x="484" y="258">08:00</text></g>
-      </svg>
-      <div class="note">A few manual readings against what the water really did. Illustrative.</div>
-    </div>
-  </div>
-</section>
-
-<section id="solution">
-  <div class="wrap">
-    <div class="kicker reveal">The solution</div>
-    <h2 class="title u reveal">It never stops checking</h2>
-    <p class="lead reveal">Every few minutes, day and night, rain or shine.</p>
-    <div class="features three">
-      <div class="feature reveal">
-        <div class="num">01</div>
-        <h3>Gets to know each tank</h3>
-      </div>
-      <div class="feature reveal">
-        <div class="num">02</div>
-        <h3>Turns the aerator on by itself</h3>
-      </div>
-      <div class="feature reveal">
-        <div class="num">03</div>
-        <h3>Runs on sunlight, no wiring</h3>
-      </div>
-    </div>
-  </div>
-</section>
-
-<section id="measures">
-  <div class="wrap">
-    <div class="kicker reveal">Sensors</div>
-    <h2 class="title u reveal">Eight sensors in one float</h2>
-    <p class="lead reveal">Oxygen, pH, temperature and more, all measured right in the water.</p>
-    <div class="params">
-      <div class="param reveal">
-        <div class="ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="1.8" stroke-linecap="round"><circle cx="9" cy="9" r="4"/><circle cx="16.5" cy="15.5" r="2.5"/><circle cx="7" cy="17.5" r="1.5"/></svg></div>
-        <h3>Dissolved oxygen</h3>
-      </div>
-      <div class="param reveal">
-        <div class="ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="1.8" stroke-linecap="round"><path d="M12 3s6 6.5 6 11a6 6 0 0 1-12 0c0-4.5 6-11 6-11z"/><path d="M9.5 14h5"/></svg></div>
-        <h3>pH</h3>
-      </div>
-      <div class="param reveal">
-        <div class="ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="1.8" stroke-linecap="round"><path d="M13 3 6 13h5l-1 8 7-10h-5z"/></svg></div>
-        <h3>Conductivity &amp; salinity</h3>
-      </div>
-      <div class="param reveal">
-        <div class="ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="1.8" stroke-linecap="round"><path d="M10 14V5a2 2 0 1 1 4 0v9a4 4 0 1 1-4 0z"/></svg></div>
-        <h3>Temperature</h3>
-      </div>
-      <div class="param reveal">
-        <div class="ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="8"/><path d="M4 12h16M12 4a12 12 0 0 1 0 16M12 4a12 12 0 0 0 0 16"/></svg></div>
-        <h3>Turbidity</h3>
-      </div>
-    </div>
-  </div>
-</section>
-
-<section id="dawn">
-  <div class="wrap split">
-    <div>
-      <div class="kicker reveal">Alerts</div>
-      <h2 class="title u reveal">When oxygen drops, it acts</h2>
-      <p class="lead reveal">It turns on the aerator first, then lets you know. You don't have to be awake for it to work.</p>
-    </div>
-    <div class="chart-card reveal">
-      <div class="cap"><span><b>Dissolved oxygen</b> · 24 h</span><span>mg/L</span></div>
-      <svg viewBox="0 0 520 260" role="img" aria-label="Illustrative 24-hour dissolved oxygen curve with its minimum just before dawn, below the alert threshold">
-        <defs>
-          <linearGradient id="fillg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8b5cf6" stop-opacity=".35"/><stop offset="1" stop-color="#8b5cf6" stop-opacity="0"/></linearGradient>
-        </defs>
-        <g stroke="rgba(255,255,255,.06)"><line x1="0" y1="40" x2="520" y2="40"/><line x1="0" y1="100" x2="520" y2="100"/><line x1="0" y1="160" x2="520" y2="160"/><line x1="0" y1="220" x2="520" y2="220"/></g>
-        <path d="M0 120 C 60 70, 110 40, 160 45 S 260 110, 320 170 S 390 212, 410 205 S 470 140, 520 110 L 520 240 L 0 240 Z" fill="url(#fillg)"/>
-        <path d="M0 120 C 60 70, 110 40, 160 45 S 260 110, 320 170 S 390 212, 410 205 S 470 140, 520 110" fill="none" stroke="#a78bfa" stroke-width="3" stroke-linecap="round"/>
-        <line x1="0" y1="185" x2="520" y2="185" stroke="#fbbf24" stroke-width="1.5" stroke-dasharray="6 6"/>
-        <text x="8" y="178" fill="#fbbf24" font-size="12" font-family="Inter, sans-serif">alert threshold</text>
-        <circle cx="398" cy="207" r="7" fill="#8b5cf6" stroke="#fff" stroke-width="2"/>
-        <circle cx="398" cy="207" r="16" fill="none" stroke="#a78bfa" stroke-opacity=".5"><animate attributeName="r" values="9;22;9" dur="2.4s" repeatCount="indefinite"/><animate attributeName="stroke-opacity" values=".7;0;.7" dur="2.4s" repeatCount="indefinite"/></circle>
-        <text x="352" y="238" fill="#e9d5ff" font-size="12" font-family="Inter, sans-serif">alert · 04:40</text>
-        <g fill="#6f6a86" font-size="11" font-family="Inter, sans-serif"><text x="0" y="258">12:00</text><text x="120" y="258">18:00</text><text x="250" y="258">00:00</text><text x="375" y="258">06:00</text><text x="484" y="258">12:00</text></g>
-      </svg>
-      <div class="note">Illustrative curve, not measured data.</div>
-    </div>
-  </div>
-</section>
-
-<section id="built">
-  <div class="wrap">
-    <div class="kicker reveal">Design</div>
-    <h2 class="title u reveal">Made to stay in the water for months</h2>
-    <div class="features">
-      <div class="feature reveal">
-        <div class="num">01</div>
-        <h3>Swap a sensor, no recalibration</h3>
-      </div>
-      <div class="feature reveal">
-        <div class="num">02</div>
-        <h3>Safe for your fish</h3>
-      </div>
-      <div class="feature reveal">
-        <div class="num">03</div>
-        <h3>Fine in sun, rain and a hose-down</h3>
-      </div>
-      <div class="feature reveal">
-        <div class="num">04</div>
-        <h3>Always floats upright</h3>
-      </div>
-    </div>
-  </div>
-</section>
-
-<section id="how">
-  <div class="wrap">
-    <div class="kicker reveal">How it works</div>
-    <h2 class="title u reveal">Setting it up takes minutes</h2>
-    <div class="steps">
-      <div class="step reveal"><h3>Put it in the water</h3></div>
-      <div class="step reveal"><h3>See all your tanks on one screen</h3></div>
-      <div class="step reveal"><h3>Get a message if something's wrong</h3></div>
-    </div>
-  </div>
-</section>
 
 <section id="trust">
   <div class="wrap">
@@ -565,16 +435,6 @@
   const io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } }), { threshold: 0.15 });
   document.querySelectorAll('.reveal').forEach(el => io.observe(el));
 
-  // the dive lasts as long as the story: the text rides over the descent from the first screen to the last section
-  const fitDive = () => {
-    const sc = document.getElementById('scroller'), st = document.getElementById('story');
-    const H = Math.max(st.offsetHeight * 0.9, innerHeight * 3) + innerHeight;
-    sc.style.height = H + 'px';
-    st.style.marginTop = (innerHeight * 1.1 - H) + 'px';
-  };
-  fitDive();
-  addEventListener('resize', fitDive);
-  addEventListener('load', fitDive);
 
   // depth tint: each story section fades its dark water veil in as it scrolls up into view,
   // so the sections read as lit panels inside one continuous underwater scene
@@ -2077,7 +1937,7 @@ setStageMode();
 
 const header = document.getElementById('site-header');
 const scroller = document.getElementById('scroller');
-const uwVids = [...document.querySelectorAll('#stage .uwv')], veilEl = document.getElementById('veil'), heroCopy = document.getElementById('hero-copy'), solidCopy = document.getElementById('solid-copy'), hint = document.getElementById('hint');
+const beats = [...document.querySelectorAll('#stage .beat')], uwVids = [...document.querySelectorAll('#stage .uwv')], veilEl = document.getElementById('veil'), heroCopy = document.getElementById('hero-copy'), solidCopy = document.getElementById('solid-copy'), hint = document.getElementById('hint');
 const smooth = (a, b, x) => { const t = Math.min(Math.max((x - a) / (b - a), 0), 1); return t * t * (3 - 2 * t); };
 const lerp = THREE.MathUtils.lerp;
 const TAN16 = Math.tan(THREE.MathUtils.degToRad(16));
@@ -2204,7 +2064,7 @@ function tick(static_ = false) {
     vidTop = Math.max(vidTop, i === 0 ? o : smooth(a0, a1, p));
   });
   veilEl.style.opacity = Math.max(0.32 * smooth(0.1, 0.18, p), (0.72 + 0.22 * q) * smooth(0.0, 0.8, (scrollY - span) / innerHeight));   // light shade while text rides over the dive
-  solidCopy.style.opacity = 0;
+  beats.forEach(el => { const a = +el.dataset.in, b = +el.dataset.out; el.style.opacity = (smooth(a, a + 0.03, p) * (1 - smooth(b - 0.03, b, p))).toFixed(3); });
   solidCopy.classList.toggle('faded', q > 0.1);
   hint.style.opacity = 1 - smooth(0.0, 0.04, p);
   diveEl.style.opacity = (1 - smooth(0.93, 0.99, p)) * (1 - smooth(0.0, 0.08, q));
