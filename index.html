@@ -374,9 +374,9 @@
       <p>Solar powered, nothing to wire. It reports over satellite, Wi-Fi or LTE.</p>
     </div>
     <div class="copy" id="solid-copy"></div>
-    <video class="uwv" muted loop playsinline preload="none" data-src="media/uw-rays.mp4" aria-hidden="true"></video>
-    <video class="uwv" muted loop playsinline preload="none" data-src="media/uw-reef.mp4" aria-hidden="true"></video>
-    <video class="uwv" muted loop playsinline preload="none" data-src="media/uw-turtle.mp4" aria-hidden="true"></video>
+    <video class="uwv" muted loop playsinline preload="none" poster="media/uw-rays.jpg" data-src="media/uw-rays.mp4" aria-hidden="true"></video>
+    <video class="uwv" muted loop playsinline preload="none" poster="media/uw-reef.jpg" data-src="media/uw-reef.mp4" aria-hidden="true"></video>
+    <video class="uwv" muted loop playsinline preload="none" poster="media/uw-turtle.jpg" data-src="media/uw-turtle.mp4" aria-hidden="true"></video>
     <div id="veil" aria-hidden="true"></div>
     <div id="hint">Scroll to dive</div>
     <div id="dive" aria-hidden="true"><u></u><span>Waterline</span><i></i></div>
@@ -1928,7 +1928,13 @@ setStageMode();
 
 const header = document.getElementById('site-header');
 const scroller = document.getElementById('scroller');
-const beats = [...document.querySelectorAll('#stage .beat')], uwVids = [...document.querySelectorAll('#stage .uwv')], veilEl = document.getElementById('veil'), heroCopy = document.getElementById('hero-copy'), solidCopy = document.getElementById('solid-copy'), hint = document.getElementById('hint');
+const beats = [...document.querySelectorAll('#stage .beat')], uwVids = [...document.querySelectorAll('#stage .uwv')], _uwPrefetch = (() => {
+  // fetch the clips one after another as soon as the page has loaded, so they are ready before the dive reaches them;
+  // until a clip can play, its poster (a still of the same scene) shows instead of a black frame
+  const next = i => { const v = uwVids[i]; if (!v) return; if (!v.src) { v.preload = 'auto'; v.src = v.dataset.src; }
+    v.addEventListener('canplaythrough', () => next(i + 1), { once: true }); v.addEventListener('error', () => next(i + 1), { once: true }); };
+  addEventListener('load', () => setTimeout(() => next(0), 300));
+})(), veilEl = document.getElementById('veil'), heroCopy = document.getElementById('hero-copy'), solidCopy = document.getElementById('solid-copy'), hint = document.getElementById('hint');
 const smooth = (a, b, x) => { const t = Math.min(Math.max((x - a) / (b - a), 0), 1); return t * t * (3 - 2 * t); };
 const lerp = THREE.MathUtils.lerp;
 const TAN16 = Math.tan(THREE.MathUtils.degToRad(16));
