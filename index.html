@@ -1532,43 +1532,18 @@ function decimateAll(parts, target) {
 
 const PROBE_TRIS = 38000, PROXY_TRIS = 10000;
 const loadingEl = document.getElementById('loading');
-new GLTFLoader().load('model-mid.glb', gltf => {
-  const root = gltf.scene;
-  // the middle ring is left out, so the dome sits straight on the base (mm, as exported from CAD)
-  const head = root.getObjectByName('head');
-  if (head) head.position.y -= 174.8 - 124.33;
-  root.updateMatrixWorld(true);
-  const box = new THREE.Box3().setFromObject(root);
-  const size = box.getSize(new THREE.Vector3()), c = box.getCenter(new THREE.Vector3());
-  const s = HEIGHT / size.y;
-  const fit = new THREE.Matrix4().makeScale(s, s, s).multiply(new THREE.Matrix4().makeTranslation(-c.x, -WATERLINE_MM, -c.z));
-  TOP = (box.max.y - WATERLINE_MM) * s; BOTTOM = (box.min.y - WATERLINE_MM) * s;
-  let rWater = 0;
-  const parts = [];
-  root.traverse(o => {
+new GLTFLoader().load('probe-baked.glb', gltf => {
+  // the probe is decimated once, offline, from the CAD mesh (model-mid.glb): loading it is instant, no work on the visitor's CPU
+  const ex = gltf.scene.userData || {};
+  TOP = ex.TOP; BOTTOM = ex.BOTTOM;
+  gltf.scene.traverse(o => {
     if (!o.isMesh) return;
-    const g = o.geometry.clone().applyMatrix4(new THREE.Matrix4().multiplyMatrices(fit, o.matrixWorld));
-    const pa = g.attributes.position, P = new Float32Array(pa.count * 3);
-    for (let i = 0; i < pa.count; i++) {
-      P[i * 3] = pa.getX(i); P[i * 3 + 1] = pa.getY(i); P[i * 3 + 2] = pa.getZ(i);
-      if (Math.abs(P[i * 3 + 1]) < 0.08) rWater = Math.max(rWater, Math.hypot(P[i * 3], P[i * 3 + 2]));
-    }
-    parts.push({ g, mat: MATS[o.name] || MATS.paye, D: prepDecimate(P, g.index ? g.index.array : null) });
-  });
-  const crease = THREE.MathUtils.degToRad(35);
-  const addParts = (geos, group) => geos.forEach((g, i) => {
-    const mesh = new THREE.Mesh(mergeVertices(toCreasedNormals(g, crease)), parts[i].mat);   // re-indexed: fewer vertices per pass
+    const grp = o.name.startsWith('main') ? 'main' : 'proxy', mat = o.name.endsWith('head') ? 'head' : 'paye';   // the loader strips the ':' from 'main:head'
+    const mesh = new THREE.Mesh(o.geometry, MATS[mat] || MATS.paye);
     mesh.castShadow = mesh.receiveShadow = true;
-    group.add(mesh);
+    (grp === 'main' ? probeMain : probeProxy).add(mesh);
   });
-  try {
-    addParts(decimateAll(parts, PROBE_TRIS), probeMain);
-    addParts(decimateAll(parts, PROXY_TRIS), probeProxy);
-  } catch (err) {                                       // never lose the hero: fall back to the full CAD mesh
-    console.warn('probe decimation failed, using the full mesh', err);
-    probeMain.clear(); probeProxy.clear();
-    addParts(parts.map(p => p.g), probeMain);
-  }
+  const rWater = ex.rWater || 0;
   if (rWater > 0) { foam = makeFoam(rWater); foam.userData.r0 = rWater; scene.add(foam); }
   loadingEl.style.opacity = 0;
 }, e => {
