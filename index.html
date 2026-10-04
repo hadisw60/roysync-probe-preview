@@ -45,6 +45,13 @@
     display: flex; align-items: center; justify-content: space-between;
     padding: 22px 6vw; transition: background .4s, padding .4s, backdrop-filter .4s;
   }
+  /* section links slide in once the visitor starts scrolling */
+  .navlinks { display: flex; gap: 30px; margin-left: auto; margin-right: 26px; opacity: 0; transform: translateY(-6px); pointer-events: none;
+              transition: opacity .5s ease, transform .5s ease; }
+  header.scrolled .navlinks { opacity: 1; transform: none; pointer-events: auto; }
+  .navlinks a { color: #d9d6e6; text-decoration: none; font-size: 14px; letter-spacing: .01em; transition: color .2s; }
+  .navlinks a:hover { color: #fff; }
+  @media (max-width: 640px) { .navlinks { gap: 16px; margin-right: 0; } .navlinks a { font-size: 13px; } header.scrolled .btn.small { display: none; } }
   header.scrolled { background: rgba(8, 7, 18, .6); backdrop-filter: blur(14px); padding-top: 14px; padding-bottom: 14px; }
   .logo { display: flex; align-items: center; gap: 12px; font-weight: 600; font-size: 19px; letter-spacing: -.01em; }
   .logo img { width: 40px; height: 40px; border-radius: 50%; display: block; }
@@ -349,6 +356,11 @@
     <img src="assets/logo.png" alt="" width="40" height="40">
     <b>RoySync</b><i>Gen2</i>
   </a>
+  <div class="navlinks">
+    <a href="#solution" data-dive="0.3">Solution</a>
+    <a href="#trust">Device</a>
+    <a href="#contact">Contact us</a>
+  </div>
   <a class="btn ghost small" href="#contact">Request a pilot</a>
   </nav>
 </header>
@@ -436,6 +448,11 @@
   });
   const io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } }), { threshold: 0.15 });
   document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+  document.querySelectorAll('[data-dive]').forEach(l => l.addEventListener('click', e => {
+    e.preventDefault();
+    const sc = document.getElementById('scroller');
+    scrollTo({ top: (sc.offsetHeight - innerHeight) * +l.dataset.dive, behavior: 'smooth' });
+  }));
   const capIO = new IntersectionObserver(es => es.forEach(e => e.target.classList.toggle('on', e.isIntersecting)), { rootMargin: '-30% 0px -30% 0px' });
   document.querySelectorAll('.cap').forEach(el => capIO.observe(el));
 
