@@ -109,17 +109,21 @@
   #hero-copy h1, #hero-copy p { text-shadow: 0 2px 18px rgba(0,0,0,.45); }
   /* trust: a single engraved ledger strip — hairline above and below, three columns divided by ticks, no cards, no glass */
   /* closing panels speak in the same voice as the dive captions: one left column, same type, no ornaments */
-  #trust .wrap, #contact .wrap { max-width: 560px; margin: 0; }
+  #contact .wrap { max-width: 560px; margin: 0; }
+  #trust .wrap { max-width: 900px; margin: 0; }
   #trust h2.title, #contact h2.title { font-size: clamp(24px, 2.9vw, 40px); font-weight: 500; letter-spacing: -.03em; line-height: 1.1; margin: 0 0 12px; }
   #contact { text-align: left; }
   #contact h2.title, #contact p.lead { margin-left: 0; margin-right: 0; }
   #contact p.lead { font-size: 16px; color: #dfe6f2; margin-bottom: 28px; }
   #contact .cta-row { justify-content: flex-start; }
-  .tvis { display: flex; flex-direction: column; margin: 22px 0 0; }
-  .tv { display: grid; grid-template-columns: 28px 1fr; gap: 2px 16px; padding: 16px 0; border-top: 1px solid rgba(255,255,255,.1); text-align: left; }
-  .tv svg { width: 28px; height: 28px; grid-row: span 2; margin-top: 2px; overflow: visible; }
-  .tv h3 { margin: 0; font-size: 17px; font-weight: 500; color: #fff; }
-  .tv span { font-size: 15px; line-height: 1.5; color: #dfe6f2; }
+  /* three big marks, a few words each: the picture does the talking */
+  .tvis { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin: 40px 0 0; }
+  .tv { display: flex; flex-direction: column; align-items: flex-start; text-align: left; }
+  .tv svg { width: clamp(84px, 11vw, 132px); height: auto; overflow: visible; margin-bottom: 18px; filter: drop-shadow(0 0 18px rgba(139,92,246,.35)); }
+  .tv .ring { stroke-width: 2.6; }
+  .tv h3 { margin: 0 0 6px; font-size: clamp(17px, 1.8vw, 22px); font-weight: 500; color: #fff; }
+  .tv span { font-size: 13px; letter-spacing: .06em; color: #c9c4dc; }
+  @media (max-width: 560px) { .tvis { gap: 14px; } .tv h3 { font-size: 15px; } .tv span { font-size: 11.5px; } }
   .tv .ring, .tv .wave { fill: none; stroke: rgba(255,255,255,.7); stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
   .tv .draw { fill: none; stroke: var(--accent-2); stroke-width: 3.2; stroke-linecap: round; stroke-linejoin: round;
               stroke-dasharray: 80; stroke-dashoffset: 80; transition: stroke-dashoffset 1.1s cubic-bezier(.4,0,.2,1) .35s; }
@@ -383,7 +387,7 @@
 <section id="trust">
   <div class="wrap">
     <div class="kicker reveal">Trust</div>
-    <h2 class="title reveal">Why you can count on it</h2>
+    <h2 class="title reveal">Built to be trusted</h2>
     <div class="tvis">
       <div class="tv reveal">
         <svg viewBox="0 0 120 120" aria-hidden="true">
@@ -391,7 +395,7 @@
           <circle cx="60" cy="60" r="38" class="ring"/>
           <path d="M47 61 l9 9 l18 -20" class="draw"/>
         </svg>
-        <h3>Nobody else makes this.</h3><span>Our own design, legally protected. Registered design No. 6535677.</span>
+        <h3>Our own design</h3><span>Reg. No. 6535677</span>
       </div>
       <div class="tv reveal">
         <svg viewBox="0 0 120 120" aria-hidden="true">
@@ -402,7 +406,7 @@
           <path d="M32 34 a39 39 0 0 1 56 0" class="wave w3"/>
           <path d="M14 100 q8 -5 16 0 t16 0 t16 0 t16 0 t16 0 t16 0" class="ring sea"/>
         </svg>
-        <h3>It reaches you, even where your phone can't.</h3><span>No signal at the farm? It sends over satellite, Wi-Fi or LTE, whichever works.</span>
+        <h3>Works with no signal</h3><span>Satellite · Wi-Fi · LTE</span>
       </div>
       <div class="tv reveal">
         <svg viewBox="0 0 120 120" aria-hidden="true">
@@ -410,7 +414,7 @@
           <rect x="36" y="56" width="48" height="38" rx="8" class="ring"/>
           <path d="M50 75 l7 7 l13 -14" class="draw"/>
         </svg>
-        <h3>Your data stays yours.</h3><span>Everything it sends is encrypted, and only our signed software can run on it.</span>
+        <h3>Your data is safe</h3><span>Encrypted</span>
       </div>
     </div>
   </div>
