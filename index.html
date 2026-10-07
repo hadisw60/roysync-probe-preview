@@ -298,11 +298,41 @@
   .step h3 { font-size: 20px; font-weight: 500; margin: 0 0 10px; }
   .step p { color: var(--muted); font-size: 15px; line-height: 1.6; margin: 0; }
 
-  #contact { text-align: center; padding: 140px 6vw; min-height: 100vh; display: flex; align-items: center; justify-content: center; background: transparent; }
+  /* contact us: a deep-water enquiry desk — the sea floor stays visible behind a darkened glass panel */
+  #contact { text-align: center; padding: 140px 6vw 170px; min-height: 100vh; display: flex; align-items: center; justify-content: center; background: transparent; }
+  #contact::before { content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none; opacity: 0; transition: opacity 1.2s ease;
+    background: radial-gradient(90% 70% at 50% 55%, rgba(3,6,16,.78), rgba(3,6,16,.4) 75%, transparent); }
+  #contact.tint-in::before { opacity: 1; }
   #contact h2.title, #contact p.lead { text-shadow: 0 2px 18px rgba(0,0,0,.65); }
   #contact h2.title { margin: 0 auto 20px; }
-  #contact p.lead { margin: 0 auto 36px; }
+  #contact p.lead { margin: 0 auto 40px; }
   #contact .cta-row { justify-content: center; }
+  /* the form reads as one engraved sheet: hairline frame, quiet fields, no card-in-card noise */
+  .inq { max-width: 640px; margin: 0 auto; text-align: left; padding: clamp(24px, 4vw, 44px);
+         border: 1px solid var(--line); border-radius: 24px;
+         background: rgba(10, 12, 26, .55); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+         box-shadow: 0 40px 90px rgba(0,0,0,.4); }
+  .inq .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .field { display: flex; flex-direction: column; gap: 8px; }
+  .field label { font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: var(--faint); }
+  .field label i { font-style: normal; text-transform: none; letter-spacing: .02em; color: var(--faint); opacity: .6; }
+  .field input, .field textarea { width: 100%; font: inherit; font-size: 15px; color: var(--fg);
+    background: rgba(255,255,255,.04); border: 1px solid var(--line); border-radius: 12px;
+    padding: 13px 15px; outline: none; caret-color: var(--accent-2);
+    transition: border-color .25s, background .25s, box-shadow .25s; resize: vertical; }
+  .field input::placeholder, .field textarea::placeholder { color: rgba(200,205,225,.35); }
+  .field input:focus, .field textarea:focus { border-color: var(--accent-2); background: rgba(139,92,246,.07);
+    box-shadow: 0 0 0 3px rgba(139,92,246,.18); }
+  .field.bad input, .field.bad textarea { border-color: rgba(251,191,36,.65); }
+  .form-foot { display: flex; align-items: center; gap: 18px; margin-top: 26px; flex-wrap: wrap; }
+  .form-foot .quiet { font-size: 13px; color: var(--faint); }
+  .form-foot .quiet a { color: var(--accent-2); text-decoration: underline; text-underline-offset: 3px; }
+  .form-status { min-height: 20px; margin: 16px 0 0; font-size: 14px; line-height: 1.5; opacity: 0; transform: translateY(6px);
+                 transition: opacity .5s ease, transform .5s ease; }
+  .form-status.show { opacity: 1; transform: none; }
+  .form-status.ok { color: var(--ok); }
+  .form-status.err { color: var(--warn); }
+  @media (max-width: 640px) { .inq .grid { grid-template-columns: 1fr; gap: 16px; } .form-foot { gap: 12px; } }
 
   #story, footer { background: transparent; }
   /* translucent panels over the live underwater scene — depth shows through behind every card */
@@ -428,10 +458,32 @@
   <div class="wrap">
     <div class="kicker reveal">Get started</div>
     <h2 class="title reveal">Want to try it on your farm?</h2>
-    <p class="lead reveal">Send us an email and we'll set up a pilot with you.</p>
-    <div class="cta-row reveal">
-      <a class="btn" href="mailto:info@roysync.com?subject=Pilot%20request">Email us</a>
-    </div>
+    <p class="lead reveal">Tell us about your ponds. We'll come back within one working day.</p>
+    <form class="inq reveal" id="inquiry-form" novalidate>
+      <div class="grid">
+        <div class="field">
+          <label for="f-name">Name</label>
+          <input id="f-name" name="name" type="text" autocomplete="name" placeholder="Your name" required>
+        </div>
+        <div class="field">
+          <label for="f-email">Email</label>
+          <input id="f-email" name="email" type="email" autocomplete="email" placeholder="you@farm.com" required>
+        </div>
+      </div>
+      <div class="field" style="margin-top:20px">
+        <label for="f-org">Farm or company <i>(optional)</i></label>
+        <input id="f-org" name="org" type="text" autocomplete="organization" placeholder="e.g. Highland Trout Ltd.">
+      </div>
+      <div class="field" style="margin-top:20px">
+        <label for="f-msg">What would you like to monitor?</label>
+        <textarea id="f-msg" name="message" rows="4" placeholder="Pond size, species, number of tanks — anything that helps us prepare."></textarea>
+      </div>
+      <div class="form-foot">
+        <button class="btn" type="submit">Request a demo</button>
+        <span class="quiet">Or write to <a href="mailto:info@roysync.com?subject=Pilot%20request">info@roysync.com</a></span>
+      </div>
+      <p class="form-status" id="form-status" role="status" aria-live="polite"></p>
+    </form>
   </div>
 </section>
 
@@ -459,6 +511,32 @@
   const capIO = new IntersectionObserver(es => es.forEach(e => e.target.classList.toggle('on', e.isIntersecting)), { rootMargin: '-30% 0px -30% 0px' });
   document.querySelectorAll('.cap').forEach(el => capIO.observe(el));
 
+  // contact form: validate quietly, then hand off to email — no backend on the static site yet
+  const inq = document.getElementById('inquiry-form');
+  if (inq) {
+    const statusEl = document.getElementById('form-status');
+    const say = (msg, kind) => { statusEl.textContent = msg; statusEl.className = 'form-status show ' + kind; };
+    inq.addEventListener('submit', e => {
+      e.preventDefault();
+      const name = inq.name.value.trim(), email = inq.email.value.trim(), org = inq.org.value.trim(), msg = inq.message.value.trim();
+      let bad = null;
+      inq.querySelectorAll('.field').forEach(f => f.classList.remove('bad'));
+      if (!name) { bad = inq.name; }
+      else if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { bad = inq.email; }
+      if (bad) {
+        bad.closest('.field').classList.add('bad'); bad.focus();
+        say(bad === inq.email ? 'That email doesn\u2019t look right \u2014 mind checking it?' : 'Please fill this in before sending.', 'err');
+        return;
+      }
+      const body = ['Name: ' + name, 'Email: ' + email, org ? 'Farm: ' + org : '', msg ? 'Notes: ' + msg : ''].filter(Boolean).join('\n');
+      window.location.href = 'mailto:info@roysync.com?subject=' + encodeURIComponent('RoySync pilot request' + (org ? ' \u2014 ' + org : '')) + '&body=' + encodeURIComponent(body);
+      say('Your mail app should open with everything filled in. If nothing happened, write to info@roysync.com.', 'ok');
+      inq.reset();
+    });
+    // clear a field's error the moment the visitor starts fixing it
+    inq.querySelectorAll('input, textarea').forEach(i => i.addEventListener('input', () => i.closest('.field')?.classList.remove('bad')));
+  }
+
   // trust strip: the three marks rise as one line, a beat apart — quiet, not staggered confetti
   document.querySelectorAll('.tvis .tv').forEach((el, i) => { el.style.transitionDelay = (i * 0.12) + 's'; });
 
@@ -467,6 +545,7 @@
   const tio = new IntersectionObserver(es => es.forEach(e => {
     if (e.isIntersecting) { e.target.classList.add('tint-in'); tio.unobserve(e.target); }
   }), { rootMargin: '12% 0px' });
+  document.querySelectorAll('#story > section').forEach(el => tio.observe(el));
 
 
   // draw the oxygen curves in when their card scrolls into view (skipped when motion is reduced)
