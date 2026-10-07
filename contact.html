@@ -1,0 +1,223 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Contact — RoySync</title>
+<meta name="description" content="Talk to RoySync about water-quality monitoring for your fish farm. Request a pilot or write to us.">
+<link rel="icon" type="image/png" href="assets/favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #07080f; --panel: rgba(255,255,255,.04); --line: rgba(255,255,255,.09);
+    --fg: #f3f1fa; --muted: #a39fb8; --faint: #6f6a86;
+    --accent: #8b5cf6; --accent-2: #a78bfa; --accent-deep: #5b21b6; --glow: rgba(139,92,246,.35);
+    --ok: #34d399; --warn: #fbbf24;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  html, body { margin: 0; background: var(--bg); color: var(--fg); font-family: Inter, system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+  a { color: inherit; text-decoration: none; }
+
+  /* the same fixed sea as the home page, parked at its deepest frame — you arrive already underwater */
+  #stage { position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; }
+  #stage video { position: absolute; top: 50%; left: 50%; min-width: 100%; min-height: 100%; transform: translate(-50%,-50%);
+                 object-fit: cover; opacity: 0; transition: opacity 1.4s ease; }
+  #stage video.on { opacity: .5; }
+  #stage::after { content: ""; position: absolute; inset: 0; pointer-events: none;
+    background: radial-gradient(120% 90% at 50% 0%, rgba(7,8,15,.35), rgba(7,8,15,.86) 70%),
+                linear-gradient(180deg, rgba(7,8,15,.65), rgba(7,8,15,.35) 30%, rgba(7,8,15,.8)); }
+  @media (prefers-reduced-motion: reduce) { #stage video { display: none; } }
+
+  header { position: fixed; top: 0; left: 0; right: 0; z-index: 10; display: flex; align-items: center; justify-content: space-between;
+           padding: 22px 6vw; background: rgba(8,7,18,.6); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); }
+  .logo { display: flex; align-items: center; gap: 12px; font-weight: 600; font-size: 19px; letter-spacing: -.01em; }
+  .logo img { width: 40px; height: 40px; border-radius: 50%; display: block; }
+  .logo i { font-style: normal; font-size: 11px; font-weight: 600; letter-spacing: .12em; color: var(--accent-2);
+            border: 1px solid rgba(167,139,250,.4); border-radius: 999px; padding: 3px 8px 2px; margin-left: 2px; }
+  .backlink { font-size: 14px; color: #d9d6e6; transition: color .2s; }
+  .backlink:hover { color: #fff; }
+  @media (max-width: 640px) { .logo b { display: inline; } header { padding: 16px 20px; } }
+
+  main { position: relative; z-index: 2; min-height: 100vh; padding: 150px 6vw 90px; }
+  .wrap { max-width: 1080px; margin: 0 auto; }
+  .kicker { font-size: 12px; letter-spacing: .22em; text-transform: uppercase; color: var(--accent-2); margin-bottom: 18px; }
+  h1.title { font-size: clamp(30px, 4.6vw, 58px); font-weight: 500; letter-spacing: -.035em; line-height: 1.08; margin: 0 0 16px;
+             text-shadow: 0 2px 18px rgba(0,0,0,.65); }
+  h1.title em { font-style: normal; color: var(--accent-2); }
+  p.lead { font-size: 17px; line-height: 1.65; color: #dfe6f2; max-width: 640px; margin: 0 0 64px; text-shadow: 0 2px 14px rgba(0,0,0,.6); }
+
+  .desk { display: grid; grid-template-columns: 1.15fr .85fr; gap: clamp(28px, 5vw, 72px); align-items: start; }
+  @media (max-width: 860px) { .desk { grid-template-columns: 1fr; } }
+
+  /* engraved sheet, same language as the in-page enquiry desk on the dive */
+  .inq { text-align: left; padding: clamp(24px, 4vw, 44px); border: 1px solid var(--line); border-radius: 24px;
+         background: rgba(10, 12, 26, .55); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+         box-shadow: 0 40px 90px rgba(0,0,0,.4); }
+  .inq .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .field { display: flex; flex-direction: column; gap: 8px; }
+  .field label { font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: var(--faint); }
+  .field label i { font-style: normal; text-transform: none; letter-spacing: .02em; opacity: .6; }
+  .field input, .field textarea { width: 100%; font: inherit; font-size: 15px; color: var(--fg);
+    background: rgba(255,255,255,.04); border: 1px solid var(--line); border-radius: 12px;
+    padding: 13px 15px; outline: none; caret-color: var(--accent-2);
+    transition: border-color .25s, background .25s, box-shadow .25s; resize: vertical; }
+  .field input::placeholder, .field textarea::placeholder { color: rgba(200,205,225,.35); }
+  .field input:focus, .field textarea:focus { border-color: var(--accent-2); background: rgba(139,92,246,.07);
+    box-shadow: 0 0 0 3px rgba(139,92,246,.18); }
+  .field.bad input, .field.bad textarea { border-color: rgba(251,191,36,.65); }
+  .form-foot { display: flex; align-items: center; gap: 18px; margin-top: 26px; flex-wrap: wrap; }
+  .btn { display: inline-block; background: linear-gradient(135deg, var(--accent), var(--accent-deep)); color: #fff;
+         border: 0; border-radius: 999px; padding: 13px 26px; font: inherit; font-size: 15px; font-weight: 600; cursor: pointer;
+         box-shadow: 0 10px 30px var(--glow); transition: transform .25s ease, box-shadow .25s ease; }
+  .btn:hover { transform: translateY(-2px); box-shadow: 0 16px 40px var(--glow); }
+  @keyframes breathe { 0%,100% { box-shadow: 0 10px 30px var(--glow); } 50% { box-shadow: 0 14px 44px rgba(139,92,246,.55); } }
+  .inq .btn { animation: breathe 3.2s ease-in-out infinite; }
+  .form-foot .quiet { font-size: 13px; color: var(--faint); }
+  .form-foot .quiet a { color: var(--accent-2); text-decoration: underline; text-underline-offset: 3px; }
+  .form-status { min-height: 20px; margin: 16px 0 0; font-size: 14px; line-height: 1.5; opacity: 0; transform: translateY(6px);
+                 transition: opacity .5s ease, transform .5s ease; }
+  .form-status.show { opacity: 1; transform: none; }
+  .form-status.ok { color: var(--ok); }
+  .form-status.err { color: var(--warn); }
+  @media (max-width: 640px) { .inq .grid { grid-template-columns: 1fr; gap: 16px; } .form-foot { gap: 12px; } }
+
+  /* the side rail: direct lines, quiet ledger style from the trust strip */
+  .lines { display: flex; flex-direction: column; }
+  .lines .row { padding: 22px 0; border-top: 1px solid var(--line); }
+  .lines .row:last-child { border-bottom: 1px solid var(--line); }
+  .lines .lab { font-size: 11px; letter-spacing: .18em; text-transform: uppercase; color: var(--faint); margin-bottom: 6px; }
+  .lines .val { font-size: 17px; font-weight: 500; }
+  .lines .val a { color: var(--accent-2); transition: color .2s; }
+  .lines .val a:hover { color: #fff; }
+  .lines .note { font-size: 13px; color: var(--muted); margin-top: 4px; line-height: 1.5; }
+
+  footer { position: relative; z-index: 2; padding: 36px 6vw; border-top: 1px solid var(--line); color: var(--faint); font-size: 13px; }
+  footer .wrap { display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; max-width: 1080px; margin: 0 auto; }
+
+  .reveal { opacity: 0; transform: translateY(26px); transition: opacity .9s cubic-bezier(.22,.61,.36,1), transform .9s cubic-bezier(.22,.61,.36,1); }
+  .reveal.in { opacity: 1; transform: none; }
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    .reveal { opacity: 1; transform: none; transition: none; }
+    .inq .btn { animation: none; }
+  }
+</style>
+</head>
+<body>
+
+<header role="banner">
+  <a class="logo" href="./" aria-label="RoySync Gen2 home">
+    <img src="assets/logo.png" alt="" width="40" height="40">
+    <b>RoySync</b><i>Gen2</i>
+  </a>
+  <a class="backlink" href="./#contact">← Back to the dive</a>
+</header>
+
+<div id="stage" aria-hidden="true">
+  <video data-src="media/dive-4-floor.mp4" poster="media/dive-4-floor.jpg" muted loop playsinline preload="none"></video>
+</div>
+
+<main>
+  <div class="wrap">
+    <div class="kicker reveal">Contact us</div>
+    <h1 class="title reveal">Let's put a float<br><em>in your water.</em></h1>
+    <p class="lead reveal">Tell us about your ponds and what keeps you up at night. We'll come back within one working day with a straight answer — pilot plan, pricing, or just an honest "not yet".</p>
+
+    <div class="desk">
+      <form class="inq reveal" id="inquiry-form" novalidate>
+        <div class="grid">
+          <div class="field">
+            <label for="f-name">Name</label>
+            <input id="f-name" name="name" type="text" autocomplete="name" placeholder="Your name" required>
+          </div>
+          <div class="field">
+            <label for="f-email">Email</label>
+            <input id="f-email" name="email" type="email" autocomplete="email" placeholder="you@farm.com" required>
+          </div>
+        </div>
+        <div class="field" style="margin-top:20px">
+          <label for="f-org">Farm or company <i>(optional)</i></label>
+          <input id="f-org" name="org" type="text" autocomplete="organization" placeholder="e.g. Highland Trout Ltd.">
+        </div>
+        <div class="field" style="margin-top:20px">
+          <label for="f-msg">What would you like to monitor?</label>
+          <textarea id="f-msg" name="message" rows="5" placeholder="Pond size, species, number of tanks — anything that helps us prepare."></textarea>
+        </div>
+        <div class="form-foot">
+          <button class="btn" type="submit">Request a pilot</button>
+          <span class="quiet">Or write to <a href="mailto:info@roysync.com?subject=Pilot%20request">info@roysync.com</a></span>
+        </div>
+        <p class="form-status" id="form-status" role="status" aria-live="polite"></p>
+      </form>
+
+      <aside class="lines reveal" aria-label="Direct contact">
+        <div class="row">
+          <div class="lab">Email</div>
+          <div class="val"><a href="mailto:info@roysync.com">info@roysync.com</a></div>
+          <div class="note">Sales, pilots, technical questions — one inbox, human answers.</div>
+        </div>
+        <div class="row">
+          <div class="lab">Response time</div>
+          <div class="val">Within one working day</div>
+          <div class="note">Pilot proposals usually land within a week.</div>
+        </div>
+        <div class="row">
+          <div class="lab">Registered design</div>
+          <div class="val" style="font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 15px;">REG. 6535677</div>
+          <div class="note">The device you're asking about is protected intellectual property.</div>
+        </div>
+      </aside>
+    </div>
+  </div>
+</main>
+
+<footer>
+  <div class="wrap">
+    <span>© 2026 RoySync</span>
+    <span>Water-quality monitoring for fish farms · info@roysync.com</span>
+  </div>
+</footer>
+
+<script>
+  // reveals, same easing family as the dive captions
+  const io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } }), { threshold: 0.15 });
+  document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+
+  // bring the sea floor behind the panel once it can be decoded cheaply
+  (() => {
+    const v = document.querySelector('#stage video');
+    if (!v || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    const start = () => { v.src = v.dataset.src; v.load(); v.play().then(() => v.classList.add('on')).catch(() => {}); };
+    ('requestIdleCallback' in window ? requestIdleCallback : setTimeout)(start, { timeout: 2500 });
+  })();
+
+  // contact form: validate quietly, then hand off to email — no backend on the static site yet
+  const inq = document.getElementById('inquiry-form');
+  if (inq) {
+    const statusEl = document.getElementById('form-status');
+    const say = (msg, kind) => { statusEl.textContent = msg; statusEl.className = 'form-status show ' + kind; };
+    inq.addEventListener('submit', e => {
+      e.preventDefault();
+      const name = inq.name.value.trim(), email = inq.email.value.trim(), org = inq.org.value.trim(), msg = inq.message.value.trim();
+      let bad = null;
+      inq.querySelectorAll('.field').forEach(f => f.classList.remove('bad'));
+      if (!name) { bad = inq.name; }
+      else if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { bad = inq.email; }
+      if (bad) {
+        bad.closest('.field').classList.add('bad'); bad.focus();
+        say(bad === inq.email ? 'That email doesn\u2019t look right — mind checking it?' : 'Please fill this in before sending.', 'err');
+        return;
+      }
+      const body = ['Name: ' + name, 'Email: ' + email, org ? 'Farm: ' + org : '', msg ? 'Notes: ' + msg : ''].filter(Boolean).join('\n');
+      window.location.href = 'mailto:info@roysync.com?subject=' + encodeURIComponent('RoySync pilot request' + (org ? ' \u2014 ' + org : '')) + '&body=' + encodeURIComponent(body);
+      say('Your mail app should open with everything filled in. If nothing happened, write to info@roysync.com.', 'ok');
+      inq.reset();
+    });
+    inq.querySelectorAll('input, textarea').forEach(i => i.addEventListener('input', () => i.closest('.field')?.classList.remove('bad')));
+  }
+</script>
+</body>
+</html>
