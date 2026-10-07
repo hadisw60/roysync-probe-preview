@@ -15,22 +15,23 @@
     --fg: #f3f1fa; --muted: #a39fb8; --faint: #6f6a86;
     --accent: #8b5cf6; --accent-2: #a78bfa; --accent-deep: #5b21b6; --glow: rgba(139,92,246,.35);
     --ok: #34d399; --warn: #fbbf24;
+    --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
   }
   * { box-sizing: border-box; }
   html { scroll-behavior: smooth; }
   html, body { margin: 0; background: var(--bg); color: var(--fg); font-family: Inter, system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
   a { color: inherit; text-decoration: none; }
 
-  /* the same fixed sea as the home page, parked at its deepest frame — you arrive already underwater */
+  /* ---- surface-to-seabed backdrop: one still, tinted live by the depth gauge ---- */
   #stage { position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; }
-  #stage video { position: absolute; top: 50%; left: 50%; min-width: 100%; min-height: 100%; transform: translate(-50%,-50%);
-                 object-fit: cover; opacity: 0; transition: opacity 1.4s ease; }
-  #stage video.on { opacity: .5; }
-  #stage::after { content: ""; position: absolute; inset: 0; pointer-events: none;
-    background: radial-gradient(120% 90% at 50% 0%, rgba(7,8,15,.35), rgba(7,8,15,.86) 70%),
-                linear-gradient(180deg, rgba(7,8,15,.65), rgba(7,8,15,.35) 30%, rgba(7,8,15,.8)); }
-  @media (prefers-reduced-motion: reduce) { #stage video { display: none; } }
+  #stage .plate { position: absolute; inset: -6%; background: url("media/dive-4-floor.jpg") center/cover no-repeat;
+                  opacity: .55; transform: scale(1.04); transition: filter 1.2s ease, opacity 1.2s ease; will-change: filter; }
+  #stage::after { content: ""; position: absolute; inset: 0;
+    background: radial-gradient(120% 90% at 50% 0%, rgba(7,8,15,.3), rgba(7,8,15,.85) 72%),
+                linear-gradient(180deg, rgba(7,8,15,.55), rgba(7,8,15,.3) 34%, rgba(7,8,15,.88)); }
+  @media (prefers-reduced-motion: reduce) { #stage .plate { transition: none; } }
 
+  /* ---- header ---- */
   header { position: fixed; top: 0; left: 0; right: 0; z-index: 10; display: flex; align-items: center; justify-content: space-between;
            padding: 22px 6vw; background: rgba(8,7,18,.6); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); }
   .logo { display: flex; align-items: center; gap: 12px; font-weight: 600; font-size: 19px; letter-spacing: -.01em; }
@@ -39,35 +40,56 @@
             border: 1px solid rgba(167,139,250,.4); border-radius: 999px; padding: 3px 8px 2px; margin-left: 2px; }
   .backlink { font-size: 14px; color: #d9d6e6; transition: color .2s; }
   .backlink:hover { color: #fff; }
-  @media (max-width: 640px) { .logo b { display: inline; } header { padding: 16px 20px; } }
+  @media (max-width: 640px) { header { padding: 16px 20px; } }
 
-  main { position: relative; z-index: 2; min-height: 100vh; padding: 150px 6vw 90px; }
-  .wrap { max-width: 1080px; margin: 0 auto; }
-  .kicker { font-size: 12px; letter-spacing: .22em; text-transform: uppercase; color: var(--accent-2); margin-bottom: 18px; }
-  h1.title { font-size: clamp(30px, 4.6vw, 58px); font-weight: 500; letter-spacing: -.035em; line-height: 1.08; margin: 0 0 16px;
+  /* ---- depth rail: the signature — a dive gauge that darkens the sea as you descend ---- */
+  #gauge { position: fixed; left: 26px; top: 50%; transform: translateY(-50%); z-index: 9; display: flex; align-items: center; gap: 14px;
+           font-family: var(--mono); font-size: 11px; letter-spacing: .08em; color: var(--faint); pointer-events: none; }
+  #gauge .track { position: relative; width: 1px; height: 46vh; background: var(--line); }
+  #gauge .track::before, #gauge .track::after { content: ""; position: absolute; left: -3px; width: 7px; height: 1px; background: rgba(255,255,255,.18); }
+  #gauge .track::before { top: 0; } #gauge .track::after { bottom: 0; }
+  #gauge .cursor { position: absolute; left: -4px; top: 0; width: 9px; height: 9px; border-radius: 50%;
+                   background: var(--accent-2); box-shadow: 0 0 14px var(--glow); transition: top .12s linear; }
+  #gauge .read { min-width: 62px; }
+  #gauge .read b { display: block; font-weight: 500; color: var(--fg); font-size: 13px; letter-spacing: .04em; }
+  #gauge .zone { display: block; margin-top: 3px; text-transform: uppercase; letter-spacing: .18em; font-size: 10px; color: var(--accent-2); }
+  @media (max-width: 1080px) { #gauge { display: none; } }
+
+  /* ---- hero ---- */
+  main { position: relative; z-index: 2; padding: 160px 6vw 0; }
+  .wrap { max-width: 1140px; margin: 0 auto; }
+  .kicker { font-family: var(--mono); font-size: 11px; letter-spacing: .26em; text-transform: uppercase; color: var(--accent-2); margin-bottom: 20px; }
+  h1.title { font-size: clamp(38px, 6.4vw, 84px); font-weight: 500; letter-spacing: -.04em; line-height: 1.02; margin: 0 0 20px;
              text-shadow: 0 2px 18px rgba(0,0,0,.65); }
   h1.title em { font-style: normal; color: var(--accent-2); }
-  p.lead { font-size: 17px; line-height: 1.65; color: #dfe6f2; max-width: 640px; margin: 0 0 64px; text-shadow: 0 2px 14px rgba(0,0,0,.6); }
+  p.lead { font-size: 17px; line-height: 1.65; color: #dfe6f2; max-width: 560px; margin: 0 0 clamp(56px, 9vh, 96px);
+           text-shadow: 0 2px 14px rgba(0,0,0,.6); }
 
+  /* ---- desk: form + ledger ---- */
   .desk { display: grid; grid-template-columns: 1.15fr .85fr; gap: clamp(28px, 5vw, 72px); align-items: start; }
-  @media (max-width: 860px) { .desk { grid-template-columns: 1fr; } }
+  @media (max-width: 880px) { .desk { grid-template-columns: 1fr; } }
 
-  /* engraved sheet, same language as the in-page enquiry desk on the dive */
+  /* engraved sheet — floating label fields, quiet validation */
   .inq { text-align: left; padding: clamp(24px, 4vw, 44px); border: 1px solid var(--line); border-radius: 24px;
          background: rgba(10, 12, 26, .55); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
          box-shadow: 0 40px 90px rgba(0,0,0,.4); }
   .inq .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-  .field { display: flex; flex-direction: column; gap: 8px; }
-  .field label { font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: var(--faint); }
-  .field label i { font-style: normal; text-transform: none; letter-spacing: .02em; opacity: .6; }
+  .field { position: relative; }
   .field input, .field textarea { width: 100%; font: inherit; font-size: 15px; color: var(--fg);
     background: rgba(255,255,255,.04); border: 1px solid var(--line); border-radius: 12px;
-    padding: 13px 15px; outline: none; caret-color: var(--accent-2);
-    transition: border-color .25s, background .25s, box-shadow .25s; resize: vertical; }
-  .field input::placeholder, .field textarea::placeholder { color: rgba(200,205,225,.35); }
+    padding: 24px 15px 10px; outline: none; caret-color: var(--accent-2); resize: vertical;
+    transition: border-color .25s, background .25s, box-shadow .25s; }
+  .field label { position: absolute; left: 16px; top: 17px; font-size: 12px; letter-spacing: .14em; text-transform: uppercase;
+                 color: var(--faint); pointer-events: none; transform-origin: left top;
+                 transition: transform .22s cubic-bezier(.22,.61,.36,1), color .22s; }
+  .field label i { font-style: normal; text-transform: none; letter-spacing: .02em; opacity: .6; }
   .field input:focus, .field textarea:focus { border-color: var(--accent-2); background: rgba(139,92,246,.07);
     box-shadow: 0 0 0 3px rgba(139,92,246,.18); }
-  .field.bad input, .field.bad textarea { border-color: rgba(251,191,36,.65); }
+  .field input:focus + label, .field textarea:focus + label,
+  .field input:not(:placeholder-shown) + label, .field textarea:not(:placeholder-shown) + label {
+    transform: translateY(-9px) scale(.82); color: var(--accent-2); }
+  .field.bad input, .field.bad textarea { border-color: rgba(251,191,24,.65); }
+  .field.bad label { color: var(--warn); }
   .form-foot { display: flex; align-items: center; gap: 18px; margin-top: 26px; flex-wrap: wrap; }
   .btn { display: inline-block; background: linear-gradient(135deg, var(--accent), var(--accent-deep)); color: #fff;
          border: 0; border-radius: 999px; padding: 13px 26px; font: inherit; font-size: 15px; font-weight: 600; cursor: pointer;
@@ -84,7 +106,7 @@
   .form-status.err { color: var(--warn); }
   @media (max-width: 640px) { .inq .grid { grid-template-columns: 1fr; gap: 16px; } .form-foot { gap: 12px; } }
 
-  /* the side rail: direct lines, quiet ledger style from the trust strip */
+  /* the side ledger: hairlines, mono values — same language as the trust strip */
   .lines { display: flex; flex-direction: column; }
   .lines .row { padding: 22px 0; border-top: 1px solid var(--line); }
   .lines .row:last-child { border-bottom: 1px solid var(--line); }
@@ -92,10 +114,22 @@
   .lines .val { font-size: 17px; font-weight: 500; }
   .lines .val a { color: var(--accent-2); transition: color .2s; }
   .lines .val a:hover { color: #fff; }
+  .lines .val.mono { font-family: var(--mono); font-size: 15px; }
   .lines .note { font-size: 13px; color: var(--muted); margin-top: 4px; line-height: 1.5; }
 
-  footer { position: relative; z-index: 2; padding: 36px 6vw; border-top: 1px solid var(--line); color: var(--faint); font-size: 13px; }
-  footer .wrap { display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; max-width: 1080px; margin: 0 auto; }
+  /* ---- what happens next: numbered steps on a hairline ---- */
+  .next { margin-top: clamp(72px, 12vh, 130px); }
+  .next h2 { font-size: clamp(22px, 2.6vw, 30px); font-weight: 500; letter-spacing: -.02em; margin: 0 0 34px; }
+  .steps { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: clamp(20px, 4vw, 48px);
+           border-top: 1px solid var(--line); }
+  .steps li { padding: 26px 0 0; position: relative; }
+  .steps li::before { content: attr(data-n); font-family: var(--mono); font-size: 11px; letter-spacing: .14em; color: var(--accent-2); display: block; margin-bottom: 10px; }
+  .steps b { display: block; font-weight: 600; font-size: 15px; margin-bottom: 6px; }
+  .steps span { font-size: 13.5px; line-height: 1.55; color: var(--muted); }
+  @media (max-width: 880px) { .steps { grid-template-columns: 1fr; gap: 0; } .steps li { padding: 20px 0; border-bottom: 1px solid var(--line); } }
+
+  footer { position: relative; z-index: 2; margin-top: clamp(72px, 12vh, 130px); padding: 36px 6vw; border-top: 1px solid var(--line); color: var(--faint); font-size: 13px; }
+  footer .wrap { display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; max-width: 1140px; margin: 0 auto; }
 
   .reveal { opacity: 0; transform: translateY(26px); transition: opacity .9s cubic-bezier(.22,.61,.36,1), transform .9s cubic-bezier(.22,.61,.36,1); }
   .reveal.in { opacity: 1; transform: none; }
@@ -116,35 +150,39 @@
   <a class="backlink" href="./#contact">← Back to the dive</a>
 </header>
 
-<div id="stage" aria-hidden="true">
-  <video data-src="media/dive-4-floor.mp4" poster="media/dive-4-floor.jpg" muted loop playsinline preload="none"></video>
+<div id="stage" aria-hidden="true"><div class="plate"></div></div>
+
+<!-- depth gauge: descends with you, tints the sea darker as it does -->
+<div id="gauge" aria-hidden="true">
+  <div class="track"><span class="cursor" id="gauge-cursor"></span></div>
+  <div class="read"><b id="gauge-depth">0 m</b><span class="zone" id="gauge-zone">surface</span></div>
 </div>
 
 <main>
   <div class="wrap">
-    <div class="kicker reveal">Contact us</div>
-    <h1 class="title reveal">Let's put a float<br><em>in your water.</em></h1>
-    <p class="lead reveal">Tell us about your ponds and what keeps you up at night. We'll come back within one working day with a straight answer — pilot plan, pricing, or just an honest "not yet".</p>
+    <div class="kicker reveal">Contact · info@roysync.com</div>
+    <h1 class="title reveal">Tell us about<br>your <em>water.</em></h1>
+    <p class="lead reveal">Ponds, species, tank count — or just the thing that keeps you up at night. One working day for an answer. Pilot plans within a week.</p>
 
     <div class="desk">
       <form class="inq reveal" id="inquiry-form" novalidate>
         <div class="grid">
           <div class="field">
+            <input id="f-name" name="name" type="text" autocomplete="name" placeholder=" " required>
             <label for="f-name">Name</label>
-            <input id="f-name" name="name" type="text" autocomplete="name" placeholder="Your name" required>
           </div>
           <div class="field">
+            <input id="f-email" name="email" type="email" autocomplete="email" placeholder=" " required>
             <label for="f-email">Email</label>
-            <input id="f-email" name="email" type="email" autocomplete="email" placeholder="you@farm.com" required>
           </div>
         </div>
         <div class="field" style="margin-top:20px">
+          <input id="f-org" name="org" type="text" autocomplete="organization" placeholder=" ">
           <label for="f-org">Farm or company <i>(optional)</i></label>
-          <input id="f-org" name="org" type="text" autocomplete="organization" placeholder="e.g. Highland Trout Ltd.">
         </div>
         <div class="field" style="margin-top:20px">
+          <textarea id="f-msg" name="message" rows="5" placeholder=" "></textarea>
           <label for="f-msg">What would you like to monitor?</label>
-          <textarea id="f-msg" name="message" rows="5" placeholder="Pond size, species, number of tanks — anything that helps us prepare."></textarea>
         </div>
         <div class="form-foot">
           <button class="btn" type="submit">Request a pilot</button>
@@ -166,11 +204,20 @@
         </div>
         <div class="row">
           <div class="lab">Registered design</div>
-          <div class="val" style="font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 15px;">REG. 6535677</div>
+          <div class="val mono">REG. 6535677</div>
           <div class="note">The device you're asking about is protected intellectual property.</div>
         </div>
       </aside>
     </div>
+
+    <section class="next reveal" aria-label="What happens next">
+      <h2>What happens next</h2>
+      <ol class="steps">
+        <li data-n="01"><b>We read your note</b><span>A person, not a queue. If we need more detail, we ask one short question.</span></li>
+        <li data-n="02"><b>Pilot plan in a week</b><span>Device count, placement, connectivity options and a clear price — nothing hidden.</span></li>
+        <li data-n="03"><b>Float in the water</b><span>Drop it, it reports. You watch your pond from a dashboard within days.</span></li>
+      </ol>
+    </section>
   </div>
 </main>
 
@@ -186,12 +233,35 @@
   const io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } }), { threshold: 0.15 });
   document.querySelectorAll('.reveal').forEach(el => io.observe(el));
 
-  // bring the sea floor behind the panel once it can be decoded cheaply
+  // depth gauge: page progress becomes a descent — 0 → 40 m, and the sea darkens with it
   (() => {
-    const v = document.querySelector('#stage video');
-    if (!v || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-    const start = () => { v.src = v.dataset.src; v.load(); v.play().then(() => v.classList.add('on')).catch(() => {}); };
-    ('requestIdleCallback' in window ? requestIdleCallback : setTimeout)(start, { timeout: 2500 });
+    const plate = document.querySelector('#stage .plate');
+    const cur = document.getElementById('gauge-cursor');
+    const depthEl = document.getElementById('gauge-depth');
+    const zoneEl = document.getElementById('gauge-zone');
+    if (!cur || !depthEl) return;
+    let raf = 0;
+    const zones = [[0, 'surface'], [0.25, 'midwater'], [0.55, 'reef'], [0.8, 'seabed']];
+    const update = () => {
+      raf = 0;
+      const max = Math.max(1, document.documentElement.scrollHeight - innerHeight);
+      const p = Math.min(1, Math.max(0, scrollY / max));
+      cur.style.top = (p * 100) + '%';
+      depthEl.textContent = Math.round(p * 40) + ' m';
+      let z = zones[0][1];
+      for (const [t, name] of zones) if (p >= t) z = name;
+      if (zoneEl.textContent !== z) zoneEl.textContent = z;
+      if (plate) {
+        const hue = 200 - p * 14;                       // cooler with depth
+        const bright = 0.92 - p * 0.5;                  // darker with depth
+        const sat = 1 - p * 0.45;                       // bleached by depth
+        plate.style.filter = `hue-rotate(${hue}deg) brightness(${bright.toFixed(3)}) saturate(${sat.toFixed(3)})`;
+        plate.style.opacity = (0.55 - p * 0.25).toFixed(3);
+      }
+    };
+    addEventListener('scroll', () => { if (!raf) raf = requestAnimationFrame(update); }, { passive: true });
+    addEventListener('resize', update, { passive: true });
+    update();
   })();
 
   // contact form: validate quietly, then hand off to email — no backend on the static site yet
