@@ -459,10 +459,10 @@
       <p>Solar powered, nothing to wire. It reports over satellite, Wi-Fi or LTE.</p>
     </div>
     <div class="copy" id="solid-copy"></div>
-    <video class="uwv" muted loop playsinline preload="none" data-poster="media/dive-1-light.jpg?v=51" data-src="media/dive-1-light.mp4?v=51" aria-hidden="true"></video>
-    <video class="uwv" muted loop playsinline preload="none" data-poster="media/dive-2-life.jpg?v=51" data-src="media/dive-2-life.mp4?v=51" aria-hidden="true"></video>
-    <video class="uwv" muted loop playsinline preload="none" data-poster="media/dive-3-reef.jpg?v=51" data-src="media/dive-3-reef.mp4?v=51" aria-hidden="true"></video>
-    <video class="uwv" muted loop playsinline preload="none" data-poster="media/dive-4-floor.jpg?v=51" data-src="media/dive-4-floor.mp4?v=51" aria-hidden="true"></video>
+    <video class="uwv" muted loop playsinline preload="none" data-poster="media/dive-1-light.jpg?v=53" data-src="media/dive-1-light.mp4?v=53" aria-hidden="true"></video>
+    <video class="uwv" muted loop playsinline preload="none" data-poster="media/dive-2-life.jpg?v=53" data-src="media/dive-2-life.mp4?v=53" aria-hidden="true"></video>
+    <video class="uwv" muted loop playsinline preload="none" data-poster="media/dive-3-reef.jpg?v=53" data-src="media/dive-3-reef.mp4?v=53" aria-hidden="true"></video>
+    <video class="uwv" muted loop playsinline preload="none" data-poster="media/dive-4-floor.jpg?v=53" data-src="media/dive-4-floor.mp4?v=53" aria-hidden="true"></video>
     <div id="veil" aria-hidden="true"></div>
     <canvas id="uwsnow" aria-hidden="true"></canvas>
     <div id="hint">Scroll to dive</div>
@@ -2216,16 +2216,16 @@ function tick(static_ = false) {
   const uwNow = performance.now(), uwDt = Math.min(Math.max((uwNow - _uw.t) / 1000, 0.001), 0.1), uwDy = scrollY - _uw.y;
   _uw.t = uwNow; _uw.y = scrollY;
   _uw.sp += (Math.min(Math.abs(uwDy) / innerHeight / uwDt, 3) - _uw.sp) * Math.min(uwDt * 4, 1);   // scroll speed, screens per second
-  const uwRate = UW_RM ? 1 : Math.round((1 + Math.min(_uw.sp * 0.8, 1.2)) * 20) / 20;
+  const uwRate = UW_RM ? 1 : Math.round((1 + Math.min(_uw.sp * 0.6, 0.6)) * 20) / 20;
   drawUwSnow(uwDy, UW_RM ? 0 : 0.85 * smooth(0.12, 0.3, p));
   let vidTop = 0;
   uwVids.forEach((v, i) => {
     const o = ops[i];
     v.style.opacity = o.toFixed(3);
     const ds = Math.max(i < 3 ? (scrollY - UW[i][0] * span) / innerHeight : kEnd, 0);   // screens scrolled since this clip began
-    const sc = Math.min(1.04 + 0.035 * ds, 1.2), ty = Math.max(1 - 0.8 * ds, -2);
-    v.style.transform = UW_RM ? 'scale(1.04)' : `translate3d(0, ${ty.toFixed(2)}%, 0) scale(${sc.toFixed(4)})`;
-    v.style.filter = !UW_RM && o > 0.001 && o < 0.999 ? `blur(${((1 - o) * 7).toFixed(1)}px)` : 'none';
+    const sc = Math.min(1.03 + 0.015 * ds, 1.07), ty = Math.max(0.8 - 0.5 * ds, -1);
+    v.style.transform = UW_RM ? 'scale(1.03)' : `translate3d(0, ${ty.toFixed(2)}%, 0) scale(${sc.toFixed(4)})`;
+    v.style.filter = !UW_RM && o > 0.001 && o < 0.999 ? `blur(${((1 - o) * 4).toFixed(1)}px)` : 'none';
     if (!v.src && (i < 3 ? p > UW[i][0] - 0.12 : kEnd > -2.5)) uwLoad(v);   // the visitor got here before the queue did
     if (o > 0.001) { if (v.paused) v.play().catch(() => {}); if (Math.abs(v.playbackRate - uwRate) > 0.04) v.playbackRate = uwRate; }
     else if (!v.paused) v.pause();
