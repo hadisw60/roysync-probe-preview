@@ -1006,7 +1006,7 @@ const wu = water.material.uniforms;
 Object.assign(wu, WAVE_U, {
   uTime: MU.uTime, uWave: { value: 1.0 }, uFine: { value: 1.0 }, uRefr: { value: refrRT.texture }, uSkyCube: { value: cubeRT.texture },
   uScreen: { value: new THREE.Vector2(1, 1) }, uReflDistort: { value: 0.2 }, uRefrDistort: { value: 0.05 },
-  uHaze: { value: 0.0032 }, uSSS: { value: new THREE.Color(0x0e6b75) }, uSunE: { value: 2.6 }, uRough: { value: 0.0012 },
+  uHaze: { value: 0.0032 }, uSSS: { value: new THREE.Color(0x0b3f86) }, uSunE: { value: 2.6 }, uRough: { value: 0.0012 },
 });
 water.material.vertexShader = /* glsl */`
   uniform mat4 textureMatrix;
