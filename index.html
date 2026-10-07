@@ -10,19 +10,23 @@
 <meta property="og:type" content="website">
 <meta property="og:image" content="assets/logo.png">
 <link rel="icon" type="image/png" href="assets/favicon.png">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="preload" href="assets/fonts/sora.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="assets/fonts/inter.woff2" as="font" type="font/woff2" crossorigin>
 <style>
+  @font-face { font-family: 'Inter'; font-style: normal; font-weight: 400 600; font-display: swap; src: url(assets/fonts/inter.woff2) format('woff2'); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+  @font-face { font-family: 'Sora'; font-style: normal; font-weight: 500 700; font-display: swap; src: url(assets/fonts/sora.woff2) format('woff2'); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
   :root {
-    --bg: #07080f; --bg-2: #0d0b1a; --panel: rgba(255,255,255,.04); --line: rgba(255,255,255,.09);
-    --fg: #f3f1fa; --muted: #a39fb8; --faint: #6f6a86;
-    --accent: #8b5cf6; --accent-2: #a78bfa; --accent-deep: #5b21b6; --glow: rgba(139,92,246,.35);
+    /* palette from the logo: deep navy, white, and the steel-to-ice blue of its ring */
+    --bg: #050c16; --bg-2: #0a1524; --panel: rgba(255,255,255,.04); --line: rgba(170,210,255,.12);
+    --fg: #f2f7fc; --muted: #a7bccf; --faint: #6f879e;
+    --accent: #4f9fe0; --accent-2: #9fd0f7; --accent-deep: #1f4e79; --glow: rgba(79,159,224,.35);
+    --head: Sora, Inter, system-ui, sans-serif;
     --ok: #34d399; --warn: #fbbf24;
   }
   * { box-sizing: border-box; }
   html { scroll-behavior: smooth; }
   html, body { margin: 0; background: var(--bg); color: var(--fg); font-family: Inter, system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+  h1, h2, h3, h4, .logo b { font-family: var(--head); }
   a { color: inherit; text-decoration: none; }
   /* the dive is no longer a fixed-length hero: it lasts exactly from the top of the page to the start
      of the first story section, so scrolling always feels like sinking — never like "waiting for the scene" */
@@ -49,26 +53,28 @@
   .navlinks { display: flex; gap: 30px; margin-left: auto; margin-right: 26px; opacity: 0; transform: translateY(-6px); pointer-events: none;
               transition: opacity .5s ease, transform .5s ease; }
   header.scrolled .navlinks { opacity: 1; transform: none; pointer-events: auto; }
-  .navlinks a { color: #d9d6e6; text-decoration: none; font-size: 14px; letter-spacing: .01em; transition: color .2s; }
+  .navlinks a { color: #d6e6f3; text-decoration: none; font-size: 14px; letter-spacing: .01em; transition: color .2s; }
   .navlinks a:hover { color: #fff; }
-  @media (max-width: 640px) { .navlinks { gap: 16px; margin-right: 0; } .navlinks a { font-size: 13px; } header.scrolled .btn.small { display: none; } }
-  header.scrolled { background: rgba(8, 7, 18, .6); backdrop-filter: blur(14px); padding-top: 14px; padding-bottom: 14px; }
+  @media (max-width: 640px) { .navlinks { gap: 14px; margin-right: 14px; } header:not(.scrolled) .navlinks { display: none; } .navlinks a { font-size: 13px; } header.scrolled .logo b, header.scrolled .logo i { display: none; } header .btn.cta { padding: 8px 14px; font-size: 13px; } }
+  header.scrolled { background: rgba(5, 14, 26, .6); backdrop-filter: blur(14px); padding-top: 14px; padding-bottom: 14px; }
   .logo { display: flex; align-items: center; gap: 12px; font-weight: 600; font-size: 19px; letter-spacing: -.01em; }
   .logo img { width: 40px; height: 40px; border-radius: 50%; display: block; }
   .logo b { font-weight: 600; }
   .logo i { font-style: normal; font-size: 11px; font-weight: 600; letter-spacing: .12em; color: var(--accent-2);
-            border: 1px solid rgba(167,139,250,.4); border-radius: 999px; padding: 3px 8px 2px; margin-left: 2px; }
+            border: 1px solid rgba(159,208,247,.4); border-radius: 999px; padding: 3px 8px 2px; margin-left: 2px; }
   .skip { position: absolute; left: -999px; top: 8px; z-index: 20; background: var(--accent); color: #fff; padding: 8px 16px; border-radius: 8px; }
   .skip:focus { left: 16px; }
   .btn.small { padding: 9px 18px; font-size: 13px; }
   .btn {
-    display: inline-flex; align-items: center; gap: 8px; padding: 11px 20px; border-radius: 999px;
-    background: var(--accent); color: #fff; font-weight: 500; font-size: 14px;
-    box-shadow: 0 8px 30px var(--glow); transition: transform .2s, background .2s;
+    display: inline-flex; align-items: center; gap: 8px; padding: 12px 22px; border-radius: 999px;
+    background: linear-gradient(135deg, #e3f3ff 0%, #9fd0f7 48%, #5fa9e6 100%); color: #06182b; font-weight: 600; font-size: 14px; letter-spacing: .01em;
+    box-shadow: 0 8px 28px var(--glow), inset 0 1px 0 rgba(255,255,255,.7); transition: transform .2s, box-shadow .2s, filter .2s;
   }
-  .btn:hover { background: #7c4dff; transform: translateY(-1px); }
-  .btn.ghost { background: transparent; border: 1px solid var(--line); box-shadow: none; color: var(--fg); }
-  .btn.ghost:hover { border-color: var(--accent-2); }
+  .btn:hover { transform: translateY(-1px); filter: brightness(1.06); box-shadow: 0 12px 34px rgba(79,159,224,.5), inset 0 1px 0 rgba(255,255,255,.7); }
+  .btn.ghost { background: rgba(6,18,32,.35); border: 1px solid rgba(190,225,255,.3); box-shadow: none; color: var(--fg); font-weight: 500; }
+  .btn.ghost:hover { border-color: var(--accent-2); filter: none; box-shadow: none; }
+  /* the one action in the header: a solid ice-blue pill with a soft halo, never mistaken for one more link */
+  .btn.cta { padding: 10px 20px; font-size: 13.5px; box-shadow: 0 0 0 4px rgba(159,208,247,.12), 0 8px 26px var(--glow), inset 0 1px 0 rgba(255,255,255,.7); }
 
   /* ---------- hero overlay ---------- */
   .copy { position: absolute; z-index: 5; transition: opacity .4s; }
@@ -76,14 +82,17 @@
   #hero-copy { left: 6vw; bottom: 13vh; max-width: 680px; }
   .eyebrow { display: inline-flex; align-items: center; gap: 8px; font-size: 12px; letter-spacing: .18em; text-transform: uppercase; color: var(--accent-2); margin-bottom: 20px; }
   .eyebrow::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--accent-2); box-shadow: 0 0 12px var(--accent-2); }
-  #hero-copy h1 { font-size: clamp(30px, 3.8vw, 54px); font-weight: 500; line-height: 1.02; letter-spacing: -.04em; margin: 0 0 20px; }
-  #hero-copy h1 em { font-style: normal; background: linear-gradient(90deg, var(--accent-2), #e9d5ff); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  #hero-copy h1 { font-size: clamp(30px, 3.6vw, 52px); font-weight: 600; line-height: 1.08; letter-spacing: -.035em; margin: 0 0 20px; }
+  #hero-copy h1 em { font-style: normal; background: linear-gradient(90deg, #6fb8f2, #a8dbff 55%, #e6f5ff); -webkit-background-clip: text; background-clip: text; color: transparent;
+                     text-shadow: none; filter: drop-shadow(0 2px 14px rgba(0,0,0,.45)); }
   #hero-copy p { color: var(--muted); font-size: 17px; line-height: 1.55; margin: 0 0 26px; max-width: 520px; }
   #hero-copy .cta-row { display: flex; gap: 12px; flex-wrap: wrap; }
   #solid-copy { display: none; }
   .beat { left: 6vw; bottom: 14vh; max-width: 520px; opacity: 0; pointer-events: none; }
-  .beat h2 { font-size: clamp(24px, 2.9vw, 40px); font-weight: 500; letter-spacing: -.03em; line-height: 1.1; margin: 0 0 12px; text-shadow: 0 2px 18px rgba(0,0,0,.6); }
-  .beat p { color: #dfe6f2; font-size: 16px; line-height: 1.55; margin: 0; text-shadow: 0 2px 14px rgba(0,0,0,.6); }
+  .beat h2 { font-size: clamp(24px, 2.7vw, 38px); font-weight: 600; letter-spacing: -.025em; line-height: 1.12; margin: 0 0 12px; text-shadow: 0 2px 18px rgba(0,0,0,.6); }
+  .beat h2::before { content: ""; display: block; width: 34px; height: 3px; border-radius: 3px; margin: 0 0 16px; background: linear-gradient(90deg, var(--accent), var(--accent-2)); box-shadow: 0 0 12px var(--glow); }
+  .beat h2 em, #contact h2 em { font-style: normal; color: #8fd0ff; }
+  .beat p { color: #d8e6f3; font-size: 16px; line-height: 1.55; margin: 0; text-shadow: 0 2px 14px rgba(0,0,0,.6); }
   @media (max-width: 760px) { .beat { left: 16px; right: 16px; bottom: 9vh; text-align: center; } }
   #solid-copy h2 { font-size: clamp(28px, 4vw, 50px); font-weight: 500; letter-spacing: -.03em; margin: 0 0 12px; }
   #solid-copy p { color: var(--muted); font-size: 16px; line-height: 1.55; margin: 0; }
@@ -98,8 +107,10 @@
   #dive span { position: absolute; left: 12px; top: calc(22% - 7px); font-size: 10px; letter-spacing: .18em;
                text-transform: uppercase; color: var(--faint); white-space: nowrap; }
   @media (max-width: 760px) { #dive { display: none; } }
-  #loading { position: absolute; inset: 0; display: grid; place-items: center; z-index: 4;
-             color: var(--muted); font-size: 13px; letter-spacing: .15em; transition: opacity .6s; pointer-events: none; }
+  /* a thin brand-blue line along the top while the probe loads, instead of a LOADING label over the scene */
+  #loading { position: absolute; top: 0; left: 0; right: 0; height: 2px; z-index: 6; font-size: 0; color: transparent; pointer-events: none;
+             background: linear-gradient(90deg, var(--accent), var(--accent-2)); box-shadow: 0 0 12px var(--glow);
+             transform-origin: 0 50%; transform: scaleX(.06); transition: transform .35s ease, opacity .6s; }
 
   /* the dive does not end at the hero: every story section sits in the water column, so the whole page
      reads as one continuous descent. Sections are translucent panels over the live underwater scene —
@@ -109,7 +120,9 @@
   /* real reef footage: the dive ends by dissolving the 3D reef into it */
   .uwv { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 3; opacity: 0; pointer-events: none; will-change: transform, opacity; transform-origin: 50% 45%; background: #04122a; }
   #veil { position: absolute; inset: 0; z-index: 4; pointer-events: none; opacity: 0;
-    background: radial-gradient(120% 80% at 50% 0%, rgba(8,16,34,.55), rgba(3,6,16,.92) 70%), #030610; }
+    background: radial-gradient(120% 80% at 50% 0%, rgba(10,30,52,.5), rgba(3,10,20,.92) 70%), #030a14; }
+  /* marine snow: one layer of drifting specks over every clip, streaming past while the visitor scrolls */
+  #uwsnow { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 4; pointer-events: none; opacity: 0; }
   /* the hero copy sits on a soft shade so it reads over sun glare */
   #hero-copy::before { content: ""; position: absolute; inset: -18vh -12vw -10vh -12vw; z-index: -1; pointer-events: none;
     background: radial-gradient(closest-side, rgba(3,6,16,.62), transparent); }
@@ -117,21 +130,28 @@
   /* trust: a single engraved ledger strip — hairline above and below, three columns divided by ticks, no cards, no glass */
   /* closing panels speak in the same voice as the dive captions: one left column, same type, no ornaments */
   #contact .wrap { max-width: 560px; margin: 0 auto; }
-  /* capabilities, bluesonde-style: one centred column, a big white mark, a title and one quiet line each */
-  #trust { background: transparent; padding: 140px 6vw 60px; }
-  #trust h2.title, .cap h3, .cap p { text-shadow: 0 2px 18px rgba(0,0,0,.65); }
-  .cap svg { filter: drop-shadow(0 2px 12px rgba(0,0,0,.55)); }
-  #trust .wrap { max-width: 640px; margin: 0 auto; text-align: center; }
-  #trust .wrap h2.title { margin: 0 auto; }
-  .caps { display: flex; flex-direction: column; }
-  /* each capability gets the whole screen: it fades and settles in at the centre, then leaves as the next arrives */
-  .cap { min-height: 76vh; display: flex; flex-direction: column; align-items: center; justify-content: center;
-         opacity: 0; transform: translateY(40px) scale(.96); transition: opacity .9s ease, transform 1s cubic-bezier(.2,.8,.2,1); }
+  /* capabilities: one screen, six glass tiles that rise in a quick stagger, so everything is seen at a glance */
+  #trust { background: transparent; padding: 120px 6vw 90px; min-height: 100vh; display: flex; align-items: center; }
+  #trust .wrap { max-width: 1060px; width: 100%; margin: 0 auto; text-align: center; }
+  #trust .wrap h2.title { margin: 0 auto 40px; text-shadow: 0 2px 18px rgba(0,0,0,.65); }
+  .caps { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; text-align: left; }
+  .cap { position: relative; padding: 26px 24px 24px; border-radius: 20px; overflow: hidden;
+         background: linear-gradient(160deg, rgba(16,40,66,.66), rgba(5,14,26,.58)); border: 1px solid rgba(159,208,247,.16);
+         box-shadow: inset 0 1px 0 rgba(255,255,255,.07), 0 18px 44px rgba(0,0,0,.28);
+         opacity: 0; transform: translateY(24px); transition: opacity .7s ease, transform .7s cubic-bezier(.2,.7,.2,1), border-color .3s; }
+  .cap::after { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 1px; background: linear-gradient(90deg, transparent, rgba(159,208,247,.5), transparent); }
   .cap.on { opacity: 1; transform: none; }
-  .cap svg { width: clamp(64px, 8vw, 96px); height: auto; color: #fff; margin-bottom: 28px; }
-  .cap h3 { margin: 0 0 12px; font-size: clamp(26px, 3.4vw, 44px); font-weight: 500; letter-spacing: -.01em; color: #fff; }
-  .cap p { margin: 0; font-size: clamp(15px, 1.4vw, 18px); line-height: 1.6; color: #dfe3ee; max-width: 440px; }
-  #trust h2.title, #contact h2.title { font-size: clamp(24px, 2.9vw, 40px); font-weight: 500; letter-spacing: -.03em; line-height: 1.1; margin: 0 0 12px; }
+  .cap:hover { border-color: rgba(159,208,247,.42); }
+  .cap:nth-child(2) { transition-delay: .07s, .07s, 0s; } .cap:nth-child(3) { transition-delay: .14s, .14s, 0s; }
+  .cap:nth-child(4) { transition-delay: .21s, .21s, 0s; } .cap:nth-child(5) { transition-delay: .28s, .28s, 0s; } .cap:nth-child(6) { transition-delay: .35s, .35s, 0s; }
+  .cap svg { display: block; width: 26px; height: 26px; padding: 11px; box-sizing: content-box; border-radius: 14px; margin: 0 0 18px; color: var(--accent-2);
+             background: rgba(79,159,224,.14); border: 1px solid rgba(159,208,247,.2); }
+  .cap h3 { margin: 0 0 6px; font-size: 18px; font-weight: 600; letter-spacing: -.01em; color: #fff; }
+  .cap p { margin: 0; font-size: 14.5px; line-height: 1.55; color: #c9dbea; }
+  @media (max-width: 900px) { .caps { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  @media (max-width: 560px) { #trust { padding: 96px 16px 64px; } .caps { gap: 10px; } .cap { padding: 18px 16px; border-radius: 16px; }
+    .cap svg { width: 22px; height: 22px; padding: 9px; margin-bottom: 12px; border-radius: 12px; } .cap h3 { font-size: 15px; } .cap p { font-size: 13px; } }
+  #trust h2.title, #contact h2.title { font-size: clamp(26px, 3vw, 42px); font-weight: 600; letter-spacing: -.03em; line-height: 1.1; margin: 0 0 12px; }
   #contact { text-align: center; }
   #contact h2.title, #contact p.lead { margin-left: auto; margin-right: auto; }
   #contact p.lead { font-size: 16px; color: #dfe6f2; margin-bottom: 28px; }
@@ -139,7 +159,7 @@
   /* three big marks, a few words each: the picture does the talking */
   .tvis { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin: 40px 0 0; }
   .tv { display: flex; flex-direction: column; align-items: flex-start; text-align: left; }
-  .tv svg { width: clamp(84px, 11vw, 132px); height: auto; overflow: visible; margin-bottom: 18px; filter: drop-shadow(0 0 18px rgba(139,92,246,.35)); }
+  .tv svg { width: clamp(84px, 11vw, 132px); height: auto; overflow: visible; margin-bottom: 18px; filter: drop-shadow(0 0 18px rgba(79,159,224,.35)); }
   .tv .ring { stroke-width: 2.6; }
   .tv h3 { margin: 0 0 6px; font-size: clamp(17px, 1.8vw, 22px); font-weight: 500; color: #fff; }
   .tv span { font-size: 13px; letter-spacing: .06em; color: #c9c4dc; }
@@ -175,7 +195,7 @@
   #story { position: relative; }
   /* gentle continuous drift on decorative elements (paused when reduced motion is set) */
   @keyframes floaty { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-9px); } }
-  @keyframes breathe { 0%, 100% { box-shadow: 0 8px 30px var(--glow); } 50% { box-shadow: 0 8px 44px rgba(139,92,246,.55); } }
+  @keyframes breathe { 0%, 100% { box-shadow: 0 8px 30px var(--glow); } 50% { box-shadow: 0 8px 44px rgba(79,159,224,.55); } }
   .param .ico, .feature::after { animation: floaty 7s ease-in-out infinite; }
   .param:nth-child(2n) .ico, .feature:nth-child(2n)::after { animation-delay: -2.3s; }
   .param:nth-child(3n) .ico { animation-delay: -4.6s; }
@@ -219,8 +239,8 @@
   #measures { background: transparent; }
   .params { display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px; margin-top: 56px; }
   .param { padding: 26px 22px; border-radius: 20px; background: var(--panel); border: 1px solid var(--line); transition: border-color .3s, transform .3s; }
-  .param:hover { border-color: rgba(167,139,250,.5); transform: translateY(-3px); }
-  .param .ico { width: 44px; height: 44px; border-radius: 12px; display: grid; place-items: center; background: rgba(139,92,246,.14); margin-bottom: 22px; }
+  .param:hover { border-color: rgba(159,208,247,.5); transform: translateY(-3px); }
+  .param .ico { width: 44px; height: 44px; border-radius: 12px; display: grid; place-items: center; background: rgba(79,159,224,.14); margin-bottom: 22px; }
   .param h3 { font-size: 18px; font-weight: 500; margin: 0 0 8px; letter-spacing: -.01em; }
   .param p { font-size: 14px; line-height: 1.5; color: var(--muted); margin: 0; }
 
@@ -261,14 +281,14 @@
   .quote cite { display: block; margin-top: 8px; font-style: normal; font-size: 13px;
                 letter-spacing: .06em; text-transform: uppercase; color: var(--faint); }
   .feature { padding: 34px; border-radius: 24px; background: var(--panel); border: 1px solid var(--line); position: relative; overflow: hidden; }
-  .feature::after { content: ""; position: absolute; inset: auto -30% -60% auto; width: 60%; height: 120%; background: radial-gradient(closest-side, rgba(139,92,246,.18), transparent); pointer-events: none; }
+  .feature::after { content: ""; position: absolute; inset: auto -30% -60% auto; width: 60%; height: 120%; background: radial-gradient(closest-side, rgba(79,159,224,.18), transparent); pointer-events: none; }
   .feature .num { font-size: 13px; color: var(--accent-2); margin-bottom: 18px; letter-spacing: .1em; }
   .feature h3 { font-size: 22px; font-weight: 500; letter-spacing: -.02em; margin: 0 0 10px; }
   .feature p { color: var(--muted); font-size: 15px; line-height: 1.6; margin: 0; max-width: 460px; }
 
   #problem { background: transparent; }
   #solution { text-align: center; padding-top: 150px; padding-bottom: 150px; background:
-              radial-gradient(55% 70% at 50% 0%, rgba(139,92,246,.16), transparent 70%); }
+              radial-gradient(55% 70% at 50% 0%, rgba(79,159,224,.16), transparent 70%); }
   #solution .title, #solution p.lead { margin-left: auto; margin-right: auto; }
 
   #system { background: transparent; }
@@ -278,10 +298,10 @@
   .flow .lab { fill: #f3f1fa; font: 500 12.5px Inter, sans-serif; letter-spacing: .12em; text-anchor: middle; }
   .flow .sub { fill: #a39fb8; font: 400 11px Inter, sans-serif; text-anchor: middle; }
   .flow .ln { stroke: rgba(255,255,255,.16); fill: none; }
-  .flow .node { fill: #a78bfa; }
+  .flow .node { fill: #9fd0f7; }
   .flow .wire { fill: none; stroke: rgba(255,255,255,.18); stroke-width: 2; }
-  .flow .beam { fill: none; stroke: #a78bfa; stroke-width: 2; stroke-linecap: round; stroke-dasharray: 7 7;
-                filter: drop-shadow(0 0 6px rgba(139,92,246,.6)); animation: flowdash 1.1s linear infinite; }
+  .flow .beam { fill: none; stroke: #9fd0f7; stroke-width: 2; stroke-linecap: round; stroke-dasharray: 7 7;
+                filter: drop-shadow(0 0 6px rgba(79,159,224,.6)); animation: flowdash 1.1s linear infinite; }
   @keyframes flowdash { to { stroke-dashoffset: -14; } }
   @media (max-width: 700px) {
     .flow { padding: 22px 14px; }
@@ -321,8 +341,8 @@
     padding: 13px 15px; outline: none; caret-color: var(--accent-2);
     transition: border-color .25s, background .25s, box-shadow .25s; resize: vertical; }
   .field input::placeholder, .field textarea::placeholder { color: rgba(200,205,225,.35); }
-  .field input:focus, .field textarea:focus { border-color: var(--accent-2); background: rgba(139,92,246,.07);
-    box-shadow: 0 0 0 3px rgba(139,92,246,.18); }
+  .field input:focus, .field textarea:focus { border-color: var(--accent-2); background: rgba(79,159,224,.07);
+    box-shadow: 0 0 0 3px rgba(79,159,224,.18); }
   .field.bad input, .field.bad textarea { border-color: rgba(251,191,36,.65); }
   .form-foot { display: flex; align-items: center; gap: 18px; margin-top: 26px; flex-wrap: wrap; }
   .form-foot .quiet { font-size: 13px; color: var(--faint); }
@@ -340,11 +360,23 @@
   .reading-card { background: rgba(11, 9, 22, .72); }
   .param, .feature { background: rgba(15, 16, 32, .45); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
   .step { background: rgba(15, 16, 32, .4); }
-  header.scrolled { background: rgba(8, 7, 18, .55); }
+  header.scrolled { background: rgba(5, 14, 26, .55); }
 
-  footer { padding: 36px 6vw; border-top: 1px solid var(--line); color: var(--faint); font-size: 13px;
-           background: linear-gradient(180deg, rgba(5,9,22,.6), rgba(5,9,22,.9)); }
-  footer .wrap { display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+  /* footer, after bluesonde's: brand and email first, then the pages, then the company's registered details (UK law asks for them) */
+  footer { padding: 72px 6vw 30px; border-top: 1px solid var(--line); color: #9fb4c8; font-size: 14px; line-height: 1.6;
+           background: linear-gradient(180deg, rgba(4,12,22,.9), #03080f 65%); }
+  .ft { display: grid; grid-template-columns: 1.5fr 1fr 1.1fr 1.3fr; gap: 40px; max-width: 1140px; margin: 0 auto; }
+  .ft h4 { margin: 0 0 16px; font-size: 12px; font-weight: 600; letter-spacing: .16em; text-transform: uppercase; color: var(--accent-2); }
+  .ft-col { display: flex; flex-direction: column; gap: 8px; }
+  .ft-col a { width: fit-content; transition: color .2s; } .ft-col a:hover { color: #fff; }
+  .ft-brand .logo { margin-bottom: 16px; }
+  .ft-brand p { margin: 0 0 18px; max-width: 280px; }
+  .ft-mail { display: inline-flex; color: #fff; font-weight: 500; padding-bottom: 3px; border-bottom: 1px solid rgba(159,208,247,.45); transition: border-color .2s; }
+  .ft-mail:hover { border-color: #fff; }
+  .ft-bottom { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 10px 24px; max-width: 1140px; margin: 56px auto 0; padding-top: 22px;
+               border-top: 1px solid var(--line); font-size: 12.5px; color: #6f879e; }
+  @media (max-width: 900px) { .ft { grid-template-columns: 1fr 1fr; } }
+  @media (max-width: 540px) { footer { padding: 52px 16px 24px; font-size: 13px; } .ft { grid-template-columns: 1fr 1fr; gap: 28px 18px; } .ft-brand { grid-column: 1 / -1; } }
 
   @media (max-width: 1000px) {
     .params { grid-template-columns: repeat(2, 1fr); }
@@ -391,9 +423,8 @@
   <div class="navlinks">
     <a href="#solution" data-dive="0.3">Solution</a>
     <a href="#trust">Device</a>
-    <a href="contact.html">Contact us</a>
   </div>
-  <a class="btn ghost small" href="contact.html">Request a pilot</a>
+  <a class="btn cta" href="contact.html">Contact us</a>
   </nav>
 </header>
 
@@ -407,32 +438,33 @@
       <h1>Sleep through the night.<br><em>We'll watch the water.</em></h1>
       <p>A small float sits in your tank with eight sensors. If the oxygen drops, it turns the aerator on and sends you a message.</p>
       <div class="cta-row">
-        <a class="btn" href="contact.html">Request a pilot</a>
+        <a class="btn" href="contact.html">Contact us</a>
         <a class="btn ghost" href="#solution" data-dive="0.3">See how it works</a>
       </div>
     </div>
     <div class="copy beat" data-in="0.22" data-out="0.36">
-      <h2>Eight sensors, under the waterline</h2>
+      <h2>Eight sensors, <em>under the waterline</em></h2>
       <p>Oxygen, pH, temperature and more, measured right where your fish live.</p>
     </div>
     <div class="copy beat" data-in="0.42" data-out="0.56">
-      <h2>Most fish are lost before sunrise</h2>
+      <h2>Most fish are lost <em>before sunrise</em></h2>
       <p>Oxygen drops slowly all night. By the morning check, it's often too late.</p>
     </div>
     <div class="copy beat" data-in="0.62" data-out="0.78">
-      <h2>When oxygen drops, it acts</h2>
+      <h2>When oxygen drops, <em>it acts</em></h2>
       <p>It turns the aerator on first, then sends you a message. You don't have to be awake.</p>
     </div>
     <div class="copy beat" data-in="0.84" data-out="1.01">
-      <h2>Works on any farm</h2>
+      <h2>Works on <em>any farm</em></h2>
       <p>Solar powered, nothing to wire. It reports over satellite, Wi-Fi or LTE.</p>
     </div>
     <div class="copy" id="solid-copy"></div>
-    <video class="uwv" muted loop playsinline preload="none" poster="media/dive-1-light.jpg" data-src="media/dive-1-light.mp4" aria-hidden="true"></video>
-    <video class="uwv" muted loop playsinline preload="none" poster="media/dive-2-life.jpg" data-src="media/dive-2-life.mp4" aria-hidden="true"></video>
-    <video class="uwv" muted loop playsinline preload="none" poster="media/dive-3-reef.jpg" data-src="media/dive-3-reef.mp4" aria-hidden="true"></video>
-    <video class="uwv" muted loop playsinline preload="none" poster="media/dive-4-floor.jpg" data-src="media/dive-4-floor.mp4" aria-hidden="true"></video>
+    <video class="uwv" muted loop playsinline preload="none" data-poster="media/dive-1-light.jpg?v=51" data-src="media/dive-1-light.mp4?v=51" aria-hidden="true"></video>
+    <video class="uwv" muted loop playsinline preload="none" data-poster="media/dive-2-life.jpg?v=51" data-src="media/dive-2-life.mp4?v=51" aria-hidden="true"></video>
+    <video class="uwv" muted loop playsinline preload="none" data-poster="media/dive-3-reef.jpg?v=51" data-src="media/dive-3-reef.mp4?v=51" aria-hidden="true"></video>
+    <video class="uwv" muted loop playsinline preload="none" data-poster="media/dive-4-floor.jpg?v=51" data-src="media/dive-4-floor.mp4?v=51" aria-hidden="true"></video>
     <div id="veil" aria-hidden="true"></div>
+    <canvas id="uwsnow" aria-hidden="true"></canvas>
     <div id="hint">Scroll to dive</div>
     <div id="dive" aria-hidden="true"><u></u><span>Waterline</span><i></i></div>
   </div>
@@ -457,7 +489,7 @@
 <section id="contact">
   <div class="wrap">
     <div class="kicker reveal">Get started</div>
-    <h2 class="title reveal">Want to try it on your farm?</h2>
+    <h2 class="title reveal">Want to try it <em>on your farm?</em></h2>
     <p class="lead reveal">Tell us about your ponds. We'll come back within one working day.</p>
     <div class="cta-row reveal" style="justify-content:center">
       <a class="btn" href="contact.html">Contact us</a>
@@ -469,9 +501,35 @@
 </div><!-- /story -->
 
 <footer>
-  <div class="wrap">
-    <span>© 2026 RoySync</span>
-    <span>Water-quality monitoring for fish farms · info@roysync.com</span>
+  <div class="ft">
+    <div class="ft-brand">
+      <a class="logo" href="#top"><img src="assets/logo.png" alt="" width="40" height="40" loading="lazy"><b>RoySync</b></a>
+      <p>Water-quality monitoring for fish farms.</p>
+      <a class="ft-mail" href="mailto:info@roysync.com">info@roysync.com</a>
+    </div>
+    <nav class="ft-col" aria-label="Footer">
+      <h4>Pages</h4>
+      <a href="#top">Home</a>
+      <a href="#solution" data-dive="0.3">Solution</a>
+      <a href="#trust">Device</a>
+      <a href="contact.html">Contact us</a>
+    </nav>
+    <div class="ft-col">
+      <h4>Company</h4>
+      <span>ROYSYNC LTD</span>
+      <span>Company No. 17360256</span>
+      <span>Registered in England and Wales</span>
+    </div>
+    <div class="ft-col">
+      <h4>Registered office</h4>
+      <span>35 Peacock Drive</span>
+      <span>Highfields Caldecote</span>
+      <span>Cambridge CB23 7FE, United Kingdom</span>
+    </div>
+  </div>
+  <div class="ft-bottom">
+    <span>© 2026 ROYSYNC LTD. All rights reserved.</span>
+    <span>Registered design No. 6535677</span>
   </div>
 </footer>
 
@@ -487,7 +545,7 @@
     const sc = document.getElementById('scroller');
     scrollTo({ top: (sc.offsetHeight - innerHeight) * +l.dataset.dive, behavior: 'smooth' });
   }));
-  const capIO = new IntersectionObserver(es => es.forEach(e => e.target.classList.toggle('on', e.isIntersecting)), { rootMargin: '-30% 0px -30% 0px' });
+  const capIO = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add('on'); capIO.unobserve(e.target); } }), { rootMargin: '0px 0px -10% 0px' });
   document.querySelectorAll('.cap').forEach(el => capIO.observe(el));
 
   // the enquiry form now lives on its own page (contact.html)
@@ -1576,12 +1634,14 @@ function decimateAll(parts, target) {
 
 const PROBE_TRIS = 38000, PROXY_TRIS = 10000;
 const loadingEl = document.getElementById('loading');
-new GLTFLoader().load('probe-baked.glb', gltf => {
-  // the probe is decimated once, offline, from the CAD mesh (model-mid.glb): loading it is instant, no work on the visitor's CPU
+const onProbeLoaded = gltf => {
+  // decimated once, offline, from the CAD mesh; shipped as 16-bit integers and gzipped (half the bytes), and turned back
+  // into the original float coordinates right here, so everything downstream sees exactly the same geometry as before
   const ex = gltf.scene.userData || {};
   TOP = ex.TOP; BOTTOM = ex.BOTTOM;
   gltf.scene.traverse(o => {
     if (!o.isMesh) return;
+    probeDequantize(o.geometry);
     const grp = o.name.startsWith('main') ? 'main' : 'proxy', mat = o.name.endsWith('head') ? 'head' : 'paye';   // the loader strips the ':' from 'main:head'
     const mesh = new THREE.Mesh(o.geometry, MATS[mat] || MATS.paye);
     mesh.castShadow = mesh.receiveShadow = true;
@@ -1589,10 +1649,36 @@ new GLTFLoader().load('probe-baked.glb', gltf => {
   });
   const rWater = ex.rWater || 0;
   if (rWater > 0) { foam = makeFoam(rWater); foam.userData.r0 = rWater; scene.add(foam); }
-  loadingEl.style.opacity = 0;
-}, e => {
-  if (e.total) loadingEl.textContent = `LOADING ${Math.round(e.loaded / e.total * 100)}%`;
-}, err => { loadingEl.textContent = 'MODEL FAILED TO LOAD'; console.error(err); });
+  loadingEl.style.transform = 'scaleX(1)'; loadingEl.style.opacity = 0;
+  dispatchEvent(new Event('probe-ready'));   // the footage starts loading only now, so it never competes with the probe
+};
+const onProbeFailed = err => { console.error(err); loadingEl.style.opacity = 0; dispatchEvent(new Event('probe-ready')); };
+function probeDequantize(g) {
+  const q = g.userData.q; if (!q || g.userData.dq) return;
+  g.userData.dq = true;
+  const P = g.attributes.position, N = g.attributes.normal, pos = new Float32Array(P.count * 3), nor = N ? new Float32Array(N.count * 3) : null;
+  for (let i = 0; i < P.count; i++) {
+    pos[i * 3] = q[0] + q[3] * P.getX(i); pos[i * 3 + 1] = q[1] + q[3] * P.getY(i); pos[i * 3 + 2] = q[2] + q[3] * P.getZ(i);
+    if (nor) { nor[i * 3] = N.getX(i); nor[i * 3 + 1] = N.getY(i); nor[i * 3 + 2] = N.getZ(i); }
+  }
+  g.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  if (nor) g.setAttribute('normal', new THREE.BufferAttribute(nor, 3));
+  g.computeBoundingBox(); g.computeBoundingSphere();
+}
+(async () => {
+  const res = await fetch('DecompressionStream' in window ? 'probe-baked.glb.gz' : 'probe-baked.glb');
+  if (!res.ok) throw new Error('probe ' + res.status);
+  const total = +res.headers.get('content-length') || 0, rd = res.body.getReader(), parts = [];
+  for (let got = 0; ;) {
+    const { done, value } = await rd.read(); if (done) break;
+    parts.push(value); got += value.length;
+    if (total) loadingEl.style.transform = `scaleX(${Math.max(got / total, 0.06).toFixed(3)})`;
+  }
+  let blob = new Blob(parts);
+  const sig = new Uint8Array(await blob.slice(0, 2).arrayBuffer());
+  if (sig[0] === 0x1f && sig[1] === 0x8b) blob = await new Response(blob.stream().pipeThrough(new DecompressionStream('gzip'))).blob();
+  new GLTFLoader().parse(await blob.arrayBuffer(), '', onProbeLoaded, onProbeFailed);
+})().catch(onProbeFailed);
 
 // ---------------- rendering: air view, water view, and the split between them ----------------
 function renderAir(target) {
@@ -1972,10 +2058,7 @@ setStageMode();
 
 const header = document.getElementById('site-header');
 const scroller = document.getElementById('scroller');
-const beats = [...document.querySelectorAll('#stage .beat')], uwVids = [...document.querySelectorAll('#stage .uwv')], _uwPrefetch = addEventListener('load', () => setTimeout(() => {
-  // only the first clip is fetched up front; each later one loads a little before the dive reaches it (see tick)
-  const v = uwVids[0]; if (v && !v.src) { v.preload = 'auto'; v.src = v.dataset.src; }
-}, 300)), contactEl = document.getElementById('contact'), veilEl = document.getElementById('veil'), heroCopy = document.getElementById('hero-copy'), solidCopy = document.getElementById('solid-copy'), hint = document.getElementById('hint');
+const beats = [...document.querySelectorAll('#stage .beat')], uwVids = [...document.querySelectorAll('#stage .uwv')], _uw = { y: scrollY, t: performance.now(), sp: 0, chain: false }, contactEl = document.getElementById('contact'), veilEl = document.getElementById('veil'), heroCopy = document.getElementById('hero-copy'), solidCopy = document.getElementById('solid-copy'), hint = document.getElementById('hint');
 const smooth = (a, b, x) => { const t = Math.min(Math.max((x - a) / (b - a), 0), 1); return t * t * (3 - 2 * t); };
 const lerp = THREE.MathUtils.lerp;
 const TAN16 = Math.tan(THREE.MathUtils.degToRad(16));
@@ -2004,6 +2087,41 @@ function govern(t, dt) {
 }
 let rot = 0, lastT = 0;
 const clock = new THREE.Clock();
+// ---------- footage: loaded in dive order once the probe is up; marine snow ties the clips into one descent ----------
+const UW_RM = matchMedia('(prefers-reduced-motion: reduce)').matches;
+function uwLoad(v) {
+  if (v.src) return;
+  if (v.dataset.poster) v.poster = v.dataset.poster;
+  v.preload = 'auto'; v.src = v.dataset.src;
+}
+function uwChain() {   // one clip at a time, in order, so the first is ready early instead of all four arriving late together
+  if (_uw.chain) return; _uw.chain = true;
+  const next = i => {
+    const v = uwVids[i]; if (!v) return;
+    uwLoad(v);
+    let moved = false; const go = () => { if (!moved) { moved = true; next(i + 1); } };
+    if (v.readyState >= 4) go();
+    else { v.addEventListener('canplaythrough', go, { once: true }); v.addEventListener('error', go, { once: true }); setTimeout(go, 10000); }
+  };
+  next(0);
+}
+addEventListener('probe-ready', () => setTimeout(uwChain, 200), { once: true });
+setTimeout(uwChain, 8000);   // never hold the footage back for long, even if the probe is slow
+const uwSnow = document.getElementById('uwsnow'), uwSnowCtx = uwSnow.getContext('2d'),
+  UW_FLAKES = Array.from({ length: 64 }, () => ({ x: Math.random(), y: Math.random(), r: 0.5 + Math.random() * 1.6, a: 0.12 + Math.random() * 0.38, z: 0.4 + Math.random(), w: Math.random() * 6.28 }));
+function drawUwSnow(dy, alpha) {
+  uwSnow.style.opacity = alpha.toFixed(3);
+  if (alpha < 0.01) return;
+  const dpr = Math.min(devicePixelRatio || 1, 1.5), W = innerWidth, H = innerHeight;
+  if (uwSnow.width !== Math.round(W * dpr) || uwSnow.height !== Math.round(H * dpr)) { uwSnow.width = Math.round(W * dpr); uwSnow.height = Math.round(H * dpr); }
+  uwSnowCtx.setTransform(dpr, 0, 0, dpr, 0, 0); uwSnowCtx.clearRect(0, 0, W, H); uwSnowCtx.fillStyle = '#e2f3ff';
+  for (const f of UW_FLAKES) {
+    f.y -= (0.0004 + dy / H * 1.1) * f.z;   // a slow drift up; while the visitor dives they stream past, the same specks over every clip
+    f.w += 0.012; f.x += Math.sin(f.w) * 0.00025;
+    if (f.y < -0.03) { f.y = 1.03; f.x = Math.random(); } else if (f.y > 1.03) { f.y = -0.03; f.x = Math.random(); }
+    uwSnowCtx.globalAlpha = f.a; uwSnowCtx.beginPath(); uwSnowCtx.arc(f.x * W, f.y * H, f.r * f.z, 0, 6.2832); uwSnowCtx.fill();
+  }
+}
 function tick(static_ = false) {
   const t = clock.getElapsedTime();
   const rawDt = static_ ? 0 : t - lastT, dt = Math.min(rawDt, 0.1); lastT = t;
@@ -2088,20 +2206,28 @@ function tick(static_ = false) {
   // the stage copies belong to the dive itself: they fade out as the story panels scroll up over them
   // the deep dive in real footage: sunbeams, then the coral reef, then a turtle over the reef. Each clip dissolves
   // into the next with the scroll, and slowly pushes in while it is on screen, so it reads as one continuous descent
-  // light, then life, then the reef keyed to the dive; the sea floor keyed to the closing panel, so the scroll ends on it
-  const UW = [[0.34, 0.42, 0.58, 0.64], [0.58, 0.64, 0.8, 0.86], [0.8, 0.86, 9, 9]];
+  // one continuous descent: light, life and reef keyed to the dive, the sea floor keyed to the closing panel. Each clip
+  // surfaces out of a soft blur over the last, keeps pushing in and drifting up as the visitor goes deeper, and runs a
+  // little faster while they scroll, so the footage moves with the hand instead of looping on its own
+  const UW = [[0.34, 0.42, 0, 0.66], [0.58, 0.66, 0, 0.88], [0.8, 0.88, 0, 9]];
   const kEnd = (innerHeight - contactEl.getBoundingClientRect().top) / innerHeight;   // 0 as the last panel enters, 1 once it fills the screen
   const ops = uwVids.map((v, i) => i < 3 ? smooth(UW[i][0], UW[i][1], p) * (p < UW[i][3] ? 1 : 0) : smooth(0.05, 0.75, kEnd));
   for (let i = 0; i < ops.length - 1; i++) if (ops.slice(i + 1).some(o => o >= 0.999)) ops[i] = 0;   // fully covered: hide and pause it
+  const uwNow = performance.now(), uwDt = Math.min(Math.max((uwNow - _uw.t) / 1000, 0.001), 0.1), uwDy = scrollY - _uw.y;
+  _uw.t = uwNow; _uw.y = scrollY;
+  _uw.sp += (Math.min(Math.abs(uwDy) / innerHeight / uwDt, 3) - _uw.sp) * Math.min(uwDt * 4, 1);   // scroll speed, screens per second
+  const uwRate = UW_RM ? 1 : Math.round((1 + Math.min(_uw.sp * 0.8, 1.2)) * 20) / 20;
+  drawUwSnow(uwDy, UW_RM ? 0 : 0.85 * smooth(0.12, 0.3, p));
   let vidTop = 0;
   uwVids.forEach((v, i) => {
     const o = ops[i];
     v.style.opacity = o.toFixed(3);
-    const k = i < 3 ? Math.min(Math.max((p - UW[i][0]) / (UW[i][3] - UW[i][0]), 0), 1) : Math.min(Math.max(kEnd, 0), 1);
-    v.style.transform = `scale(${(1.05 - 0.05 * k).toFixed(4)})`;   // a gentle push-in while each clip is on screen
-    const near = i < 3 ? p > UW[i][0] - 0.12 : kEnd > -2.5;
-    if (!v.src && near) { v.preload = 'auto'; v.src = v.dataset.src; }   // fetch a little before it is needed
-    if (o > 0.001) { if (v.paused) v.play().catch(() => {}); }
+    const ds = Math.max(i < 3 ? (scrollY - UW[i][0] * span) / innerHeight : kEnd, 0);   // screens scrolled since this clip began
+    const sc = Math.min(1.04 + 0.035 * ds, 1.2), ty = Math.max(1 - 0.8 * ds, -2);
+    v.style.transform = UW_RM ? 'scale(1.04)' : `translate3d(0, ${ty.toFixed(2)}%, 0) scale(${sc.toFixed(4)})`;
+    v.style.filter = !UW_RM && o > 0.001 && o < 0.999 ? `blur(${((1 - o) * 7).toFixed(1)}px)` : 'none';
+    if (!v.src && (i < 3 ? p > UW[i][0] - 0.12 : kEnd > -2.5)) uwLoad(v);   // the visitor got here before the queue did
+    if (o > 0.001) { if (v.paused) v.play().catch(() => {}); if (Math.abs(v.playbackRate - uwRate) > 0.04) v.playbackRate = uwRate; }
     else if (!v.paused) v.pause();
     vidTop = Math.max(vidTop, o);
   });
