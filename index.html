@@ -702,30 +702,39 @@ function waveHeight(x, z, t) {
 const sunDir = new THREE.Vector3();          // toward the sun
 const sunCol = new THREE.Color(0xffd6a6);    // a 5° sun seen through ~10 air masses: warm, not white
 // open-ocean optics (Jerlov type I) per metre × 0.0793 m per unit: red is gone within a few metres, blue carries for tens
-const SIGMA = new THREE.Vector3(0.035, 0.008, 0.005);  // extinction per unit
-const KD = new THREE.Vector3(0.03, 0.006, 0.003);      // how fast daylight fades with depth
-const LHZ0 = new THREE.Vector3(0.035, 0.34, 0.6), LHZ_REEF = new THREE.Vector3(0.03, 0.62, 1.05);
-const LDN0 = new THREE.Vector3(0.003, 0.03, 0.075), LDN_REEF = new THREE.Vector3(0.01, 0.15, 0.28);
+// That clear-ocean water still shades the hull seen from the air (the hero above the surface is kept as it was);
+// once the eye is under, the water is a fish-farm pond instead: green-teal and turbid, about a metre and a half of
+// visibility (c ≈ 0.7–1.1 per metre), daylight fading by half in under a metre of depth
+const SIGMA_AIR = new THREE.Vector3(0.035, 0.008, 0.005);
+const SIGMA = new THREE.Vector3(0.09, 0.055, 0.065);    // extinction per unit, under water
+const KD = new THREE.Vector3(0.062, 0.038, 0.046);      // how fast daylight fades with depth (kept below SIGMA)
+const LHZ0 = new THREE.Vector3(0.07, 0.3, 0.34), LHZ_REEF = new THREE.Vector3(0.03, 0.62, 1.05);
+const LDN0 = new THREE.Vector3(0.004, 0.03, 0.04), LDN_REEF = new THREE.Vector3(0.01, 0.15, 0.28);
+// deeper down the pond's teal settles toward the muted blue the footage below is graded to, so the first clip
+// surfaces out of the same water instead of a different sea
+const LHZ_DEEP = new THREE.Vector3(0.045, 0.22, 0.46), LDN_DEEP = new THREE.Vector3(0.003, 0.025, 0.07);
 const MU = {
   uTime: { value: 0 },
   uEye: { value: new THREE.Vector3() },       // optical eye: y clamped to the side of the surface the eye is on
   uMode: { value: 0 },                        // 0 eye in air · 1 eye in water · 2 reflected path (underside mirror)
   uDome: { value: DOME_R },
   uSigma: { value: SIGMA.clone() },
+  uSigmaAir: { value: SIGMA_AIR },
   uKd: { value: KD.clone() },
   uLt: { value: new THREE.Vector3(0, -1, 0) }, // refracted sunlight direction under water (points down)
   uSunDir: { value: sunDir },
   uSunCol: { value: sunCol },
   uApparent: { value: 1 },                    // < 1 while drawing what the surface refracts: apparent depth at grazing view
-  uLup: { value: new THREE.Vector3(0.15, 0.86, 1.2) },     // water radiance just below the surface: looking up
-  uLhz: { value: new THREE.Vector3(0.035, 0.34, 0.6) },    //   … looking level: sunlit blue-cyan
-  uLdn: { value: new THREE.Vector3(0.003, 0.03, 0.075) },  //   … looking down
+  uLup: { value: new THREE.Vector3(0.2, 0.9, 0.95) },      // pond water just below the surface: looking up, a bright glow
+  uLhz: { value: LHZ0.clone() },                           //   … looking level: muted turquoise
+  uLdn: { value: LDN0.clone() },                           //   … looking down: dark green-teal
   uLwin: { value: new THREE.Vector3(0.95, 1.15, 1.3) },    // the sky seen through Snell's window
-  uEup: { value: new THREE.Vector3(1.3, 2.3, 2.8) },       // irradiance on an upward face just below the surface
+  uEup: { value: new THREE.Vector3(1.3, 2.4, 2.4) },       // irradiance on an upward face just below the surface
   uUpwell: { value: new THREE.Color(0x0a3b5c) },           // deep water seen from above
   uCaustTex: { value: null },
   uCaustScale: { value: 0.13 },
-  uCaustBlur: { value: 1.3 },
+  uCaustBlur: { value: 0.5 },
+  uRayScale: { value: 0.3 },                  // the broad sun shafts: one streak every few units across the light
 };
 
 // ---------------- GLSL ----------------
@@ -734,6 +743,16 @@ float h21(vec2 p){ p = fract(p * vec2(123.34, 456.21)); p += dot(p, p + 45.32); 
 float vnoise(vec2 p){
   vec2 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f);
   return mix(mix(h21(i), h21(i + vec2(1.0, 0.0)), f.x), mix(h21(i + vec2(0.0, 1.0)), h21(i + vec2(1.0, 1.0)), f.x), f.y);
+}`;
+// broad sheets of sunlight focused by the swell: soft streaks across the plane the refracted sun enters by, drifting
+// and morphing with the sea. Looked at along the light they are the shafts; at a point, how much sun reaches it.
+// Needs NOISE, and uLt and uTime declared before it.
+const RAYS = /* glsl */`
+uniform float uRayScale;
+float rays(vec3 p){
+  vec2 e = (p.xz - uLt.xz * (p.y / uLt.y)) * uRayScale;
+  float n = vnoise(e + uTime * vec2(0.11, 0.07)) * 0.62 + vnoise(e * 2.37 + uTime * vec2(-0.09, 0.13) + 5.3) * 0.38;
+  return smoothstep(0.42, 0.88, n);
 }`;
 
 const WAVES = /* glsl */`
@@ -806,14 +825,14 @@ vec2 rippleSlopeLo(vec2 p){                     // the two broad octaves only: a
 // light in the water: per-wavelength extinction, and closed-form in-scatter of daylight that fades with depth
 const MEDIUM = /* glsl */`
 uniform float uTime, uMode, uDome;
-uniform vec3 uEye, uSigma, uKd, uLt, uSunDir, uSunCol, uLup, uLhz, uLdn, uLwin, uEup, uUpwell;
+uniform vec3 uEye, uSigma, uSigmaAir, uKd, uLt, uSunDir, uSunCol, uLup, uLhz, uLdn, uLwin, uEup, uUpwell;
 float hgPhase(float mu, float g){ float g2 = g * g; return (1.0 - g2) / (12.566 * pow(max(1.0 + g2 - 2.0 * g * mu, 1e-4), 1.5)); }
 vec3 waterL0(vec3 d){                         // deep-water radiance along d, just below the surface
   vec3 c = d.y > 0.0 ? mix(uLhz, uLup, smoothstep(0.0, 0.9, d.y)) : mix(uLhz, uLdn, smoothstep(0.0, 0.6, -d.y));
   return c + uLhz * 0.9 * hgPhase(dot(d, -uLt), 0.55);
 }
 vec3 inscatter(vec3 d, float y0, float len){   // integral of the glow along a ray starting at depth y0
-  vec3 a = max(uSigma - uKd * d.y, vec3(1e-3));
+  vec3 a = max(uSigma - uKd * d.y, 0.25 * uSigma);   // (never below a quarter: looking straight up stays finite)
   return uSigma / a * waterL0(d) * exp(uKd * min(y0, 0.0)) * (1.0 - exp(-a * len));
 }
 vec3 applyWater(vec3 col, vec3 wp){
@@ -822,7 +841,7 @@ vec3 applyWater(vec3 col, vec3 wp){
     if (wp.y >= 0.0) return col;
     float ci = clamp((uEye.y - wp.y) / L, 0.0, 1.0);
     float st = sqrt(1.0 - ci * ci) / 1.333;
-    vec3 T = exp(-uSigma * 1.2 * (-wp.y / sqrt(1.0 - st * st)));
+    vec3 T = exp(-uSigmaAir * 1.2 * (-wp.y / sqrt(1.0 - st * st)));
     return col * T + uUpwell * (1.0 - T);
   }
   if (uMode < 1.5) {                          // eye in the water, behind a dome port
@@ -837,7 +856,9 @@ vec3 applyWater(vec3 col, vec3 wp){
 
 const UWLIGHT = /* glsl */`
 vec3 uwIrradiance(vec3 n, float y){           // daylight arriving on a face with normal n at depth y
-  vec3 e = n.y > 0.0 ? mix(uLhz * PI, uEup, smoothstep(0.0, 1.0, n.y)) : mix(uLhz * PI, uLdn * PI, smoothstep(0.0, 1.0, -n.y));
+  // light under water comes from above: faces turned up catch the bright surface, the sides the turbid glow around
+  // them, the undersides only the dim depths, so the hull models in top-down relief instead of an even studio fill
+  vec3 e = n.y > 0.0 ? mix(uLhz * PI * 0.85, uEup, smoothstep(0.0, 1.0, n.y)) : mix(uLhz * PI * 0.85, uLdn * PI, smoothstep(0.0, 0.7, -n.y));
   return e * exp(uKd * min(y, 0.0));
 }
 vec3 uwRadiance(vec3 r, float y, float rough){ // what a glossy face reflects: the bright window above, blue around
@@ -854,7 +875,7 @@ vec3 causticRGB(vec3 p, float dep){           // sunlight focused by the waves, 
   float lod = log2(1.0 + dep * uCaustBlur);
   vec2 sp = normalize(uLt.xz + 1e-4) * (0.0035 * dep);   // a trace of dispersion, growing with depth
   vec3 c = vec3(textureLod(uCaustTex, e + sp, lod).r, textureLod(uCaustTex, e, lod).r, textureLod(uCaustTex, e - sp, lod).r);
-  return mix(vec3(1.0), c, exp(-dep * 0.1));
+  return mix(vec3(1.0), c, exp(-dep * 0.05));
 }`;
 
 // ---------------- sky: physical sky, polarised blue, and a thin sunlit cloud layer ----------------
@@ -1182,7 +1203,12 @@ const under = new THREE.Mesh(seaGeo, new THREE.ShaderMaterial({
         vec3 R = reflect(I, Nd);                  // outside it: a mirror of the depths
         vec3 Fe = mix(vec3(1.0), F, inW);
         vec3 col = win * (1.0 - Fe) + inscatter(R, 0.0, 400.0) * Fe;
-        gl_FragColor = vec4(applyWater(col, vW), 1.0);
+        // a few metres out the underside and the open water melt into one haze (particles scatter in every direction,
+        // not only along the ray): no hard horizon where the surface meets the water column below it
+        // toward grazing the pixel spans more and more waves, and the mirror of the water converges on that water itself
+        float far = max(1.0 - exp(-dist * 0.04), 1.0 - smoothstep(0.0, 0.16, I.y));
+        vec3 c = mix(applyWater(col, vW), inscatter(normalize(vec3(I.x, 0.0, I.z)), uEye.y, 400.0), far);
+        gl_FragColor = vec4(c, 1.0);
       }`,
 }));
 under.rotation.x = Math.PI / 2;
@@ -1267,7 +1293,7 @@ const snowU = { uFocal: { value: 1000 }, uFocusD: { value: 12.5 }, uCoc: { value
 const particles = new THREE.Points(pGeo, new THREE.ShaderMaterial({
   transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
   uniforms: { ...MU, ...WAVE_U, ...snowU },
-  vertexShader: MEDIUM + WAVES + /* glsl */`
+  vertexShader: MEDIUM + WAVES + NOISE + RAYS + /* glsl */`
     attribute float aSeed, aSize;
     uniform float uFocal, uFocusD, uCoc, uGain;
     varying vec3 vCol; varying float vA;
@@ -1291,7 +1317,8 @@ const particles = new THREE.Points(pGeo, new THREE.ShaderMaterial({
       vA = min(1.0, max(sharp, 0.8) * max(sharp, 0.8) / (sz * sz)) * smoothstep(uDome, uDome * 1.35, d);
       if (d < uDome) gl_Position = vec4(2.0, 2.0, 2.0, 1.0);          // inside the dome port: nothing to draw
       float dep = max(-p.y, 0.0);
-      vec3 sunHere = uSunCol * exp(-uSigma * dep / max(-uLt.y, 0.3)) * hgPhase(dot(normalize(p - cameraPosition), -uLt), 0.8) * 10.0;
+      vec3 sunHere = uSunCol * exp(-uSigma * dep / max(-uLt.y, 0.3)) * hgPhase(dot(normalize(p - cameraPosition), -uLt), 0.8) * 10.0
+                    * (0.3 + 2.2 * rays(p));                       // specks light up as they drift through a shaft
       vCol = (uLhz * 2.5 * exp(-uKd * dep) + sunHere) * exp(-uSigma * max(d - uDome, 0.0)) * (0.3 + 0.7 * fract(aSeed * 7.31)) * uGain;
     }`,
   fragmentShader: /* glsl */`
@@ -1333,7 +1360,7 @@ function patchProbe(sh) {
       vec4 mvPosition = viewMatrix * wApp;
       gl_Position = projectionMatrix * mvPosition;`);
   sh.fragmentShader = sh.fragmentShader
-    .replace('#include <common>', '#include <common>\nvarying vec3 vWPos;\nvarying vec3 vLPos;\n' + NOISE + MEDIUM + UWLIGHT + CAUSTIC)
+    .replace('#include <common>', '#include <common>\nvarying vec3 vWPos;\nvarying vec3 vLPos;\n' + NOISE + MEDIUM + UWLIGHT + CAUSTIC + RAYS)
     .replace('#include <color_fragment>', `#include <color_fragment>
       float wet = 1.0 - smoothstep(0.04, 0.22, vLPos.y);          // the band the bobbing keeps wet, and all below it
       float grain = vnoise(vLPos.xz * 23.0 + vLPos.y * 7.0) * 0.6 + vnoise(vLPos.xy * 61.0 + 3.7) * 0.4;
@@ -1358,7 +1385,8 @@ function patchProbe(sh) {
     .replace('#include <lights_fragment_end>', `#include <lights_fragment_end>
       if (uwF > 0.0) {                                           // the refracted sun arrives focused into caustics
         float dep = max(-vWPos.y, 0.0);
-        vec3 k = causticRGB(vWPos, dep) * exp(-uSigma * dep / max(-uLt.y, 0.3));
+        // … and it drifts in and out of the broad shafts, the same ones seen in the water around it
+        vec3 k = causticRGB(vWPos, dep) * exp(-uSigma * dep / max(-uLt.y, 0.3)) * (0.45 + 1.6 * rays(vWPos));
         reflectedLight.directDiffuse *= mix(vec3(1.0), k, uwF);
         reflectedLight.directSpecular *= mix(vec3(1.0), k * 0.5, uwF);
         #ifdef USE_CLEARCOAT
@@ -1725,6 +1753,8 @@ const volU = {
   uEye: MU.uEye, uDome: MU.uDome, uSigma: MU.uSigma, uLt: MU.uLt, uCaustTex: MU.uCaustTex,
   uShaftScale: MU.uCaustScale, uSunUW: { value: new THREE.Vector3(0.08, 0.08, 0.08) },   // set from the sun in setSun()
   uMaxDist: { value: 300 }, uFrame: { value: 0 },
+  uTime: MU.uTime, uRayScale: MU.uRayScale, uRayGain: { value: 0.35 }, uRayMean: { value: 0.15 }, uRayFade: { value: 0.14 },
+  uLhz: MU.uLhz, uTurb: { value: 1.6 },
 };
 const volumeMat = new THREE.ShaderMaterial({
   uniforms: volU,
@@ -1732,10 +1762,11 @@ const volumeMat = new THREE.ShaderMaterial({
   fragmentShader: /* glsl */`
     uniform sampler2D tDepth, tShadow, uCaustTex;
     uniform mat4 uShadowMat, uProjInv, uCamWorld;
-    uniform vec3 uEye, uSigma, uLt, uSunUW;
-    uniform float uDome, uShaftScale, uMaxDist, uFrame;
+    uniform vec3 uEye, uSigma, uLt, uSunUW, uLhz;
+    uniform float uDome, uShaftScale, uMaxDist, uFrame, uTime, uRayGain, uRayMean, uRayFade, uTurb;
     varying vec2 vUv;
     #include <packing>
+    ${NOISE}${RAYS}
     float hg(float mu, float g){ float g2 = g * g; return (1.0 - g2) / (12.566 * pow(max(1.0 + g2 - 2.0 * g * mu, 1e-4), 1.5)); }
     float lit(vec3 p){                              // is the refracted sun blocked by the probe? (its own shadow map)
       vec4 sc = uShadowMat * vec4(p, 1.0);
@@ -1753,6 +1784,7 @@ const volumeMat = new THREE.ShaderMaterial({
       if (dir.y > 1e-4) s1 = min(s1, max(-uEye.y, 0.0) / dir.y);
       float len = s1 - s0;
       vec3 acc = vec3(0.0);
+      float turb = 0.0;
       if (len > 0.0) {
         // how fast this ray sweeps across the projected caustic field (texels per unit): a step that crosses many
         // cells can only see their mean, so it reads a coarser mip instead of aliasing into noise
@@ -1766,12 +1798,41 @@ const volumeMat = new THREE.ShaderMaterial({
           float dep = max(-p.y, 0.0);
           vec2 e = (p.xz - uLt.xz * (p.y / uLt.y)) * uShaftScale;
           float c = textureLod(uCaustTex, e, max(1.0 + log2(1.0 + dep * 0.15), log2(max(sweep * ds, 1.0)))).r;
-          // sheets of focused light and the gaps between them, around the mean; the probe's shadow is a dark shaft
-          acc += exp(-uSigma * ((s - s0) + dep / max(-uLt.y, 0.2))) * ((c * lit(p) - 1.0) * ds);
+          // sheets of focused light and the gaps between them, around the mean; the probe's shadow is a dark shaft;
+          // and the broad shafts the swell focuses, fading as the light goes deeper
+          // (right under the surface the light has not been focused yet: a ray grazing the underside sees no sheets)
+          acc += exp(-uSigma * ((s - s0) + dep / max(-uLt.y, 0.2))) * ((c * lit(p) - 1.0) * ds) * smoothstep(0.0, 1.5, dep);
         }
+        // a pond's suspended matter is never even: soft clouds of it, a metre or so across, drift through the near
+        // water; where a ray crosses more of it the haze is a little brighter, where less a little clearer
+        float tl = min(len, 40.0);
+        for (int i = 0; i < 8; i++) {
+          float s = s0 + tl * (float(i) + j) / 8.0;
+          vec3 p = uEye + dir * s;
+          vec2 q = vec2(p.x + 0.6 * p.y, p.z - 0.4 * p.y) * 0.09 + uTime * vec2(0.035, 0.022);
+          turb += (vnoise(q) * 0.65 + vnoise(q * 2.3 + 4.7) * 0.35 - 0.5) * exp(-uSigma.g * (s - s0));
+        }
+        turb *= tl / 8.0 * uSigma.g;
+      }
+      {
+        // the broad shafts: sheets of light parallel to the refracted sun, so in perspective they all converge on its
+        // vanishing point. Each sheet is a direction around that point, read from noise on a circle (no seam), slowly
+        // morphing with the swell; they are seen only in front of whatever the ray hits, and fade with depth
+        vec3 lv = -uLt, ta = normalize(cross(lv, vec3(0.0, 0.0, 1.0))), tb = cross(lv, ta);
+        vec2 cp = normalize(vec2(dot(dir, ta), dot(dir, tb)) + 1e-5);
+        float sh = vnoise(cp * 8.5 + uTime * vec2(0.21, -0.13)) * 0.6 + vnoise(cp * 21.0 + uTime * vec2(-0.27, 0.19) + 3.1) * 0.4;
+        sh = smoothstep(0.34, 0.92, sh);
+        // the mean depth of the stretch of water in front of the lens: from deep down, even looking up, they are fainter
+        float yd = max(-(uEye.y + 0.5 * dir.y * min(dist, 25.0)), 0.0);
+        // a ray stopped by the underside goes on in its mirror: the shafts show there as in the water below the horizon
+        // (even right under the dome's waterline, where the surface is closer than the port: no seam at the horizon)
+        float rd = dir.y > 0.0 && uEye.y + dir.y * dist > -0.6 ? 40.0 : min(dist, 40.0);
+        // in turbid water they are short: only the first stretch of water in front of the lens shows them
+        acc += (1.0 - exp(-uSigma * rd)) / uSigma * uRayGain * (sh - uRayMean) * exp(-uRayFade * yd)
+             * smoothstep(0.9995, 0.985, dot(dir, lv));
       }
       float mu = dot(dir, -uLt);
-      gl_FragColor = vec4(acc * uSunUW * (0.6 * hg(mu, 0.8) + 0.4 * hg(mu, 0.3)), dist);
+      gl_FragColor = vec4(acc * uSunUW * (0.6 * hg(mu, 0.8) + 0.4 * hg(mu, 0.3)) + turb * uTurb * uLhz, dist);
     }`,
   depthTest: false, depthWrite: false,
 });
@@ -1825,27 +1886,31 @@ const compositeMat = new THREE.ShaderMaterial({   // split level: air above the 
     ${UPSAMPLE}
     ${WAVES}
     float g2(float x){ return exp(-x * x); }
+    float h11(float x){ return fract(sin(x * 127.1) * 43758.5453); }
+    float n1(float x){ float i = floor(x), f = fract(x); f = f * f * (3.0 - 2.0 * f); return mix(h11(i), h11(i + 1.0), f) * 2.0 - 1.0; }
     void main(){
-      // the waterline on the dome port follows the real waves; where the water is draining, a sheet lags above it
+      // the waterline on the dome port follows the real waves; where the water is draining, a sheet lags above it.
+      // The capillary wobble on top is noise, not sine waves, so the line never repeats or looks drawn
       vec4 v = uProjInv * vec4(vUv * 2.0 - 1.0, 1.0, 1.0);
       vec3 dir = normalize(mat3(uCamWorld) * (v.xyz / v.w));
       vec2 X = uCamXZ + dir.xz * uR;
       float h = waveHeight(X, uTime);
       float hd = (waveHeight(X, uTime + 0.05) - waveHeight(X, uTime - 0.05)) * 10.0;            // dh/dt
-      float wob = 0.012 * clamp(-hd * 0.8, -1.0, 1.0) * (0.65 + 0.35 * sin(vUv.x * 6.0 + uTime * 0.8))
-                + 0.0025 * sin(vUv.x * 19.0 - uTime * 2.3) + 0.0012 * sin(vUv.x * 47.0 + uTime * 3.1);
+      float wob = 0.012 * clamp(-hd * 0.8, -1.0, 1.0) * (0.7 + 0.3 * n1(vUv.x * 5.0 + uTime * 0.6))
+                + 0.0028 * n1(vUv.x * 17.0 - uTime * 1.9) + 0.0013 * n1(vUv.x * 43.0 + uTime * 2.7 + 9.0);
       float s = dir.y - (h - uCamY) / uR - wob;                      // > 0: this pixel looks out above the water
       float px = uPx;
       // a film of water on the port just above the line bends and softens the air view behind it
       float sheet = step(0.0, s) * (1.0 - smoothstep(6.0 * px, 18.0 * px, s));
-      vec2 ro = sheet * vec2(0.004 * sin(vUv.x * 61.0 + uTime * 2.6), 0.006 * sin(vUv.x * 37.0 - uTime * 1.9 + vUv.y * 90.0));
+      vec2 ro = sheet * vec2(0.004 * n1(vUv.x * 55.0 + uTime * 2.4), 0.006 * n1(vUv.x * 33.0 - uTime * 1.7 + vUv.y * 80.0));
       vec3 air = texture2D(tAir, vUv + ro).rgb;
       if (sheet > 0.0) {
         vec3 soft = (air + texture2D(tAir, vUv + ro + vec2(0.0, 2.5) * uTexel).rgb + texture2D(tAir, vUv + ro - vec2(0.0, 2.5) * uTexel).rgb) / 3.0;
         air = mix(air, soft, sheet);
       }
       float near = exp(-abs(s) / (14.0 * px));
-      vec2 uvU = vUv + vec2(0.0, 0.012 * near * step(s, 0.0));
+      // just under the line the water's own meniscus lenses the view below it: lifted, and rippled sideways
+      vec2 uvU = vUv + near * step(s, 0.0) * vec2(0.003 * n1(vUv.x * 29.0 - uTime * 2.1 + vUv.y * 40.0), 0.012);
       vec3 und = max(texture2D(tUnder, uvU).rgb + volume(uvU), 0.0);
       vec3 c = mix(und, air, smoothstep(-px, px, s));
       float lum = dot(air, vec3(0.2126, 0.7152, 0.0722));
@@ -1910,10 +1975,10 @@ class OceanPass extends Pass {
 
 // grade, vignette, ACES, sRGB, then film grain and a dither so the deep-blue gradients never band
 const FinishShader = {
-  uniforms: { tDiffuse: { value: null }, tBloom: { value: null }, uAspect: { value: 1 }, uTime: { value: 0 }, uVignette: { value: 0.26 }, uExposure: { value: 0.5 } },
+  uniforms: { tDiffuse: { value: null }, tBloom: { value: null }, uAspect: { value: 1 }, uTime: { value: 0 }, uVignette: { value: 0.26 }, uExposure: { value: 0.5 }, uUW: { value: 0 } },
   vertexShader: `varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
   fragmentShader: /* glsl */`
-    uniform sampler2D tDiffuse, tBloom; uniform float uAspect, uTime, uVignette, uExposure; varying vec2 vUv;
+    uniform sampler2D tDiffuse, tBloom; uniform float uAspect, uTime, uVignette, uExposure, uUW; varying vec2 vUv;
     vec3 rrt(vec3 v){ vec3 a = v * (v + 0.0245786) - 0.000090537; vec3 b = v * (0.983729 * v + 0.4329510) + 0.238081; return a / b; }
     vec3 aces(vec3 c){
       const mat3 IM = mat3(vec3(0.59719, 0.07600, 0.02840), vec3(0.35458, 0.90834, 0.13383), vec3(0.04823, 0.01566, 0.83777));
@@ -1923,7 +1988,9 @@ const FinishShader = {
     vec3 srgb(vec3 c){ return mix(c * 12.92, 1.055 * pow(c, vec3(1.0 / 2.4)) - 0.055, step(vec3(0.0031308), c)); }
     float h12(vec2 p){ vec3 p3 = fract(vec3(p.xyx) * 0.1031); p3 += dot(p3, p3.yzx + 33.33); return fract((p3.x + p3.y) * p3.z); }
     void main(){
-      vec3 c = texture2D(tDiffuse, vUv).rgb + texture2D(tBloom, vUv).rgb;
+      // under water the dome port's lateral colour parts red and blue toward the edges, as on a real housing
+      vec2 dc = (vUv - 0.5) * vec2(uAspect, 1.0), ca = (vUv - 0.5) * dot(dc, dc) * 0.014 * uUW;
+      vec3 c = vec3(texture2D(tDiffuse, vUv + ca).r, texture2D(tDiffuse, vUv).g, texture2D(tDiffuse, vUv - ca).b) + texture2D(tBloom, vUv).rgb;
       float l = dot(c, vec3(0.2126, 0.7152, 0.0722));
       c *= mix(vec3(0.985, 1.0, 1.02), vec3(1.03, 1.0, 0.965), smoothstep(0.05, 1.2, l));   // cool shadows, warm highlights
       c = max(mix(vec3(l), c, 1.05), 0.0);
@@ -1933,7 +2000,7 @@ const FinishShader = {
       vec2 fc = gl_FragCoord.xy + fract(uTime * 7.0) * vec2(113.0, 71.0);
       float g = h12(fc) + h12(fc + 37.17) - 1.0;                                             // triangular noise
       float y = dot(c, vec3(0.299, 0.587, 0.114));
-      c += g * (1.3 / 255.0 + 0.02 * y * (1.0 - y));                                        // dither + fine grain
+      c += g * (1.3 / 255.0 + (0.02 + 0.035 * uUW) * y * (1.0 - y));                        // dither + fine grain, more in the dim water
       gl_FragColor = vec4(c, 1.0);
     }`,
 };
@@ -1995,7 +2062,7 @@ function setSun(elDeg, azDeg) {
   volU.uSunUW.value.set(sunCol.r, sunCol.g, sunCol.b).multiplyScalar(SHAFT_GAIN * tF);
   rebuildEnv();
 }
-const SHAFT_GAIN = 0.2;
+const SHAFT_GAIN = 0.09;   // pond water: the sun's sheets are soft and short, not a starburst
 
 // ---------------- layout ----------------
 let viewW = 1, viewH = 1, wide = true, sunWide = null, bufH = 1;
@@ -2170,10 +2237,13 @@ function tick(static_ = false) {
   volU.uFrame.value = (volU.uFrame.value + 1) % 4096;
   backdrop.position.copy(camera.position);
   finish.uniforms.uTime.value = t;
-  finish.uniforms.uExposure.value = lerp(0.5, 0.62, smooth(0.2, -3.0, camY)) * (1 + 0.15 * sunlit + 0.25 * reefV);
+  finish.uniforms.uUW.value = uw;
+  finish.uniforms.uVignette.value = lerp(0.26, 0.42, uw);           // a housing's port darkens toward its rim
+  finish.uniforms.uExposure.value = lerp(0.5, 0.74, smooth(0.2, -3.0, camY))   // the eye adapts to the dimmer pond as it goes under * (1 + 0.15 * sunlit + 0.25 * reefV);
   fishU.uFishT.value = t;
-  MU.uLhz.value.lerpVectors(LHZ0, LHZ_REEF, reefV);
-  MU.uLdn.value.lerpVectors(LDN0, LDN_REEF, reefV);
+  const settle = smooth(0.26, 0.42, p);   // the pond's teal deepens toward the footage's blue as the first clip surfaces
+  MU.uLhz.value.lerpVectors(LHZ0, LHZ_DEEP, settle).lerp(LHZ_REEF, reefV);
+  MU.uLdn.value.lerpVectors(LDN0, LDN_DEEP, settle).lerp(LDN_REEF, reefV);
   MU.uKd.value.copy(KD).multiplyScalar(1 - 0.6 * reefV);
   // the school rises into view once the camera is well under, and swims ahead of the lens all the way down
   // fish removed: updateFish(t, Math.min(dt, 0.1), 0, lerp(-70, camY + lerp(4, 5, reefV), smooth(0.28, 0.4, p)), -8, 9 * Math.min(1, camera.aspect));
@@ -2215,7 +2285,8 @@ function tick(static_ = false) {
   _uw.t = uwNow; _uw.y = scrollY;
   _uw.sp += (Math.min(Math.abs(uwDy) / innerHeight / uwDt, 3) - _uw.sp) * Math.min(uwDt * 4, 1);   // scroll speed, screens per second
   const uwRate = UW_RM ? 1 : Math.round((1 + Math.min(_uw.sp * 0.6, 0.6)) * 20) / 20;
-  drawUwSnow(uwDy, UW_RM ? 0 : 0.85 * smooth(0.12, 0.3, p));
+  // the flat specks belong to the footage; in the drawn pond the specks are real particles at their own depths
+  drawUwSnow(uwDy, UW_RM ? 0 : 0.85 * smooth(0.3, 0.42, p));
   let vidTop = 0;
   uwVids.forEach((v, i) => {
     const o = ops[i];
