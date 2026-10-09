@@ -1351,22 +1351,29 @@ function probeLOD(proxy) {
   probeMain.visible = !proxy; probeProxy.visible = proxy;
 }
 const MATS = {
-  head: new THREE.MeshPhysicalMaterial({ color: 0xf2f2ee, roughness: 0.34, clearcoat: 0.3, clearcoatRoughness: 0.16, envMapIntensity: 1.3, side: THREE.DoubleSide }),
-  paye: new THREE.MeshPhysicalMaterial({ color: 0xe9ebe7, roughness: 0.38, clearcoat: 0.25, clearcoatRoughness: 0.2, envMapIntensity: 1.3, side: THREE.DoubleSide }),
+  // moulded white ASA, as the real float is: a satin, slightly matte plastic with no lacquer coat on it
+  head: new THREE.MeshPhysicalMaterial({ color: 0xf0f0ec, roughness: 0.5, envMapIntensity: 1.3, side: THREE.DoubleSide }),
+  paye: new THREE.MeshPhysicalMaterial({ color: 0xe9ebe7, roughness: 0.56, envMapIntensity: 1.3, side: THREE.DoubleSide }),
 };
+MATS.head.defines.PROBE_AO = MATS.paye.defines.PROBE_AO = '';   // these two carry the occlusion baked into the GLB
 // moulded-plastic grain, the wet band at the waterline, underwater daylight and caustics, and the water to the eye
 function patchProbe(sh) {
   Object.assign(sh.uniforms, MU);
   sh.vertexShader = sh.vertexShader
-    .replace('#include <common>', '#include <common>\nuniform float uApparent;\nvarying vec3 vWPos;\nvarying vec3 vLPos;')
+    .replace('#include <common>', '#include <common>\nuniform float uApparent;\nvarying vec3 vWPos;\nvarying vec3 vLPos;\nvarying float vAO;\n#ifdef PROBE_AO\nattribute float aAO;\n#endif')
     // seen through the surface at a grazing angle, the submerged hull is squeezed up toward the waterline
     .replace('#include <project_vertex>', `vec4 wApp = modelMatrix * vec4(transformed, 1.0);
       vWPos = wApp.xyz; vLPos = transformed;
+      #ifdef PROBE_AO
+      vAO = aAO;
+      #else
+      vAO = 1.0;
+      #endif
       wApp.y *= wApp.y < 0.0 ? uApparent : 1.0;
       vec4 mvPosition = viewMatrix * wApp;
       gl_Position = projectionMatrix * mvPosition;`);
   sh.fragmentShader = sh.fragmentShader
-    .replace('#include <common>', '#include <common>\nvarying vec3 vWPos;\nvarying vec3 vLPos;\n' + NOISE + MEDIUM + UWLIGHT + CAUSTIC + RAYS)
+    .replace('#include <common>', '#include <common>\nvarying vec3 vWPos;\nvarying vec3 vLPos;\nvarying float vAO;\n' + NOISE + MEDIUM + UWLIGHT + CAUSTIC + RAYS)
     .replace('#include <color_fragment>', `#include <color_fragment>
       float wet = 1.0 - smoothstep(0.04, 0.22, vLPos.y);          // the band the bobbing keeps wet, and all below it
       float grain = vnoise(vLPos.xz * 23.0 + vLPos.y * 7.0) * 0.6 + vnoise(vLPos.xy * 61.0 + 3.7) * 0.4;
@@ -1389,6 +1396,15 @@ function patchProbe(sh) {
       }
       #endif`)
     .replace('#include <lights_fragment_end>', `#include <lights_fragment_end>
+      // the blades and the hull hide one another from the open sky and water around them (occlusion baked from the
+      // CAD itself); and once wet, plastic (n ≈ 1.5) against water (1.33) keeps only about a tenth of its sheen in air
+      {
+        float dNV = saturate(dot(geometryNormal, geometryViewDir));
+        reflectedLight.indirectDiffuse *= vAO;
+        reflectedLight.indirectSpecular *= saturate(pow(dNV + vAO, exp2(-16.0 * material.roughness - 1.0)) - 1.0 + vAO);
+        float wet = mix(1.0, 0.15, uwF);
+        reflectedLight.directSpecular *= wet; reflectedLight.indirectSpecular *= wet;
+      }
       if (uwF > 0.0) {                                           // the refracted sun arrives focused into caustics
         float dep = max(-vWPos.y, 0.0);
         // … and it drifts in and out of the broad shafts, the same ones seen in the water around it
@@ -1674,6 +1690,10 @@ const onProbeLoaded = gltf => {
   gltf.scene.traverse(o => {
     if (!o.isMesh) return;
     probeDequantize(o.geometry);
+    // the baked occlusion (8-bit, normalised) as a float attribute; an older cached model without it reads as open
+    const g = o.geometry, aoB = g.getAttribute('_ao'), aoF = new Float32Array(g.attributes.position.count).fill(1);
+    if (aoB) { for (let i = 0; i < aoF.length; i++) aoF[i] = aoB.getX(i); g.deleteAttribute('_ao'); }
+    g.setAttribute('aAO', new THREE.BufferAttribute(aoF, 1));
     const grp = o.name.startsWith('main') ? 'main' : 'proxy', mat = o.name.endsWith('head') ? 'head' : 'paye';   // the loader strips the ':' from 'main:head'
     const mesh = new THREE.Mesh(o.geometry, MATS[mat] || MATS.paye);
     mesh.castShadow = mesh.receiveShadow = true;
@@ -1698,7 +1718,7 @@ function probeDequantize(g) {
   g.computeBoundingBox(); g.computeBoundingSphere();
 }
 (async () => {
-  const res = await fetch('DecompressionStream' in window ? 'probe-baked.glb.gz' : 'probe-baked.glb');
+  const res = await fetch('DecompressionStream' in window ? 'probe-baked.glb.gz?v=63' : 'probe-baked.glb?v=63');
   if (!res.ok) throw new Error('probe ' + res.status);
   const total = +res.headers.get('content-length') || 0, rd = res.body.getReader(), parts = [];
   for (let got = 0; ;) {
@@ -1760,7 +1780,7 @@ const volU = {
   uShaftScale: MU.uCaustScale, uSunUW: { value: new THREE.Vector3(0.08, 0.08, 0.08) },   // set from the sun in setSun()
   uMaxDist: { value: 300 }, uFrame: { value: 0 },
   uTime: MU.uTime, uRayScale: MU.uRayScale, uRayGain: { value: 0.35 }, uRayMean: { value: 0.15 }, uRayFade: { value: 0.14 },
-  uLhz: MU.uLhz, uTurb: { value: 1.6 },
+  uLhz: MU.uLhz, uTurb: { value: 2.6 },
 };
 const volumeMat = new THREE.ShaderMaterial({
   uniforms: volU,
@@ -2047,7 +2067,7 @@ class BloomLite extends UnrealBloomPass {
     r.autoClear = oldAutoClear;
   }
 }
-const bloom = new BloomLite(new THREE.Vector2(1, 1), 0.22, 0.35, 2.5);   // only the sun, its glints and the window
+const bloom = new BloomLite(new THREE.Vector2(1, 1), 0.13, 0.35, 2.5);   // only the sun, its glints and the window: a lens's faint halation, not a glow
 composer.addPass(bloom);
 const finish = new ShaderPass(FinishShader);
 finish.uniforms.tBloom.value = bloom.renderTargetsHorizontal[0].texture;
