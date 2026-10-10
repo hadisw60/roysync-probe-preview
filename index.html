@@ -458,7 +458,7 @@
     </div>
     <div class="copy" id="solid-copy"></div>
     <video class="uwv" muted loop playsinline preload="none" data-poster="media/dive-1-calm.jpg?v=60" data-src="media/dive-1-calm.mp4?v=60" aria-hidden="true"></video>
-    <video class="uwv" muted loop playsinline preload="none" data-poster="media/dive-2-rays.jpg?v=55" data-src="media/dive-2-rays.mp4?v=55" aria-hidden="true"></video>
+    <video class="uwv" muted loop playsinline preload="none" data-poster="media/dive-2-bubbles.jpg?v=66" data-src="media/dive-2-bubbles.mp4?v=66" aria-hidden="true"></video>
     <video class="uwv" muted loop playsinline preload="none" data-poster="media/dive-3-cave.jpg?v=60" data-src="media/dive-3-cave.mp4?v=60" aria-hidden="true"></video>
     <video class="uwv" muted loop playsinline preload="none" data-poster="media/dive-4-reef.jpg?v=60" data-src="media/dive-4-reef.mp4?v=60" aria-hidden="true"></video>
     <div id="veil" aria-hidden="true"></div>
@@ -2060,10 +2060,11 @@ class OceanPass extends Pass {
 // grade, vignette, ACES, sRGB, then film grain and a dither so the deep-blue gradients never band
 const FinishShader = {
   uniforms: { tDiffuse: { value: null }, tBloom: { value: null }, uAspect: { value: 1 }, uTime: { value: 0 }, uVignette: { value: 0.26 }, uExposure: { value: 0.5 }, uUW: { value: 0 },
-    tPlate: { value: null }, uPlateOn: { value: 0 }, uPlateUV: { value: new THREE.Vector4(1, 1, 0, 0) } },
+    tPlate: { value: null }, tPlate2: { value: null }, uPlateMix: { value: 0 }, uPlateOn: { value: 0 }, uPlateUV: { value: new THREE.Vector4(1, 1, 0, 0) } },
   vertexShader: `varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
   fragmentShader: /* glsl */`
-    uniform sampler2D tDiffuse, tBloom, tPlate; uniform float uAspect, uTime, uVignette, uExposure, uUW, uPlateOn; uniform vec4 uPlateUV; varying vec2 vUv;
+    uniform sampler2D tDiffuse, tBloom, tPlate, tPlate2; uniform float uAspect, uTime, uVignette, uExposure, uUW, uPlateOn, uPlateMix; uniform vec4 uPlateUV; varying vec2 vUv;
+    vec3 plateAt(sampler2D t, vec2 pu, vec2 pc){ return vec3(texture2D(t, pu + pc).r, texture2D(t, pu).g, texture2D(t, pu - pc).b); }
     vec3 rrt(vec3 v){ vec3 a = v * (v + 0.0245786) - 0.000090537; vec3 b = v * (0.983729 * v + 0.4329510) + 0.238081; return a / b; }
     vec3 aces(vec3 c){
       const mat3 IM = mat3(vec3(0.59719, 0.07600, 0.02840), vec3(0.35458, 0.90834, 0.13383), vec3(0.04823, 0.01566, 0.83777));
@@ -2087,8 +2088,10 @@ const FinishShader = {
         // the filmed water is already a finished picture: it joins after the tone curve, through the same port (the
         // same lateral colour and vignette) and under the same grain, wherever the drawn scene left it open
         vec2 pu = (vUv - 0.5) * uPlateUV.xy + 0.5 + uPlateUV.zw, pc = ca * uPlateUV.xy;
-        vec3 pl = vec3(texture2D(tPlate, pu + pc).r, texture2D(tPlate, pu).g, texture2D(tPlate, pu - pc).b) * pow(vig, 0.45);
-        pl *= vec3(0.9, 0.82, 1.03);   // the clip is filmed teal; graded to the same blue as the sea seen from the air
+        // just under the surface its rippled underside, then, deeper, the sunbeams coming down through it
+        vec3 pl = plateAt(tPlate, pu, pc);
+        if (uPlateMix > 0.001) pl = mix(pl, plateAt(tPlate2, pu, pc), uPlateMix);
+        pl *= pow(vig, 0.45);
         c = mix(pl, c, clamp(s0.a, 0.0, 1.0));
       }
       vec2 fc = gl_FragCoord.xy + fract(uTime * 7.0) * vec2(113.0, 71.0);
@@ -2278,16 +2281,26 @@ function uwChain() {   // one clip at a time, in order, so the first is ready ea
   };
   next(0);
 }
-// real water behind the float once the eye is under: footage filmed just below a sunlit sea surface (Pexels 10820163,
-// 14.6–18.6 s, motion-interpolated to 0.42× so the specks drift instead of rushing, looped seamlessly), laid in by the
-// finishing pass wherever the drawn scene is open
-const plateVid = Object.assign(document.createElement('video'), { muted: true, loop: true, playsInline: true, preload: 'auto' });
-plateVid.setAttribute('playsinline', ''); plateVid.setAttribute('muted', '');
-const plateTex = new THREE.VideoTexture(plateVid);
-plateTex.generateMipmaps = false; plateTex.minFilter = THREE.LinearFilter;
-finish.uniforms.tPlate.value = plateTex;
+// real water behind the float once the eye is under, filmed (Pexels, the user's picks, slowed and looped seamlessly):
+// first the rippled surface from just below it (3754337), then, going deeper, sunbeams coming down through it
+// (2632737). The finishing pass lays them in wherever the drawn scene is open, cross-fading as the camera sinks
+function plateVideo(uniform) {
+  const v = Object.assign(document.createElement('video'), { muted: true, loop: true, playsInline: true, preload: 'auto' });
+  v.setAttribute('playsinline', ''); v.setAttribute('muted', '');
+  const t = new THREE.VideoTexture(v);
+  t.generateMipmaps = false; t.minFilter = THREE.LinearFilter;
+  finish.uniforms[uniform].value = t;
+  return v;
+}
+const plateVid = plateVideo('tPlate'), plateVid2 = plateVideo('tPlate2');
 // a phone shows only a narrow upright slice of the wide clip, and sharp screens many pixels: both get the 1080p cut
-const plateLoad = () => { if (!plateVid.src) plateVid.src = `media/uw-plate-${Math.max(innerWidth, innerHeight) * devicePixelRatio > 1400 ? 1080 : 720}.mp4?v=65`; };
+const PLATE_H = Math.max(innerWidth, innerHeight) * devicePixelRatio > 1400 ? 1080 : 720;
+const plateLoad = () => {
+  if (plateVid.src) return;
+  plateVid.src = `media/uw-plate-a-${PLATE_H}.mp4?v=66`;
+  plateVid.addEventListener('canplaythrough', () => { if (!plateVid2.src) plateVid2.src = `media/uw-plate-b-${PLATE_H}.mp4?v=66`; }, { once: true });
+  setTimeout(() => { if (!plateVid2.src) plateVid2.src = `media/uw-plate-b-${PLATE_H}.mp4?v=66`; }, 6000);
+};
 addEventListener('probe-ready', () => { plateLoad(); setTimeout(uwChain, 200); }, { once: true });
 setTimeout(() => { plateLoad(); uwChain(); }, 8000);   // never hold the footage back for long, even if the probe is slow
 const uwSnow = document.getElementById('uwsnow'), uwSnowCtx = uwSnow.getContext('2d'),
@@ -2446,8 +2459,13 @@ function tick(static_ = false) {
   MU.uPlate.value = finish.uniforms.uPlateOn.value = plateOn ? 1 : 0;
   under.visible = particles.visible = !plateOn;
   compU.uVol.value = plateOn ? 0 : 1;
-  if (view.mode !== 0 && vidTop < 0.999) { if (plateVid.paused && plateVid.src) plateVid.play().catch(() => {}); }
-  else if (!plateVid.paused) plateVid.pause();
+  // the sunbeams take over from the rippled underside as the camera sinks; each clip plays only while it is seen
+  const plateMix = plateVid2.readyState >= 2 ? smooth(0.15, 0.28, p) : 0;
+  finish.uniforms.uPlateMix.value = plateMix;
+  const plateSeen = view.mode !== 0 && vidTop < 0.999;
+  [[plateVid, plateSeen && plateMix < 0.999], [plateVid2, plateSeen && plateMix > 0.001]].forEach(([v, on]) => {
+    if (on) { if (v.paused && v.src) v.play().catch(() => {}); } else if (!v.paused) v.pause();
+  });
   if (plateOn) {
     const ap = (plateVid.videoWidth / plateVid.videoHeight) || 1.78, as = finish.uniforms.uAspect.value, Z = 1.12;
     const sx = (as < ap ? as / ap : 1) / Z, sy = (as < ap ? 1 : ap / as) / Z;
