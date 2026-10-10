@@ -2516,6 +2516,9 @@ function tick(static_ = false) {
   sunUW.intensity = plateOn ? UW_I * 0.45 : UW_I;
   // and like the footage it takes the dimmer evening light near the surface, the clip's full light deeper down
   MU.uPlateTint.value.set(0.44, 0.72, 1.18).multiplyScalar(lerp(0.72, 1.0, smooth(0.1, 0.3, p)));
+  // sinking on toward the bottom, the float (now above and further off) is lost in the haze the way things are lost
+  // in real water, so it has already gone when the footage of the bottom surfaces, instead of being cut away
+  MU.uPlateK.value = lerp(0.035, 0.2, smooth(0.27, 0.37, p));
   bakeCaustics();
   // below the hero the sea is only a backdrop behind dark panels: render it at half rate, and skip whole
   // frames when nothing moves (tab hidden, or the fixed stage scrolled out of view)
