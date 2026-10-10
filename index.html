@@ -731,11 +731,18 @@ const MU = {
   uLdn: { value: LDN0.clone() },                           //   … looking down: dark green-teal
   uLwin: { value: new THREE.Vector3(0.95, 1.15, 1.3) },    // the sky seen through Snell's window
   uEup: { value: new THREE.Vector3(1.3, 2.35, 2.6) },      // irradiance on an upward face just below the surface
-  uUpwell: { value: new THREE.Color(0x0a3b5c) },           // deep water seen from above
+  // deep water seen from above: a touch violet of the target blue, because the tone curve pulls saturated deep blues
+  // toward cyan; it then reads as the same blue as the sea further out instead of a green near band
+  uUpwell: { value: new THREE.Color(0x142456) },
   uCaustTex: { value: null },
   uCaustScale: { value: 0.13 },
   uCaustBlur: { value: 0.5 },
   uRayScale: { value: 0.3 },                  // the broad sun shafts: one streak every few units across the light
+  // once the eye is under, the water is filmed (media/uw-plate.mp4, real footage just below a sunlit surface) and only
+  // the float is drawn: these say how that water tints what is in it, and how fast its haze closes over it
+  uPlate: { value: 0 },
+  uPlateTint: { value: new THREE.Vector3(0.58, 0.84, 1.12) },   // white plastic in bright shallow water stays light, in its blue
+  uPlateK: { value: 0.035 },
 };
 
 // ---------------- GLSL ----------------
@@ -1028,7 +1035,7 @@ const wu = water.material.uniforms;
 Object.assign(wu, WAVE_U, {
   uTime: MU.uTime, uWave: { value: 1.0 }, uFine: { value: 1.0 }, uRefr: { value: refrRT.texture }, uSkyCube: { value: cubeRT.texture },
   uScreen: { value: new THREE.Vector2(1, 1) }, uReflDistort: { value: 0.2 }, uRefrDistort: { value: 0.05 },
-  uHaze: { value: 0.0032 }, uSSS: { value: new THREE.Color(0x0b3f86) }, uSunE: { value: 2.6 }, uRough: { value: 0.0012 },
+  uHaze: { value: 0.0032 }, uSSS: { value: new THREE.Color(0x10288c) },   // under the warm low sun this glow through the crests lands blue, not green uSunE: { value: 2.6 }, uRough: { value: 0.0012 },
 });
 water.material.vertexShader = /* glsl */`
   uniform mat4 textureMatrix;
@@ -1269,13 +1276,15 @@ const backdrop = new THREE.Mesh(new THREE.SphereGeometry(500, 48, 24), new THREE
   side: THREE.BackSide, depthWrite: false, uniforms: { ...MU },
   vertexShader: `varying vec3 vW; void main(){ vec4 w = modelMatrix * vec4(position, 1.0); vW = w.xyz; gl_Position = projectionMatrix * viewMatrix * w; }`,
   fragmentShader: MEDIUM + /* glsl */`
+    uniform float uPlate;
     varying vec3 vW;
     void main(){
       vec3 dir = normalize(vW - cameraPosition);
       if (uMode < 0.5) { gl_FragColor = vec4(uUpwell, 1.0); return; }
       float y0 = uEye.y + dir.y * uDome;
       float len = dir.y > 0.002 ? max(-uEye.y / dir.y - uDome, 0.0) : 400.0;
-      gl_FragColor = vec4(inscatter(dir, y0, len), 1.0);
+      // alpha 0 where the filmed water shows through in the finishing pass (the colour still feeds the meniscus)
+      gl_FragColor = vec4(inscatter(dir, y0, len), 1.0 - uPlate);
     }`,
 }));
 backdrop.renderOrder = -10;
@@ -1358,7 +1367,7 @@ const MATS = {
 MATS.head.defines.PROBE_AO = MATS.paye.defines.PROBE_AO = '';   // these two carry the occlusion baked into the GLB
 // moulded-plastic grain, the wet band at the waterline, underwater daylight and caustics, and the water to the eye
 function patchProbe(sh) {
-  Object.assign(sh.uniforms, MU);
+  Object.assign(sh.uniforms, MU, WAVE_U);   // the waves too: where the water actually stands against the hull
   sh.vertexShader = sh.vertexShader
     .replace('#include <common>', '#include <common>\nuniform float uApparent;\nvarying vec3 vWPos;\nvarying vec3 vLPos;\nvarying float vAO;\n#ifdef PROBE_AO\nattribute float aAO;\n#endif')
     // seen through the surface at a grazing angle, the submerged hull is squeezed up toward the waterline
@@ -1373,7 +1382,7 @@ function patchProbe(sh) {
       vec4 mvPosition = viewMatrix * wApp;
       gl_Position = projectionMatrix * mvPosition;`);
   sh.fragmentShader = sh.fragmentShader
-    .replace('#include <common>', '#include <common>\nvarying vec3 vWPos;\nvarying vec3 vLPos;\nvarying float vAO;\n' + NOISE + MEDIUM + UWLIGHT + CAUSTIC + RAYS)
+    .replace('#include <common>', '#include <common>\nvarying vec3 vWPos;\nvarying vec3 vLPos;\nvarying float vAO;\nuniform float uPlate, uPlateK;\nuniform vec3 uPlateTint;\n' + NOISE + MEDIUM + WAVES + UWLIGHT + CAUSTIC + RAYS)
     .replace('#include <color_fragment>', `#include <color_fragment>
       float wet = 1.0 - smoothstep(0.04, 0.22, vLPos.y);          // the band the bobbing keeps wet, and all below it
       float grain = vnoise(vLPos.xz * 23.0 + vLPos.y * 7.0) * 0.6 + vnoise(vLPos.xy * 61.0 + 3.7) * 0.4;
@@ -1416,7 +1425,16 @@ function patchProbe(sh) {
         #endif
       }`)
     .replace('#include <opaque_fragment>', `#include <opaque_fragment>
-      gl_FragColor.rgb = applyWater(gl_FragColor.rgb, vWPos);`);
+      if (uPlate > 0.5 && uMode > 0.5 && uMode < 1.5 && vWPos.y > waveHeight(vWPos.xz, uTime)) {
+        // the dry part, looked at from under the water: outside Snell's window the underside is a mirror, so nothing
+        // above the surface (the head, out in the air) can be seen from here; the filmed water shows instead
+        gl_FragColor = vec4(0.0);
+      } else if (uPlate > 0.5 && (vWPos.y < 0.0 || (uMode > 0.5 && uMode < 1.5))) {
+        // with filmed water behind it, the haze between the lens and the hull is that same water: the hull keeps only
+        // what reaches the lens (absorbed and tinted by it) as alpha, and the footage shows through the rest
+        float Lw = max(length(vWPos - uEye) - uDome, 0.0);
+        gl_FragColor = vec4(gl_FragColor.rgb * exp(-uSigma * Lw) * uPlateTint, exp(-uPlateK * Lw));
+      } else gl_FragColor.rgb = applyWater(gl_FragColor.rgb, vWPos);`);
 }
 MATS.head.onBeforeCompile = MATS.paye.onBeforeCompile = patchProbe;
 
@@ -1869,6 +1887,8 @@ const compU = {
   uR: { value: DOME_R }, uCamY: { value: 0 }, uCamXZ: { value: new THREE.Vector2() },
   uTime: MU.uTime, uPx: { value: 0.001 }, uMaxDist: volU.uMaxDist, uVolTexel: { value: new THREE.Vector2(1, 1) },
   uTexel: { value: new THREE.Vector2(1, 1) }, ...WAVE_U,
+  uProjM: { value: camera.projectionMatrix }, uViewM: { value: camera.matrixWorldInverse }, uSigmaM: MU.uSigma,
+  uVol: { value: 1 },                                 // 0 while the filmed water is behind: no drawn shafts or mirror
 };
 const UPSAMPLE = /* glsl */`
     uniform sampler2D tVol, tDepth;
@@ -1894,11 +1914,39 @@ const UPSAMPLE = /* glsl */`
       }
       return acc / ws;
     }`;
+// Seen from just below it, the underside is a mirror (total internal reflection): between the port's waterline and the
+// horizon it shows the water and the hull beneath, reflected about the surface and rippled by it. Read back from the
+// underwater picture itself (the mirrored direction is on screen whenever the horizon is), only where the surface is
+// what this pixel sees (not the hull in front of it), and fading with the water between the lens and that surface, so
+// it is strongest at the crossing and gone a little way down. Needs UPSAMPLE (volume, viewDist) and NOISE first.
+const UNDER_MIRROR = /* glsl */`
+uniform mat4 uProjM, uViewM;
+uniform vec3 uSigmaM;
+vec3 underMirror(sampler2D t, vec3 base, vec2 uv, vec3 dir, vec3 cam, float time){
+  if (dir.y <= 0.0 || cam.y >= 0.0) return base;
+  float dS = -cam.y / dir.y;                                   // to the surface point this pixel looks at
+  float w = exp(-uSigmaM.g * dS) * (1.0 - smoothstep(0.03, 0.16, dir.y)) * step(dS * 0.92, viewDist(uv));
+  if (w < 0.004) return base;
+  vec4 cp = uProjM * uViewM * vec4(cam + vec3(dir.x, -dir.y, dir.z), 1.0);
+  if (cp.w <= 0.0) return base;
+  vec2 uvM = cp.xy / cp.w * 0.5 + 0.5;
+  vec2 Xs = cam.xz + dir.xz * dS;                              // ripples belong to the water, not to the screen
+  uvM += (vec2(vnoise(Xs * 2.6 + time * vec2(0.31, 0.22)), vnoise(Xs * 2.6 + 7.3 - time * vec2(0.24, 0.35))) - 0.5) * vec2(0.012, 0.02);
+  w *= smoothstep(0.0, 0.03, uvM.y) * smoothstep(1.0, 0.97, uvM.y) * smoothstep(0.0, 0.03, uvM.x) * smoothstep(1.0, 0.97, uvM.x);
+  return mix(base, max(texture2D(t, uvM).rgb + volume(uvM), 0.0), w);
+}`;
 const QUAD_VS = `varying vec2 vUv; void main(){ vUv = uv; gl_Position = vec4(position.xy, 0.0, 1.0); }`;
 const addShaftsMat = new THREE.ShaderMaterial({   // fully under water: frame + shafts, written to the other buffer
   uniforms: compU, vertexShader: QUAD_VS,
-  fragmentShader: `uniform sampler2D tScene; varying vec2 vUv; ${UPSAMPLE}
-    void main(){ gl_FragColor = vec4(max(texture2D(tScene, vUv).rgb + volume(vUv), 0.0), 1.0); }`,
+  fragmentShader: `uniform sampler2D tScene; uniform mat4 uCamWorld; uniform float uTime, uVol; varying vec2 vUv; ${UPSAMPLE}${NOISE}${UNDER_MIRROR}
+    void main(){
+      vec4 sc = texture2D(tScene, vUv);
+      if (uVol < 0.5) { gl_FragColor = sc; return; }   // filmed water: its own light, its own specks; alpha carries through
+      vec4 v = uProjInv * vec4(vUv * 2.0 - 1.0, 1.0, 1.0);
+      vec3 dir = normalize(mat3(uCamWorld) * (v.xyz / v.w));
+      vec3 c = max(sc.rgb + volume(vUv), 0.0);
+      gl_FragColor = vec4(underMirror(tScene, c, vUv, dir, uCamWorld[3].xyz, uTime), 1.0);
+    }`,
   depthTest: false, depthWrite: false,
 });
 const compositeMat = new THREE.ShaderMaterial({   // split level: air above the waterline on the dome port, water below
@@ -1906,25 +1954,30 @@ const compositeMat = new THREE.ShaderMaterial({   // split level: air above the 
   fragmentShader: /* glsl */`
     uniform sampler2D tAir, tUnder;
     uniform mat4 uCamWorld;
-    uniform float uR, uCamY, uTime, uPx;
+    uniform float uR, uCamY, uTime, uPx, uVol;
     uniform vec2 uCamXZ, uTexel;
     varying vec2 vUv;
     ${UPSAMPLE}
     ${WAVES}
+    ${NOISE}
+    ${UNDER_MIRROR}
     float g2(float x){ return exp(-x * x); }
     float h11(float x){ return fract(sin(x * 127.1) * 43758.5453); }
     float n1(float x){ float i = floor(x), f = fract(x); f = f * f * (3.0 - 2.0 * f); return mix(h11(i), h11(i + 1.0), f) * 2.0 - 1.0; }
     void main(){
-      // the waterline on the dome port follows the real waves; where the water is draining, a sheet lags above it.
-      // The capillary wobble on top is noise, not sine waves, so the line never repeats or looks drawn
+      // the waterline on the dome port is where the water's surface meets the dome: the swell and chop at that point,
+      // plus the centimetre ripples riding on them. The ripples live in the water's coordinates (X), so they stay on
+      // the water as the camera moves instead of sliding with the screen; where the water drains, a sheet lags above
       vec4 v = uProjInv * vec4(vUv * 2.0 - 1.0, 1.0, 1.0);
       vec3 dir = normalize(mat3(uCamWorld) * (v.xyz / v.w));
       vec2 X = uCamXZ + dir.xz * uR;
       float h = waveHeight(X, uTime);
       float hd = (waveHeight(X, uTime + 0.05) - waveHeight(X, uTime - 0.05)) * 10.0;            // dh/dt
-      float wob = 0.005 * clamp(-hd * 0.8, -1.0, 1.0) * (0.7 + 0.3 * n1(vUv.x * 5.0 + uTime * 0.6))
-                + 0.0012 * n1(vUv.x * 17.0 - uTime * 1.9) + 0.0006 * n1(vUv.x * 43.0 + uTime * 2.7 + 9.0);
-      float s = dir.y - (h - uCamY) / uR - wob;                      // > 0: this pixel looks out above the water
+      float rip = (vnoise(X * 2.1 + uTime * vec2(0.29, 0.21)) - 0.5) * 0.026
+                + (vnoise(X * 4.7 - uTime * vec2(0.23, 0.37) + 3.1) - 0.5) * 0.012
+                + (vnoise(X * 10.3 + uTime * vec2(0.45, -0.33) + 7.7) - 0.5) * 0.005;
+      float wob = 0.006 * clamp(-hd * 0.8, -1.0, 1.0);
+      float s = dir.y - (h + rip - uCamY) / uR - wob;                // > 0: this pixel looks out above the water
       float px = uPx;
       // a film of water on the port just above the line bends and softens the air view behind it
       float sheet = step(0.0, s) * (1.0 - smoothstep(3.0 * px, 9.0 * px, s));
@@ -1937,16 +1990,19 @@ const compositeMat = new THREE.ShaderMaterial({   // split level: air above the 
       float near = exp(-abs(s) / (8.0 * px));
       // just under the line the water's own meniscus lenses the view below it: lifted, and rippled sideways
       vec2 uvU = vUv + near * step(s, 0.0) * vec2(0.002 * n1(vUv.x * 29.0 - uTime * 2.1 + vUv.y * 40.0), 0.005);
-      vec3 und = max(texture2D(tUnder, uvU).rgb + volume(uvU), 0.0);
-      vec3 c = mix(und, air, smoothstep(-px, px, s));
+      vec4 uT = texture2D(tUnder, uvU);
+      vec3 und = max(uT.rgb + volume(uvU) * uVol, 0.0);
+      if (uVol > 0.5) und = underMirror(tUnder, und, uvU, dir, uCamWorld[3].xyz, uTime);   // the underside, mirroring what is below
+      vec3 c = mix(und, air, smoothstep(-1.3 * px, 1.3 * px, s));
+      // where the filmed water shows through (alpha 0) the meniscus core stays drawn: it belongs to the port
+      float a = max(mix(uT.a, 1.0, smoothstep(-1.3 * px, 1.3 * px, s)), 0.3 * g2(s / (2.5 * px)));
       float lum = dot(air, vec3(0.2126, 0.7152, 0.0722));
-      // the meniscus seen edge-on is a hairline, not a band: a thin dark core, a faint bright lip above it and the
-      // silvery, totally reflecting underside just below
-      c *= 1.0 - 0.32 * g2(s / (3.0 * px));
-      c += air * 0.22 * g2((s - 5.0 * px) / (2.5 * px));
-      c += und * 0.18 * g2((s + 4.0 * px) / (2.5 * px));
+      // the meniscus seen edge-on is a hairline, not a band or an outline: a thin dark core, the faintest lip above
+      c *= 1.0 - 0.3 * g2(s / (2.5 * px));
+      c += air * 0.1 * g2((s - 4.0 * px) / (2.0 * px));
+      c += und * 0.08 * g2((s + 3.0 * px) / (2.0 * px));
       c += lum * (vec3(0.05, 0.0, -0.02) * g2((s - 1.5 * px) / px) + vec3(-0.02, 0.0, 0.04) * g2((s + 1.5 * px) / px));
-      gl_FragColor = vec4(max(c, 0.0), 1.0);
+      gl_FragColor = vec4(max(c, 0.0), a);
     }`,
   depthTest: false, depthWrite: false,
 });
@@ -2003,10 +2059,11 @@ class OceanPass extends Pass {
 
 // grade, vignette, ACES, sRGB, then film grain and a dither so the deep-blue gradients never band
 const FinishShader = {
-  uniforms: { tDiffuse: { value: null }, tBloom: { value: null }, uAspect: { value: 1 }, uTime: { value: 0 }, uVignette: { value: 0.26 }, uExposure: { value: 0.5 }, uUW: { value: 0 } },
+  uniforms: { tDiffuse: { value: null }, tBloom: { value: null }, uAspect: { value: 1 }, uTime: { value: 0 }, uVignette: { value: 0.26 }, uExposure: { value: 0.5 }, uUW: { value: 0 },
+    tPlate: { value: null }, uPlateOn: { value: 0 }, uPlateUV: { value: new THREE.Vector4(1, 1, 0, 0) } },
   vertexShader: `varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
   fragmentShader: /* glsl */`
-    uniform sampler2D tDiffuse, tBloom; uniform float uAspect, uTime, uVignette, uExposure, uUW; varying vec2 vUv;
+    uniform sampler2D tDiffuse, tBloom, tPlate; uniform float uAspect, uTime, uVignette, uExposure, uUW, uPlateOn; uniform vec4 uPlateUV; varying vec2 vUv;
     vec3 rrt(vec3 v){ vec3 a = v * (v + 0.0245786) - 0.000090537; vec3 b = v * (0.983729 * v + 0.4329510) + 0.238081; return a / b; }
     vec3 aces(vec3 c){
       const mat3 IM = mat3(vec3(0.59719, 0.07600, 0.02840), vec3(0.35458, 0.90834, 0.13383), vec3(0.04823, 0.01566, 0.83777));
@@ -2018,13 +2075,22 @@ const FinishShader = {
     void main(){
       // under water the dome port's lateral colour parts red and blue toward the edges, as on a real housing
       vec2 dc = (vUv - 0.5) * vec2(uAspect, 1.0), ca = (vUv - 0.5) * dot(dc, dc) * 0.014 * uUW;
-      vec3 c = vec3(texture2D(tDiffuse, vUv + ca).r, texture2D(tDiffuse, vUv).g, texture2D(tDiffuse, vUv - ca).b) + texture2D(tBloom, vUv).rgb;
+      vec4 s0 = texture2D(tDiffuse, vUv);
+      vec3 c = vec3(texture2D(tDiffuse, vUv + ca).r, s0.g, texture2D(tDiffuse, vUv - ca).b) + texture2D(tBloom, vUv).rgb;
       float l = dot(c, vec3(0.2126, 0.7152, 0.0722));
       c *= mix(vec3(0.985, 1.0, 1.02), vec3(1.03, 1.0, 0.965), smoothstep(0.05, 1.2, l));   // cool shadows, warm highlights
       c = max(mix(vec3(l), c, 1.05), 0.0);
       vec2 q = (vUv - 0.5) * vec2(uAspect, 1.0);
-      c *= mix(1.0 - uVignette, 1.0, smoothstep(0.95, 0.2, length(q)));
-      c = srgb(aces(c));
+      float vig = mix(1.0 - uVignette, 1.0, smoothstep(0.95, 0.2, length(q)));
+      c = srgb(aces(c * vig));
+      if (uPlateOn > 0.5) {
+        // the filmed water is already a finished picture: it joins after the tone curve, through the same port (the
+        // same lateral colour and vignette) and under the same grain, wherever the drawn scene left it open
+        vec2 pu = (vUv - 0.5) * uPlateUV.xy + 0.5 + uPlateUV.zw, pc = ca * uPlateUV.xy;
+        vec3 pl = vec3(texture2D(tPlate, pu + pc).r, texture2D(tPlate, pu).g, texture2D(tPlate, pu - pc).b) * pow(vig, 0.45);
+        pl *= vec3(0.9, 0.82, 1.03);   // the clip is filmed teal; graded to the same blue as the sea seen from the air
+        c = mix(pl, c, clamp(s0.a, 0.0, 1.0));
+      }
       vec2 fc = gl_FragCoord.xy + fract(uTime * 7.0) * vec2(113.0, 71.0);
       float g = h12(fc) + h12(fc + 37.17) - 1.0;                                             // triangular noise
       float y = dot(c, vec3(0.299, 0.587, 0.114));
@@ -2091,6 +2157,7 @@ function setSun(elDeg, azDeg) {
   rebuildEnv();
 }
 const SHAFT_GAIN = 0.09;   // pond water: the sun's sheets are soft and short, not a starburst
+
 
 // ---------------- layout ----------------
 let viewW = 1, viewH = 1, wide = true, sunWide = null, bufH = 1;
@@ -2211,8 +2278,18 @@ function uwChain() {   // one clip at a time, in order, so the first is ready ea
   };
   next(0);
 }
-addEventListener('probe-ready', () => setTimeout(uwChain, 200), { once: true });
-setTimeout(uwChain, 8000);   // never hold the footage back for long, even if the probe is slow
+// real water behind the float once the eye is under: footage filmed just below a sunlit sea surface (Pexels 10820163,
+// 14.6–18.6 s, motion-interpolated to 0.42× so the specks drift instead of rushing, looped seamlessly), laid in by the
+// finishing pass wherever the drawn scene is open
+const plateVid = Object.assign(document.createElement('video'), { muted: true, loop: true, playsInline: true, preload: 'auto' });
+plateVid.setAttribute('playsinline', ''); plateVid.setAttribute('muted', '');
+const plateTex = new THREE.VideoTexture(plateVid);
+plateTex.generateMipmaps = false; plateTex.minFilter = THREE.LinearFilter;
+finish.uniforms.tPlate.value = plateTex;
+// a phone shows only a narrow upright slice of the wide clip, and sharp screens many pixels: both get the 1080p cut
+const plateLoad = () => { if (!plateVid.src) plateVid.src = `media/uw-plate-${Math.max(innerWidth, innerHeight) * devicePixelRatio > 1400 ? 1080 : 720}.mp4?v=65`; };
+addEventListener('probe-ready', () => { plateLoad(); setTimeout(uwChain, 200); }, { once: true });
+setTimeout(() => { plateLoad(); uwChain(); }, 8000);   // never hold the footage back for long, even if the probe is slow
 const uwSnow = document.getElementById('uwsnow'), uwSnowCtx = uwSnow.getContext('2d'),
   UW_FLAKES = Array.from({ length: 64 }, () => ({ x: Math.random(), y: Math.random(), r: 0.5 + Math.random() * 1.6, a: 0.12 + Math.random() * 0.38, z: 0.4 + Math.random(), w: Math.random() * 6.28 }));
 function drawUwSnow(dy, alpha) {
@@ -2363,6 +2440,19 @@ function tick(static_ = false) {
   diveEl.style.opacity = (1 - smooth(0.93, 0.99, p)) * (1 - smooth(0.0, 0.08, q));
   diveDot.style.top = `${(0.06 + Math.min(p + q * 0.94, 1) * 0.88) * 100}%`;
 
+  // the filmed water: on as soon as the eye is under and the clip has a frame; the drawn water, its specks and its
+  // shafts step aside. It covers the screen a little zoomed, and sinks from just under the surface as the camera does
+  const plateOn = view.mode !== 0 && plateVid.readyState >= 2;
+  MU.uPlate.value = finish.uniforms.uPlateOn.value = plateOn ? 1 : 0;
+  under.visible = particles.visible = !plateOn;
+  compU.uVol.value = plateOn ? 0 : 1;
+  if (view.mode !== 0 && vidTop < 0.999) { if (plateVid.paused && plateVid.src) plateVid.play().catch(() => {}); }
+  else if (!plateVid.paused) plateVid.pause();
+  if (plateOn) {
+    const ap = (plateVid.videoWidth / plateVid.videoHeight) || 1.78, as = finish.uniforms.uAspect.value, Z = 1.12;
+    const sx = (as < ap ? as / ap : 1) / Z, sy = (as < ap ? 1 : ap / as) / Z;
+    finish.uniforms.uPlateUV.value.set(sx, sy, 0, (1 - sy) / 2 * lerp(1, -1, smooth(0.1, 0.42, p)));
+  }
   bakeCaustics();
   // below the hero the sea is only a backdrop behind dark panels: render it at half rate, and skip whole
   // frames when nothing moves (tab hidden, or the fixed stage scrolled out of view)
