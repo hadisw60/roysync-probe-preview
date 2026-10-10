@@ -2060,7 +2060,8 @@ class OceanPass extends Pass {
 // grade, vignette, ACES, sRGB, then film grain and a dither so the deep-blue gradients never band
 const FinishShader = {
   uniforms: { tDiffuse: { value: null }, tBloom: { value: null }, uAspect: { value: 1 }, uTime: { value: 0 }, uVignette: { value: 0.26 }, uExposure: { value: 0.5 }, uUW: { value: 0 },
-    tPlate: { value: null }, tPlate2: { value: null }, uPlateMix: { value: 0 }, uPlateWarm: { value: 0 }, uPlateOn: { value: 0 }, uPlateUV: { value: new THREE.Vector4(1, 1, 0, 0) } },
+    tPlate: { value: null }, tPlate2: { value: null }, uPlateMix: { value: 0 }, uPlateWarm: { value: 0 }, uPlateOn: { value: 0 },
+    tVol: { value: null }, uShaftK: { value: 0 }, uPlateUV: { value: new THREE.Vector4(1, 1, 0, 0) } },
   vertexShader: `varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
   fragmentShader: /* glsl */`
     uniform sampler2D tDiffuse, tBloom, tPlate, tPlate2; uniform float uAspect, uTime, uVignette, uExposure, uUW, uPlateOn, uPlateMix; uniform vec4 uPlateUV; varying vec2 vUv;
@@ -2071,7 +2072,8 @@ const FinishShader = {
       for (int i = 0; i < 8; i++) { float a = float(i) * 0.785398 + 0.39; s += texture2D(t, pu + vec2(cos(a), sin(a)) * vec2(0.05, 0.07)).rgb; }
       return s / 8.0;
     }
-    uniform float uPlateWarm;
+    uniform float uPlateWarm, uShaftK;
+    uniform sampler2D tVol;
     vec3 rrt(vec3 v){ vec3 a = v * (v + 0.0245786) - 0.000090537; vec3 b = v * (0.983729 * v + 0.4329510) + 0.238081; return a / b; }
     vec3 aces(vec3 c){
       const mat3 IM = mat3(vec3(0.59719, 0.07600, 0.02840), vec3(0.35458, 0.90834, 0.13383), vec3(0.04823, 0.01566, 0.83777));
@@ -2111,6 +2113,18 @@ const FinishShader = {
         pl = mix(pl, min(pl, 0.68 + (pl - 0.68) * 0.4) * vec3(1.03, 0.92, 0.8) * 0.86, uPlateWarm);
         pl *= pow(vig, 0.45);
         c = mix(pl, c, a);
+        // the sun's shafts and the float's own shadow in them, from the same water volume the drawn scene uses:
+        // laid over the filmed water and the hull alike, so the light falls through one sea
+        // only their structure counts here (the shafts brighter, the shadow darker than the water around them): the
+        // local mean is taken off, and the light is the cool white sunlight becomes under water, not the evening orange
+        if (uShaftK > 0.0) {
+          vec3 vm = vec3(0.0);
+          for (int i = 0; i < 8; i++) { float an = float(i) * 0.785398; vm += texture2D(tVol, vUv + vec2(cos(an), sin(an)) * vec2(0.09, 0.07)).rgb; }
+          float shl = dot(texture2D(tVol, vUv).rgb - vm / 8.0, vec3(0.2126, 0.7152, 0.0722));
+          // only on the filmed water: not on the air above the line, and not on the hull (its own lighting carries the
+          // sun; the volume's short rays in front of it are no measure of the water around it)
+          c += shl * uShaftK * vec3(0.8, 0.93, 1.0) * vig * (1.0 - smoothstep(0.0, 0.12, a));
+        }
       }
       vec2 fc = gl_FragCoord.xy + fract(uTime * 7.0) * vec2(113.0, 71.0);
       float g = h12(fc) + h12(fc + 37.17) - 1.0;                                             // triangular noise
@@ -2158,6 +2172,7 @@ const bloom = new BloomLite(new THREE.Vector2(1, 1), 0.13, 0.35, 2.5);   // only
 composer.addPass(bloom);
 const finish = new ShaderPass(FinishShader);
 finish.uniforms.tBloom.value = bloom.renderTargetsHorizontal[0].texture;
+finish.uniforms.tVol.value = ocean.rtVol.texture;   // the light shafts, laid over the filmed water too
 composer.addPass(finish);
 
 // ---------------- sun placement ----------------
@@ -2178,6 +2193,7 @@ function setSun(elDeg, azDeg) {
   rebuildEnv();
 }
 const SHAFT_GAIN = 0.09;   // pond water: the sun's sheets are soft and short, not a starburst
+const SHAFT_ON_PLATE = 9;  // how strongly the shafts (and the float's shadow) read over the filmed water
 
 
 // ---------------- layout ----------------
@@ -2494,6 +2510,12 @@ function tick(static_ = false) {
     finish.uniforms.uPlateUV.value.set(sx, sy, 0, (1 - sy) / 2 * lerp(-1, 1, lookUp));
     finish.uniforms.uPlateWarm.value = 1 - smooth(0.1, 0.3, p);   // the evening light near the surface, gone with depth
   }
+  finish.uniforms.uShaftK.value = plateOn ? SHAFT_ON_PLATE : 0;
+  // a 5° evening sun puts little direct light under the surface: in the filmed water the hull is lit mostly by the
+  // water around it, so its sunlit faces stay within the footage's light instead of glowing yellow-white
+  sunUW.intensity = plateOn ? UW_I * 0.45 : UW_I;
+  // and like the footage it takes the dimmer evening light near the surface, the clip's full light deeper down
+  MU.uPlateTint.value.set(0.44, 0.72, 1.18).multiplyScalar(lerp(0.72, 1.0, smooth(0.1, 0.3, p)));
   bakeCaustics();
   // below the hero the sea is only a backdrop behind dark panels: render it at half rate, and skip whole
   // frames when nothing moves (tab hidden, or the fixed stage scrolled out of view)
