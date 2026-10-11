@@ -12,6 +12,8 @@
 <link rel="icon" type="image/png" href="assets/favicon.png">
 <link rel="preload" href="assets/fonts/sora.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="assets/fonts/inter.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="probe-baked.glb?v=65" as="fetch" crossorigin>
+<link rel="preload" href="assets/waternormals.jpg" as="image">
 <style>
   @font-face { font-family: 'Inter'; font-style: normal; font-weight: 400 600; font-display: swap; src: url(assets/fonts/inter.woff2) format('woff2'); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
   @font-face { font-family: 'Sora'; font-style: normal; font-weight: 500 700; font-display: swap; src: url(assets/fonts/sora.woff2) format('woff2'); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
@@ -405,6 +407,27 @@
     /* no drifting camera: keep the water visible behind the panels, but darken it for readability */
     #story > section::before { background: rgba(5, 9, 22, .86); opacity: 1; transition: none; }
   }
+
+  /* 360-degree interactive probe inspection affordances */
+  #stage { cursor: grab; user-select: none; -webkit-user-select: none; touch-action: pan-y; }
+  #stage.grabbing { cursor: grabbing !important; }
+  .orbit-hint {
+    position: absolute; bottom: 62px; left: 50%;
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 7px 15px 7px 11px; border-radius: 999px;
+    background: rgba(5, 14, 26, 0.72); border: 1px solid rgba(159, 208, 247, 0.32);
+    backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+    color: var(--accent-2); font-size: 11px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase;
+    z-index: 6; pointer-events: none; opacity: 0; transform: translate(-50%, 10px);
+    transition: opacity .45s ease, transform .45s cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow: 0 4px 24px rgba(0,0,0,0.4), 0 0 16px rgba(79,159,224,0.22);
+  }
+  .orbit-hint svg { width: 15px; height: 15px; color: var(--accent-2); display: block; flex-shrink: 0; }
+  .orbit-hint.visible { opacity: 0.95; transform: translate(-50%, 0); }
+  @media (max-width: 640px) {
+    .orbit-hint { bottom: 52px; font-size: 10px; padding: 6px 12px 6px 9px; }
+    .orbit-hint svg { width: 13px; height: 13px; }
+  }
 </style>
 <script type="importmap">
 { "imports": { "three": "./lib/three.module.js", "three/addons/": "./lib/addons/", "three/examples/jsm/": "./lib/jsm/" } }
@@ -457,12 +480,22 @@
       <p>Solar powered, nothing to wire. It reports over satellite, Wi-Fi or LTE.</p>
     </div>
     <div class="copy" id="solid-copy"></div>
-    <video class="uwv" muted loop playsinline preload="none" data-poster="media/dive-1-calm.jpg?v=60" data-src="media/dive-1-calm.mp4?v=60" aria-hidden="true"></video>
-    <video class="uwv" muted loop playsinline preload="none" data-poster="media/dive-2-bubbles.jpg?v=66" data-src="media/dive-2-bubbles.mp4?v=66" aria-hidden="true"></video>
-    <video class="uwv" muted loop playsinline preload="none" data-poster="media/dive-3-cave.jpg?v=60" data-src="media/dive-3-cave.mp4?v=60" aria-hidden="true"></video>
-    <video class="uwv" muted loop playsinline preload="none" data-poster="media/dive-4-reef.jpg?v=60" data-src="media/dive-4-reef.mp4?v=60" aria-hidden="true"></video>
+    <video class="uwv" muted loop playsinline preload="none" poster="media/dive-1-calm.jpg?v=60" data-poster="media/dive-1-calm.jpg?v=60" data-src="media/dive-1-calm.mp4?v=60" aria-hidden="true"></video>
+    <video class="uwv" muted loop playsinline preload="none" poster="media/dive-2-bubbles.jpg?v=60" data-poster="media/dive-2-bubbles.jpg?v=60" data-src="media/dive-2-bubbles.mp4?v=60" aria-hidden="true"></video>
+    <video class="uwv" muted loop playsinline preload="none" poster="media/dive-3-cave.jpg?v=60" data-poster="media/dive-3-cave.jpg?v=60" data-src="media/dive-3-cave.mp4?v=60" aria-hidden="true"></video>
+    <video class="uwv" muted loop playsinline preload="none" poster="media/dive-4-reef.jpg?v=60" data-poster="media/dive-4-reef.jpg?v=60" data-src="media/dive-4-reef.mp4?v=60" aria-hidden="true"></video>
     <div id="veil" aria-hidden="true"></div>
     <canvas id="uwsnow" aria-hidden="true"></canvas>
+    <div id="orbit-hint" class="orbit-hint" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
+        <path d="M3 3v5h5"/>
+        <path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/>
+        <path d="M16 21h5v-5"/>
+        <circle cx="12" cy="12" r="2.5" fill="currentColor"/>
+      </svg>
+      <span>Drag to inspect 360°</span>
+    </div>
     <div id="hint">Scroll to dive</div>
     <div id="dive" aria-hidden="true"><u></u><span>Waterline</span><i></i></div>
   </div>
@@ -701,19 +734,16 @@ function waveHeight(x, z, t) {
 // ---------------- shared state: sun, water medium ----------------
 const sunDir = new THREE.Vector3();          // toward the sun
 const sunCol = new THREE.Color(0xffd6a6);    // a 5° sun seen through ~10 air masses: warm, not white
-// open-ocean optics (Jerlov type I) per metre × 0.0793 m per unit: red is gone within a few metres, blue carries for tens
-// That clear-ocean water still shades the hull seen from the air (the hero above the surface is kept as it was);
-// once the eye is under, the water is a fish-farm pond instead: green-teal and turbid, about a metre and a half of
-// visibility (c ≈ 0.7–1.1 per metre), daylight fading by half in under a metre of depth
+// open-ocean optics (Jerlov type I / clear coastal water) per metre × 0.0793 m per unit:
+// Oceanic Jerlov Type I optics matching high-contrast open ocean:
+// Rich electric cerulean in the sunlit zone, transitioning to deep oceanic sapphire and midnight navy
 const SIGMA_AIR = new THREE.Vector3(0.035, 0.008, 0.005);
-const SIGMA = new THREE.Vector3(0.09, 0.055, 0.065);    // extinction per unit, under water
-const KD = new THREE.Vector3(0.07, 0.044, 0.052);       // how fast daylight fades with depth (kept below SIGMA)
-// muted blue-green, leaning to the same blue the water shows from the air, so crossing the surface keeps one water
-const LHZ0 = new THREE.Vector3(0.06, 0.28, 0.37), LHZ_REEF = new THREE.Vector3(0.03, 0.62, 1.05);
-const LDN0 = new THREE.Vector3(0.004, 0.03, 0.045), LDN_REEF = new THREE.Vector3(0.01, 0.15, 0.28);
-// deeper down the pond's teal settles toward the muted blue the footage below is graded to, so the first clip
-// surfaces out of the same water instead of a different sea
-const LHZ_DEEP = new THREE.Vector3(0.045, 0.22, 0.46), LDN_DEEP = new THREE.Vector3(0.003, 0.025, 0.07);
+const SIGMA = new THREE.Vector3(0.042, 0.019, 0.013);    // crystal clear ocean extinction
+const KD = new THREE.Vector3(0.032, 0.014, 0.010);       // daylight attenuation with depth
+// Deep oceanic sapphire and abyssal navy palette
+const LHZ0 = new THREE.Vector3(0.045, 0.34, 0.72), LHZ_REEF = new THREE.Vector3(0.035, 0.48, 0.88);
+const LDN0 = new THREE.Vector3(0.003, 0.026, 0.095), LDN_REEF = new THREE.Vector3(0.008, 0.09, 0.22);
+const LHZ_DEEP = new THREE.Vector3(0.022, 0.20, 0.52), LDN_DEEP = new THREE.Vector3(0.0015, 0.014, 0.065);
 const MU = {
   uTime: { value: 0 },
   uEye: { value: new THREE.Vector3() },       // optical eye: y clamped to the side of the surface the eye is on
@@ -726,22 +756,19 @@ const MU = {
   uSunDir: { value: sunDir },
   uSunCol: { value: sunCol },
   uApparent: { value: 1 },                    // < 1 while drawing what the surface refracts: apparent depth at grazing view
-  uLup: { value: new THREE.Vector3(0.2, 0.88, 1.05) },     // pond water just below the surface: looking up, a bright glow
-  uLhz: { value: LHZ0.clone() },                           //   … looking level: muted turquoise
-  uLdn: { value: LDN0.clone() },                           //   … looking down: dark green-teal
-  uLwin: { value: new THREE.Vector3(0.95, 1.15, 1.3) },    // the sky seen through Snell's window
-  uEup: { value: new THREE.Vector3(1.3, 2.35, 2.6) },      // irradiance on an upward face just below the surface
-  // deep water seen from above: a touch violet of the target blue, because the tone curve pulls saturated deep blues
-  // toward cyan; it then reads as the same blue as the sea further out instead of a green near band
-  uUpwell: { value: new THREE.Color(0x142456) },
+  uLup: { value: new THREE.Vector3(0.25, 0.55, 0.90) },    // natural water radiance looking up towards Snell's window
+  uLhz: { value: LHZ0.clone() },                           // looking level: deep luminous oceanic cerulean
+  uLdn: { value: LDN0.clone() },                           // looking down: rich marine abyssal navy
+  uLwin: { value: new THREE.Vector3(0.70, 0.95, 1.20) },   // natural sunlit Snell's window radiance
+  uEup: { value: new THREE.Vector3(0.85, 1.45, 1.95) },    // upward daylight irradiance
+  uUpwell: { value: new THREE.Color(0x021228) },
   uCaustTex: { value: null },
-  uCaustScale: { value: 0.13 },
-  uCaustBlur: { value: 0.5 },
-  uRayScale: { value: 0.3 },                  // the broad sun shafts: one streak every few units across the light
-  // once the eye is under, the water is filmed (media/uw-plate.mp4, real footage just below a sunlit surface) and only
-  // the float is drawn: these say how that water tints what is in it, and how fast its haze closes over it
+  uCaustScale: { value: 0.15 },
+  uCaustBlur: { value: 0.45 },
+  uRayScale: { value: 0.42 },                  // crisp crepuscular sun shafts
+  // filmed water tinting and haze
   uPlate: { value: 0 },
-  uPlateTint: { value: new THREE.Vector3(0.58, 0.84, 1.12) },   // white plastic in bright shallow water stays light, in its blue
+  uPlateTint: { value: new THREE.Vector3(0.45, 0.78, 1.28) },
   uPlateK: { value: 0.035 },
 };
 
@@ -1195,30 +1222,28 @@ const under = new THREE.Mesh(seaGeo, new THREE.ShaderMaterial({
         vec3 I = normalize(vW - cameraPosition);
         float dist = length(vW - cameraPosition);
         float lost, rv;
-        // a sheltered pond: from below its ripples tilt the underside gently, not the open-sea chop the air view keeps
-        vec2 sl = (waveSlope(vX0, uTime, dist, lost) + rippleSlope(vW.xz, rv)) * 0.6;
+        // Open-ocean swell dynamics: energetic surface ripples and waves as seen looking up from underwater
+        vec2 sl = waveSlope(vX0, uTime, dist, lost) * 1.05 + rippleSlope(vW.xz, rv) * 0.95;
         vec3 N = normalize(vec3(-sl.x, 1.0, -sl.y)), Nd = -N;
         float ci = clamp(dot(I, N), 0.0, 1.0);
-        // the window's rim, softened by the slope this pixel cannot resolve: it wobbles instead of fizzing
+        // Snell's window boundary with realistic wave distortion
         float w = 0.012 + 0.8 * sqrt(max(rv + lost, 0.0)) + 0.6 * length(fwidth(N));
         float inW = smoothstep(0.6614 - w, 0.6614 + w, ci);
         float cw = max(ci, 0.664);
-        vec3 F = vec3(fresnelOut(cw, 1.331), fresnelOut(cw, 1.333), fresnelOut(cw, 1.338));   // the rim is faintly coloured
-        vec3 T = refract(I, Nd, 1.333);         // inside Snell's window: the whole sky, squeezed into a 97° cone
+        vec3 F = vec3(fresnelOut(cw, 1.331), fresnelOut(cw, 1.333), fresnelOut(cw, 1.338));   // chromatic edge on the window
+        vec3 T = refract(I, Nd, 1.333);         // inside Snell's window: sky cone with overhead sun
         if (dot(T, T) < 0.5) T = normalize(vec3(I.x, 0.02, I.z));
         float sd = max(dot(T, uSunDir), 0.0);
-        // radiance gains n² ≈ 1.78 entering the denser medium: the window is brighter than the sky it shows
-        vec3 win = textureCube(uSkyCube, T).rgb * 1.7 + uSunCol * (pow(sd, 2400.0) * 90.0 + pow(sd, 120.0) * 2.0);
-        // outside it, a mirror. In turbid water what it mirrors is mostly the lit, scattering layer just under the
-        // surface rather than the dark depths far below, so it reads as a soft silvery sheet, not a dark ceiling
+        // Natural, gentle solar disk breaking through the water into Snell's window
+        vec3 sunGlow = uSunCol * (pow(sd, 180.0) * 1.6 + pow(sd, 24.0) * 0.45);
+        vec3 win = textureCube(uSkyCube, T).rgb + sunGlow;
+        // Outside Snell's window: total internal reflection of deep oceanic waters and surface ripples
         vec3 R = reflect(I, Nd);
-        vec3 Rf = normalize(vec3(R.x, min(R.y, 0.0) * 0.35, R.z));
+        vec3 Rf = normalize(vec3(R.x, -abs(R.y) * 0.7, R.z));
         vec3 Fe = mix(vec3(1.0), F, inW);
-        vec3 col = win * (1.0 - Fe) + inscatter(Rf, 0.0, 400.0) * Fe;
-        // a few metres out the underside and the open water melt into one haze (particles scatter in every direction,
-        // not only along the ray): no hard horizon where the surface meets the water column below it
-        // toward grazing the pixel spans more and more waves, and the mirror of the water converges on that water itself
-        float far = max(1.0 - exp(-dist * 0.04), 1.0 - smoothstep(0.0, 0.16, I.y));
+        vec3 col = win * (1.0 - Fe) + inscatter(Rf, 0.0, 200.0) * Fe;
+        // Seamless atmospheric transition toward grazing angle
+        float far = max(1.0 - exp(-dist * 0.035), 1.0 - smoothstep(0.0, 0.18, I.y));
         vec3 c = mix(applyWater(col, vW), inscatter(normalize(vec3(I.x, 0.0, I.z)), uEye.y, 400.0), far);
         gl_FragColor = vec4(c, 1.0);
       }`,
@@ -1394,35 +1419,37 @@ function patchProbe(sh) {
       #include <lights_fragment_maps>
       }
       #if defined( RE_IndirectSpecular )
-      if (uwF > 0.0) {                                           // under water the "sky" is the window and the blue
+      if (uwF > 0.0) {                                           // under water the ambient reflection is soft and diffuse
         vec3 wN = inverseTransformDirection(geometryNormal, viewMatrix);
         vec3 wR = inverseTransformDirection(reflect(-geometryViewDir, geometryNormal), viewMatrix);
         iblIrradiance = mix(iblIrradiance, uwIrradiance(wN, vWPos.y), uwF);
-        radiance = mix(radiance, uwRadiance(wR, vWPos.y, material.roughness) * 0.6, uwF);
+        radiance = mix(radiance, uwRadiance(wR, vWPos.y, material.roughness) * 0.18, uwF);
         #ifdef USE_CLEARCOAT
-        clearcoatRadiance = mix(clearcoatRadiance, uwRadiance(wR, vWPos.y, 0.2) * 0.6, uwF);
+        clearcoatRadiance *= mix(1.0, 0.05, uwF);
         #endif
       }
       #endif`)
     .replace('#include <lights_fragment_end>', `#include <lights_fragment_end>
-      // the blades and the hull hide one another from the open sky and water around them (occlusion baked from the
-      // CAD itself); and once wet, plastic (n ≈ 1.5) against water (1.33) keeps only about a tenth of its sheen in air
+      // the blades and the hull hide one another from the open sky and water around them;
+      // submerged in water (n=1.33), plastic (n=1.5) loses ~88% of specular sheen, becoming soft and natural
+      float dNV = saturate(dot(geometryNormal, geometryViewDir));
       {
-        float dNV = saturate(dot(geometryNormal, geometryViewDir));
         reflectedLight.indirectDiffuse *= vAO;
         reflectedLight.indirectSpecular *= saturate(pow(dNV + vAO, exp2(-16.0 * material.roughness - 1.0)) - 1.0 + vAO);
-        float wet = mix(1.0, 0.15, uwF);
-        reflectedLight.directSpecular *= wet; reflectedLight.indirectSpecular *= wet;
-      }
-      if (uwF > 0.0) {                                           // the refracted sun arrives focused into caustics
-        float dep = max(-vWPos.y, 0.0);
-        // … and it drifts in and out of the broad shafts, the same ones seen in the water around it
-        vec3 k = causticRGB(vWPos, dep) * exp(-uSigma * dep / max(-uLt.y, 0.3)) * (0.45 + 1.6 * rays(vWPos));
-        reflectedLight.directDiffuse *= mix(vec3(1.0), k, uwF);
-        reflectedLight.directSpecular *= mix(vec3(1.0), k * 0.5, uwF);
+        float wet = mix(1.0, 0.08, uwF);
+        reflectedLight.directSpecular *= wet;
+        reflectedLight.indirectSpecular *= wet;
         #ifdef USE_CLEARCOAT
-        clearcoatSpecularDirect *= mix(vec3(1.0), k * 0.5, uwF);
+        clearcoatSpecularDirect *= mix(1.0, 0.04, uwF);
+        clearcoatSpecularIndirect *= mix(1.0, 0.04, uwF);
         #endif
+      }
+      if (uwF > 0.0) {
+        float dep = max(-vWPos.y, 0.0);
+        // Soft, organic caustics softly playing across the surfaces without harsh artificial glints
+        vec3 caust = causticRGB(vWPos, dep) * exp(-uSigma * dep / max(-uLt.y, 0.3));
+        vec3 k = mix(vec3(1.0), caust, 0.16);
+        reflectedLight.directDiffuse *= mix(vec3(1.0), k, uwF);
       }`)
     .replace('#include <opaque_fragment>', `#include <opaque_fragment>
       if (uPlate > 0.5 && uMode > 0.5 && uMode < 1.5 && vWPos.y > waveHeight(vWPos.xz, uTime)) {
@@ -1440,105 +1467,133 @@ MATS.head.onBeforeCompile = MATS.paye.onBeforeCompile = patchProbe;
 
 // ---------------- fish cruising in the open water of the dive ----------------
 const fishU = { uFishT: { value: 0 } };
-const fishMat = new THREE.MeshStandardMaterial({ side: THREE.DoubleSide });   // textures come from assets/fish.glb
+const fishMat = new THREE.MeshStandardMaterial({
+  color: 0x88b0cb,
+  roughness: 0.52,
+  metalness: 0.12,
+  side: THREE.FrontSide
+});   // biological scales with natural silver-blue oceanic countershading
 fishMat.onBeforeCompile = sh => {
   patchProbe(sh);
   Object.assign(sh.uniforms, fishU);
-  sh.vertexShader = 'attribute float aPhase;\nuniform float uFishT;\n' + sh.vertexShader
+  sh.vertexShader = 'attribute float aPhase;\nattribute float aSpeed;\nuniform float uFishT;\n' + sh.vertexShader
     .replace('#include <begin_vertex>', `#include <begin_vertex>
-      float sw = clamp(0.5 - transformed.z, 0.0, 1.4);
-      transformed.x += 0.06 * sw * sw * sin(8.0 * transformed.z - uFishT * 6.5 + aPhase);`)
+      // Biomimetic Carangiform swim dynamics:
+      // Rigid cranial/pectoral zone (transformed.z > 0.10) for steady realistic heading;
+      // Fluid sinusoidal flex increasing naturally toward caudal tailfin
+      float tailFactor = smoothstep(0.12, -0.42, transformed.z);
+      float flex = tailFactor * tailFactor;
+      float wave = sin(4.2 * transformed.z - uFishT * (2.8 * aSpeed) + aPhase);
+      transformed.x += 0.019 * flex * wave;
+      // Subtle natural vertical fin flutter
+      transformed.y += 0.003 * tailFactor * cos(4.2 * transformed.z - uFishT * (2.8 * aSpeed) + aPhase);`)
     .replace('vec4 wApp = modelMatrix * vec4(transformed, 1.0);', 'vec4 wApp = modelMatrix * instanceMatrix * vec4(transformed, 1.0);');
 };
-const N_FISH = 14;
+const N_FISH = 22;
 let fishMesh = null;
-const school = { pos: new Float32Array(N_FISH * 3), vel: new Float32Array(N_FISH * 3), off: new Float32Array(N_FISH * 3), size: new Float32Array(N_FISH), ready: false };
+const school = {
+  pos: new Float32Array(N_FISH * 3),
+  vel: new Float32Array(N_FISH * 3),
+  off: new Float32Array(N_FISH * 3),
+  size: new Float32Array(N_FISH),
+  ready: false
+};
 const fPhase = new Float32Array(N_FISH);
+const fSpeed = new Float32Array(N_FISH);
 for (let i = 0; i < N_FISH; i++) {
-  let x, y, z;
-  do { x = Math.random() * 2 - 1; y = Math.random() * 2 - 1; z = Math.random() * 2 - 1; } while (x * x + y * y + z * z > 1);
-  school.off.set([x * 6.0, y * 2.4, z * 8.0], i * 3);
-  school.size[i] = 3.2 * (0.85 + 0.3 * Math.random());
+  // Spindle/ellipsoid natural schooling formation
+  const u = Math.random(), v = Math.random(), th = Math.random() * Math.PI * 2;
+  const rad = Math.sqrt(u) * 1.5;
+  const sx = Math.cos(th) * rad;
+  const sy = (v - 0.5) * 1.0;
+  const sz = (Math.random() - 0.5) * 4.2;
+  school.off.set([sx, sy, sz], i * 3);
+  school.size[i] = 1.05 + 0.32 * Math.random();
   fPhase[i] = Math.random() * Math.PI * 2;
+  fSpeed[i] = 0.88 + 0.24 * Math.random();
 }
-if (false) new GLTFLoader().load('assets/fish.glb', gltf => {
+new GLTFLoader().load('assets/fish.glb', gltf => {
   let src = null;
   gltf.scene.traverse(o => { if (o.isMesh && !src) src = o; });
+  if (!src) return;
   const g = src.geometry.clone();
   g.rotateY(Math.PI);
   g.translate(0, -0.1435, 0.0035);
-  g.scale(1.555 * 0.85, 1.555 * 0.7, 1.555);
+  g.scale(1.35 * 0.85, 1.35 * 0.7, 1.35);
   const m = src.material;
-  Object.assign(fishMat, { map: m.map, normalMap: m.normalMap, aoMap: m.aoMap, roughnessMap: m.roughnessMap, metalnessMap: m.metalnessMap,
-    roughness: m.roughness, metalness: m.metalness });
+  Object.assign(fishMat, {
+    map: m.map,
+    normalMap: m.normalMap,
+    aoMap: m.aoMap,
+    roughnessMap: m.roughnessMap,
+    roughness: 0.52,
+    metalness: 0.12
+  });
   fishMat.needsUpdate = true;
   fishMesh = new THREE.InstancedMesh(g, fishMat, N_FISH);
   fishMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
   fishMesh.geometry.setAttribute('aPhase', new THREE.InstancedBufferAttribute(fPhase, 1));
+  fishMesh.geometry.setAttribute('aSpeed', new THREE.InstancedBufferAttribute(fSpeed, 1));
   fishMesh.frustumCulled = false;
   fishMesh.layers.set(L_UNDER);
   scene.add(fishMesh);
 });
-const _fo = new THREE.Object3D(), _fv = new THREE.Vector3(), _ft = new THREE.Vector3(), _fc = new THREE.Vector3(), _fh = new THREE.Vector3();
-const N_REEF = 260;
-let reefFish = null;
-const rschool = { pos: new Float32Array(N_REEF * 3), vel: new Float32Array(N_REEF * 3), off: new Float32Array(N_REEF * 3), size: new Float32Array(N_REEF), ready: false };
-const rPhase = new Float32Array(N_REEF);
-for (let i = 0; i < N_REEF; i++) {
-  let x, y, z;
-  do { x = Math.random() * 2 - 1; y = Math.random() * 2 - 1; z = Math.random() * 2 - 1; } while (x * x + y * y + z * z > 1);
-  rschool.off.set([x * 16, y * 3.2, z * 12], i * 3);         // a loose cloud hovering over the reef, as anthias do
-  rschool.size[i] = 0.72 * (0.75 + 0.5 * Math.random());
-  rPhase[i] = Math.random() * Math.PI * 2;
-}
-const reefFishMat = new THREE.MeshStandardMaterial({ color: 0xffa04a, emissive: 0x6a2a08, side: THREE.DoubleSide, roughness: 0.45, metalness: 0.1 });
-reefFishMat.onBeforeCompile = fishMat.onBeforeCompile;
-const reefFishColors = [0xff7a2e, 0xff9548, 0xffa060, 0xff6a3a, 0xf58a8a].map(c => new THREE.Color(c));
-function makeReefFish(g) {
-  reefFish = new THREE.InstancedMesh(g, reefFishMat, N_REEF);
-  reefFish.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
-  reefFish.geometry = g.clone();
-  reefFish.geometry.setAttribute('aPhase', new THREE.InstancedBufferAttribute(rPhase, 1));
-  for (let i = 0; i < N_REEF; i++) reefFish.setColorAt(i, reefFishColors[i % reefFishColors.length]);
-  reefFish.frustumCulled = false;
-  reefFish.layers.set(L_UNDER);
-  scene.add(reefFish);
-}
-function updateReefFish(t, dt, cx, cy, cz) {
-  // each fish hovers around its own slot over the reef, drifting and darting a little; the cloud slowly turns
-  const P = rschool.pos, V = rschool.vel, O = rschool.off, k = 1 - Math.exp(-dt * 2.2), a = t * 0.05;
-  const ca = Math.cos(a), sa = Math.sin(a);
-  for (let i = 0; i < N_REEF; i++) {
+const _fo = new THREE.Object3D(), _fv = new THREE.Vector3();
+function updateFish(t, dt, cx, cy, cz) {
+  // Cohesive schooling: the entire school glides organically through the oceanic sunlight
+  const slowT = t * 0.16;
+  const leadX = cx + Math.sin(slowT) * 4.4 + Math.cos(slowT * 0.41) * 1.6;
+  const leadY = cy + Math.sin(slowT * 0.65) * 0.75;
+  const leadZ = cz + Math.cos(slowT) * 3.8 + Math.sin(slowT * 0.31) * 1.4;
+
+  const leadVx = (Math.cos(slowT) * 4.4 * 0.16 - Math.sin(slowT * 0.41) * 1.6 * 0.41 * 0.16);
+  const leadVy = Math.cos(slowT * 0.65) * 0.75 * 0.65 * 0.16;
+  const leadVz = (-Math.sin(slowT) * 3.8 * 0.16 + Math.cos(slowT * 0.31) * 1.4 * 0.31 * 0.16);
+
+  const P = school.pos, V = school.vel, O = school.off;
+  const followRate = 1.0 - Math.exp(-Math.min(dt, 0.05) * 3.4);
+
+  for (let i = 0; i < N_FISH; i++) {
     const i3 = i * 3;
-    const ox = O[i3] + 0.8 * Math.sin(t * 0.5 + i * 1.3), oy = O[i3 + 1] + 0.4 * Math.sin(t * 0.37 + i), oz = O[i3 + 2] + 0.8 * Math.cos(t * 0.43 + i * 2.1);
-    _ft.set(cx + ox * ca + oz * sa, cy + oy, cz - ox * sa + oz * ca);
-    if (!rschool.ready) { P[i3] = _ft.x; P[i3 + 1] = _ft.y; P[i3 + 2] = _ft.z; V[i3] = 0.3; }
-    V[i3] += ((_ft.x - P[i3]) * 1.2 - V[i3]) * k; V[i3 + 1] += ((_ft.y - P[i3 + 1]) * 1.2 - V[i3 + 1]) * k; V[i3 + 2] += ((_ft.z - P[i3 + 2]) * 1.2 - V[i3 + 2]) * k;
-    P[i3] += V[i3] * dt; P[i3 + 1] += V[i3 + 1] * dt; P[i3 + 2] += V[i3 + 2] * dt;
+    const ph = fPhase[i];
+    // Gentle natural drift and breathing space within the school
+    const driftX = O[i3] + Math.sin(t * 0.45 + ph) * 0.20;
+    const driftY = O[i3 + 1] + Math.sin(t * 0.35 + ph * 1.4) * 0.10;
+    const driftZ = O[i3 + 2] + Math.cos(t * 0.45 + ph * 1.8) * 0.24;
+
+    const tgtX = leadX + driftX;
+    const tgtY = leadY + driftY;
+    const tgtZ = leadZ + driftZ;
+
+    if (!school.ready) {
+      P[i3] = tgtX; P[i3 + 1] = tgtY; P[i3 + 2] = tgtZ;
+      V[i3] = leadVx; V[i3 + 1] = leadVy; V[i3 + 2] = leadVz;
+    } else {
+      const desiredVx = leadVx + (tgtX - P[i3]) * 1.5;
+      const desiredVy = leadVy + (tgtY - P[i3 + 1]) * 1.3;
+      const desiredVz = leadVz + (tgtZ - P[i3 + 2]) * 1.5;
+
+      V[i3] += (desiredVx - V[i3]) * followRate;
+      V[i3 + 1] += (desiredVy - V[i3 + 1]) * followRate;
+      V[i3 + 2] += (desiredVz - V[i3 + 2]) * followRate;
+
+      P[i3] += V[i3] * dt;
+      P[i3 + 1] += V[i3 + 1] * dt;
+      P[i3 + 2] += V[i3 + 2] * dt;
+    }
+
     _fo.position.set(P[i3], P[i3 + 1], P[i3 + 2]);
     const sp = Math.hypot(V[i3], V[i3 + 2]);
-    _fv.set(P[i3] + (sp > 0.05 ? V[i3] : Math.sin(i)), P[i3 + 1], P[i3 + 2] + (sp > 0.05 ? V[i3 + 2] : Math.cos(i)));
-    _fo.lookAt(_fv);
-    _fo.scale.setScalar(rschool.size[i]);
-    _fo.updateMatrix();
-    if (reefFish) reefFish.setMatrixAt(i, _fo.matrix);
-  }
-  rschool.ready = true;
-  if (reefFish) reefFish.instanceMatrix.needsUpdate = true;
-}
-function updateFish(t, dt, sx, sy0, sz, ampX) {
-  // each fish on its own wide, slow loop through the water: scattered, at different depths and speeds, some each way
-  const P = school.pos, V = school.vel, O = school.off;
-  for (let i = 0; i < N_FISH; i++) {
-    const i3 = i * 3, ph = fPhase[i], dir = i % 2 ? 1 : -1;
-    const w = (0.07 + 0.05 * ((i * 0.618) % 1)) * dir, a = t * w + ph;
-    const rx = ampX * (0.7 + 0.6 * ((i * 0.37) % 1)) + Math.abs(O[i3]), rz = 6 + Math.abs(O[i3 + 2]);
-    const x = sx + rx * Math.sin(a), z = sz + rz * Math.cos(a), y = sy0 + O[i3 + 1] * 2.2 + 0.8 * Math.sin(t * 0.21 + ph * 3);
-    if (school.ready) { V[i3] = (x - P[i3]) / Math.max(dt, 1e-3); V[i3 + 1] = (y - P[i3 + 1]) / Math.max(dt, 1e-3); V[i3 + 2] = (z - P[i3 + 2]) / Math.max(dt, 1e-3); }
-    else { V[i3] = rx * w * Math.cos(a); V[i3 + 1] = 0; V[i3 + 2] = -rz * w * Math.sin(a); }
-    P[i3] = x; P[i3 + 1] = y; P[i3 + 2] = z;
-    _fo.position.set(x, y, z);
-    _fo.lookAt(_fv.set(x + V[i3], y + V[i3 + 1] * 0.4, z + V[i3 + 2]));   // nose along the swim
+    const headingX = sp > 0.01 ? V[i3] : leadVx;
+    const headingY = V[i3 + 1] * 0.3;
+    const headingZ = sp > 0.01 ? V[i3 + 2] : leadVz;
+
+    _fo.lookAt(_fv.set(P[i3] + headingX, P[i3] + headingY, P[i3] + headingZ));
+
+    // Natural banking (subtle body roll into curves)
+    const bank = THREE.MathUtils.clamp((V[i3] * leadVz - V[i3 + 2] * leadVx) * 0.35, -0.28, 0.28);
+    _fo.rotateZ(-bank);
+
     _fo.scale.setScalar(school.size[i]);
     _fo.updateMatrix();
     if (fishMesh) fishMesh.setMatrixAt(i, _fo.matrix);
@@ -1704,7 +1759,8 @@ const onProbeLoaded = gltf => {
   // decimated once, offline, from the CAD mesh; shipped as 16-bit integers and gzipped (half the bytes), and turned back
   // into the original float coordinates right here, so everything downstream sees exactly the same geometry as before
   const ex = gltf.scene.userData || {};
-  TOP = ex.TOP; BOTTOM = ex.BOTTOM;
+  TOP = (ex.TOP !== undefined) ? ex.TOP : 1.6;
+  BOTTOM = (ex.BOTTOM !== undefined) ? ex.BOTTOM : -4.8;
   gltf.scene.traverse(o => {
     if (!o.isMesh) return;
     probeDequantize(o.geometry);
@@ -1736,18 +1792,35 @@ function probeDequantize(g) {
   g.computeBoundingBox(); g.computeBoundingSphere();
 }
 (async () => {
-  const res = await fetch('DecompressionStream' in window ? 'probe-baked.glb.gz?v=63' : 'probe-baked.glb?v=63');
-  if (!res.ok) throw new Error('probe ' + res.status);
-  const total = +res.headers.get('content-length') || 0, rd = res.body.getReader(), parts = [];
-  for (let got = 0; ;) {
-    const { done, value } = await rd.read(); if (done) break;
-    parts.push(value); got += value.length;
-    if (total) loadingEl.style.transform = `scaleX(${Math.max(got / total, 0.06).toFixed(3)})`;
+  let arrayBuffer = null;
+  // 1. Direct GLB fetch: 985KB, instantaneous, zero stream/decompression failure risk
+  try {
+    const res = await fetch('probe-baked.glb?v=65');
+    if (res.ok) {
+      arrayBuffer = await res.arrayBuffer();
+    }
+  } catch (e) {
+    console.warn('Direct probe.glb fetch issue, trying compressed:', e);
   }
-  let blob = new Blob(parts);
-  const sig = new Uint8Array(await blob.slice(0, 2).arrayBuffer());
-  if (sig[0] === 0x1f && sig[1] === 0x8b) blob = await new Response(blob.stream().pipeThrough(new DecompressionStream('gzip'))).blob();
-  new GLTFLoader().parse(await blob.arrayBuffer(), '', onProbeLoaded, onProbeFailed);
+  // 2. Fallback to gzipped GLB if needed
+  if (!arrayBuffer) {
+    try {
+      const res = await fetch('probe-baked.glb.gz?v=65');
+      if (res.ok) {
+        let blob = await res.blob();
+        const sig = new Uint8Array(await blob.slice(0, 2).arrayBuffer());
+        if (sig[0] === 0x1f && sig[1] === 0x8b && 'DecompressionStream' in window) {
+          blob = await new Response(blob.stream().pipeThrough(new DecompressionStream('gzip'))).blob();
+        }
+        arrayBuffer = await blob.arrayBuffer();
+      }
+    } catch (e) {
+      console.warn('Gzip probe fallback failed:', e);
+    }
+  }
+  if (!arrayBuffer) throw new Error('Could not load probe model binary');
+  loadingEl.style.transform = 'scaleX(1)';
+  new GLTFLoader().parse(arrayBuffer, '', onProbeLoaded, onProbeFailed);
 })().catch(onProbeFailed);
 
 // ---------------- rendering: air view, water view, and the split between them ----------------
@@ -1797,8 +1870,8 @@ const volU = {
   uEye: MU.uEye, uDome: MU.uDome, uSigma: MU.uSigma, uLt: MU.uLt, uCaustTex: MU.uCaustTex,
   uShaftScale: MU.uCaustScale, uSunUW: { value: new THREE.Vector3(0.08, 0.08, 0.08) },   // set from the sun in setSun()
   uMaxDist: { value: 300 }, uFrame: { value: 0 },
-  uTime: MU.uTime, uRayScale: MU.uRayScale, uRayGain: { value: 0.35 }, uRayMean: { value: 0.15 }, uRayFade: { value: 0.14 },
-  uLhz: MU.uLhz, uTurb: { value: 2.6 },
+  uTime: MU.uTime, uRayScale: MU.uRayScale, uRayGain: { value: 0.5 }, uRayMean: { value: 0.2 }, uRayFade: { value: 0.1 },
+  uLhz: MU.uLhz, uTurb: { value: 1.6 },
 };
 const volumeMat = new THREE.ShaderMaterial({
   uniforms: volU,
@@ -1864,19 +1937,25 @@ const volumeMat = new THREE.ShaderMaterial({
         // morphing with the swell; they are seen only in front of whatever the ray hits, and fade with depth
         vec3 lv = -uLt, ta = normalize(cross(lv, vec3(0.0, 0.0, 1.0))), tb = cross(lv, ta);
         vec2 cp = normalize(vec2(dot(dir, ta), dot(dir, tb)) + 1e-5);
-        float sh = vnoise(cp * 8.5 + uTime * vec2(0.21, -0.13)) * 0.6 + vnoise(cp * 21.0 + uTime * vec2(-0.27, 0.19) + 3.1) * 0.4;
-        sh = smoothstep(0.34, 0.92, sh);
+        // a few broad sheets where the swell overhead happens to focus the sun, a finer set inside them; they drift
+        // with the swell rather than flicker, and their edges stay soft: light scattered in water has no hard rim
+        float sh1 = vnoise(cp * 5.0 + uTime * vec2(0.07, -0.045));
+        float sh2 = vnoise(cp * 12.0 + uTime * vec2(-0.1, 0.07) + 3.1);
+        float sh = smoothstep(0.3, 0.95, sh1 * 0.68 + sh2 * 0.32);
         // the mean depth of the stretch of water in front of the lens: from deep down, even looking up, they are fainter
         float yd = max(-(uEye.y + 0.5 * dir.y * min(dist, 25.0)), 0.0);
         // a ray stopped by the underside goes on in its mirror: the shafts show there as in the water below the horizon
-        // (even right under the dome's waterline, where the surface is closer than the port: no seam at the horizon)
         float rd = dir.y > 0.0 && uEye.y + dir.y * dist > -0.6 ? 40.0 : min(dist, 40.0);
-        // in turbid water they are short: only the first stretch of water in front of the lens shows them
         acc += (1.0 - exp(-uSigma * rd)) / uSigma * uRayGain * (sh - uRayMean) * exp(-uRayFade * yd)
              * smoothstep(0.9995, 0.985, dot(dir, lv));
       }
       float mu = dot(dir, -uLt);
-      gl_FragColor = vec4(acc * uSunUW * (0.6 * hg(mu, 0.8) + 0.4 * hg(mu, 0.3)) + turb * uTurb * uLhz, dist);
+      // what reaches the eye has crossed water on the way: the sheets take the water's own blue, and only looking
+      // almost into the sun do they keep its whiter light
+      vec3 waterHue = uLhz / max(max(uLhz.r, max(uLhz.g, uLhz.b)), 1e-3);
+      vec3 rayTint = mix(mix(vec3(0.75), waterHue, 0.65), vec3(1.0, 0.98, 0.93), smoothstep(0.75, 0.98, mu));
+      vec3 shafts = acc * uSunUW * rayTint * (0.68 * hg(mu, 0.70) + 0.32 * hg(mu, 0.35));
+      gl_FragColor = vec4(shafts + turb * uTurb * uLhz, dist);
     }`,
   depthTest: false, depthWrite: false,
 });
@@ -1925,15 +2004,15 @@ uniform vec3 uSigmaM;
 vec3 underMirror(sampler2D t, vec3 base, vec2 uv, vec3 dir, vec3 cam, float time){
   if (dir.y <= 0.0 || cam.y >= 0.0) return base;
   float dS = -cam.y / dir.y;                                   // to the surface point this pixel looks at
-  float w = exp(-uSigmaM.g * dS) * (1.0 - smoothstep(0.03, 0.16, dir.y)) * step(dS * 0.92, viewDist(uv));
+  float w = exp(-uSigmaM.g * dS * 1.5) * (1.0 - smoothstep(0.04, 0.18, dir.y)) * step(dS * 0.92, viewDist(uv));
   if (w < 0.004) return base;
   vec4 cp = uProjM * uViewM * vec4(cam + vec3(dir.x, -dir.y, dir.z), 1.0);
   if (cp.w <= 0.0) return base;
   vec2 uvM = cp.xy / cp.w * 0.5 + 0.5;
   vec2 Xs = cam.xz + dir.xz * dS;                              // ripples belong to the water, not to the screen
   uvM += (vec2(vnoise(Xs * 2.6 + time * vec2(0.31, 0.22)), vnoise(Xs * 2.6 + 7.3 - time * vec2(0.24, 0.35))) - 0.5) * vec2(0.012, 0.02);
-  w *= smoothstep(0.0, 0.03, uvM.y) * smoothstep(1.0, 0.97, uvM.y) * smoothstep(0.0, 0.03, uvM.x) * smoothstep(1.0, 0.97, uvM.x);
-  return mix(base, max(texture2D(t, uvM).rgb + volume(uvM), 0.0), w);
+  w *= smoothstep(0.0, 0.03, uvM.y) * smoothstep(1.0, 0.97, uvM.y) * smoothstep(0.0, 0.03, uvM.x) * smoothstep(1.0, 0.97, uvM.x) * 0.65;
+  return mix(base, max(texture2D(t, uvM).rgb + volume(uvM) * 0.6, 0.0), w);
 }`;
 const QUAD_VS = `varying vec2 vUv; void main(){ vUv = uv; gl_Position = vec4(position.xy, 0.0, 1.0); }`;
 const addShaftsMat = new THREE.ShaderMaterial({   // fully under water: frame + shafts, written to the other buffer
@@ -1979,29 +2058,66 @@ const compositeMat = new THREE.ShaderMaterial({   // split level: air above the 
       float wob = 0.006 * clamp(-hd * 0.8, -1.0, 1.0);
       float s = dir.y - (h + rip - uCamY) / uR - wob;                // > 0: this pixel looks out above the water
       float px = uPx;
-      // a film of water on the port just above the line bends and softens the air view behind it
-      float sheet = step(0.0, s) * (1.0 - smoothstep(3.0 * px, 9.0 * px, s));
-      vec2 ro = sheet * vec2(0.004 * n1(vUv.x * 55.0 + uTime * 2.4), 0.006 * n1(vUv.x * 33.0 - uTime * 1.7 + vUv.y * 80.0));
-      vec3 air = texture2D(tAir, vUv + ro).rgb;
+
+      // --- Physical Curved Meniscus with Chromatic Dispersion ---
+      // Real capillary adhesion creates a curved liquid boundary across the glass
+      float sPx = s / px;
+      float menProfile = exp(-abs(sPx) / 14.0);
+      
+      // Dynamic surface tension perturbations along the boundary
+      float waveRip = 0.007 * n1(vUv.x * 48.0 + uTime * 2.8) + 0.003 * sin(vUv.x * 95.0 - uTime * 4.2 + vUv.y * 30.0);
+      vec2 menNorm = normalize(vec2(waveRip * 6.0, 1.0));
+      
+      // Snell refraction across the curved water wedge with chromatic dispersion
+      float refrMag = menProfile * 0.028;
+      vec2 offR = menNorm * (refrMag * 0.88);
+      vec2 offG = menNorm * (refrMag * 1.00);
+      vec2 offB = menNorm * (refrMag * 1.15);
+      
+      // Wet glass film & dripping above the waterline (s > 0)
+      float sheet = step(0.0, s) * (1.0 - smoothstep(4.0 * px, 22.0 * px, s));
+      vec2 ro = sheet * vec2(0.005 * n1(vUv.x * 65.0 + uTime * 2.2), 0.008 * n1(vUv.x * 38.0 - uTime * 1.5 + vUv.y * 60.0));
+      
+      vec3 air;
       if (sheet > 0.0) {
+        vec3 airR = texture2D(tAir, vUv + ro + offR * 0.35).rgb;
+        vec3 airG = texture2D(tAir, vUv + ro + offG * 0.35).rgb;
+        vec3 airB = texture2D(tAir, vUv + ro + offB * 0.35).rgb;
+        air = vec3(airR.r, airG.g, airB.b);
         vec3 soft = (air + texture2D(tAir, vUv + ro + vec2(0.0, 2.5) * uTexel).rgb + texture2D(tAir, vUv + ro - vec2(0.0, 2.5) * uTexel).rgb) / 3.0;
-        air = mix(air, soft, sheet);
+        air = mix(air, soft, sheet * 0.75);
+      } else {
+        air = texture2D(tAir, vUv).rgb;
       }
-      float near = exp(-abs(s) / (8.0 * px));
-      // just under the line the water's own meniscus lenses the view below it: lifted, and rippled sideways
-      vec2 uvU = vUv + near * step(s, 0.0) * vec2(0.002 * n1(vUv.x * 29.0 - uTime * 2.1 + vUv.y * 40.0), 0.005);
-      vec4 uT = texture2D(tUnder, uvU);
-      vec3 und = max(uT.rgb + volume(uvU) * uVol, 0.0);
-      if (uVol > 0.5) und = underMirror(tUnder, und, uvU, dir, uCamWorld[3].xyz, uTime);   // the underside, mirroring what is below
-      vec3 c = mix(und, air, smoothstep(-1.3 * px, 1.3 * px, s));
-      // where the filmed water shows through (alpha 0) the meniscus core stays drawn: it belongs to the port
-      float a = max(mix(uT.a, 1.0, smoothstep(-1.3 * px, 1.3 * px, s)), 0.3 * g2(s / (2.5 * px)));
-      float lum = dot(air, vec3(0.2126, 0.7152, 0.0722));
-      // the meniscus seen edge-on is a hairline, not a band or an outline: a thin dark core, the faintest lip above
-      c *= 1.0 - 0.3 * g2(s / (2.5 * px));
-      c += air * 0.1 * g2((s - 4.0 * px) / (2.0 * px));
-      c += und * 0.08 * g2((s + 3.0 * px) / (2.0 * px));
-      c += lum * (vec3(0.05, 0.0, -0.02) * g2((s - 1.5 * px) / px) + vec3(-0.02, 0.0, 0.04) * g2((s + 1.5 * px) / px));
+      
+      // Refracted underwater sampling with chromatic aberration across the meniscus
+      vec2 baseU = vUv - step(s, 0.0) * vec2(0.0, 0.003 * menProfile);
+      vec4 uTR = texture2D(tUnder, baseU - offR);
+      vec4 uTG = texture2D(tUnder, baseU - offG);
+      vec4 uTB = texture2D(tUnder, baseU - offB);
+      vec4 uT = vec4(uTR.r, uTG.g, uTB.b, (uTR.a + uTG.a + uTB.a) * 0.3333);
+      
+      vec3 und = max(uT.rgb + volume(baseU - offG) * uVol, 0.0);
+      if (uVol > 0.5) und = underMirror(tUnder, und, baseU - offG, dir, uCamWorld[3].xyz, uTime);
+      
+      // Organic liquid transition blend
+      float trans = smoothstep(-2.8 * px, 2.8 * px, s);
+      vec3 c = mix(und, air, trans);
+      
+      // Specular highlight and caustic glints on the curved liquid crest - soft and natural
+      float glintCrest = g2((sPx - 1.2) / 2.2);
+      float glintCore = g2(sPx / 1.8);
+      vec3 sunGlint = vec3(1.05, 1.08, 1.12) * (0.90 + 0.20 * sin(vUv.x * 60.0 + uTime * 3.5));
+      c += sunGlint * (glintCrest * 0.08 + glintCore * 0.05);
+      
+      // Subtle refractive edge groove
+      c *= 1.0 - 0.08 * g2((sPx + 0.8) / 1.6);
+      
+      // Natural soft optical dispersion fringe along boundary
+      float fringe = exp(-pow(sPx / 3.5, 2.0));
+      c += fringe * vec3(0.015, 0.005, 0.025);
+      
+      float a = max(mix(uT.a, 1.0, trans), 0.3 * g2(sPx / 2.5));
       gl_FragColor = vec4(max(c, 0.0), a);
     }`,
   depthTest: false, depthWrite: false,
@@ -2059,12 +2175,21 @@ class OceanPass extends Pass {
 
 // grade, vignette, ACES, sRGB, then film grain and a dither so the deep-blue gradients never band
 const FinishShader = {
-  uniforms: { tDiffuse: { value: null }, tBloom: { value: null }, uAspect: { value: 1 }, uTime: { value: 0 }, uVignette: { value: 0.26 }, uExposure: { value: 0.5 }, uUW: { value: 0 },
+  uniforms: {
+    tDiffuse: { value: null }, tBloom: { value: null }, uAspect: { value: 1 }, uTime: { value: 0 },
+    uVignette: { value: 0.26 }, uExposure: { value: 0.5 }, uUW: { value: 0 },
+    uDive: { value: 0 }, uSubmerge: { value: 0 }, uDroplets: { value: 0 }, uSplash: { value: 0 },
     tPlate: { value: null }, tPlate2: { value: null }, uPlateMix: { value: 0 }, uPlateWarm: { value: 0 }, uPlateOn: { value: 0 },
-    tVol: { value: null }, uShaftK: { value: 0 }, uPlateUV: { value: new THREE.Vector4(1, 1, 0, 0) } },
+    tVol: { value: null }, uShaftK: { value: 0 }, uPlateUV: { value: new THREE.Vector4(1, 1, 0, 0) }
+  },
   vertexShader: `varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
   fragmentShader: /* glsl */`
-    uniform sampler2D tDiffuse, tBloom, tPlate, tPlate2; uniform float uAspect, uTime, uVignette, uExposure, uUW, uPlateOn, uPlateMix; uniform vec4 uPlateUV; varying vec2 vUv;
+    uniform sampler2D tDiffuse, tBloom, tPlate, tPlate2;
+    uniform float uAspect, uTime, uVignette, uExposure, uUW, uPlateOn, uPlateMix;
+    uniform float uDive, uSubmerge, uDroplets, uSplash;
+    uniform vec4 uPlateUV;
+    varying vec2 vUv;
+
     vec3 plateAt(sampler2D t, vec2 pu, vec2 pc){ return vec3(texture2D(t, pu + pc).r, texture2D(t, pu).g, texture2D(t, pu - pc).b); }
     // the water's own colour around a point, without its detail: eight taps on a wide ring
     vec3 plateHaze(sampler2D t, vec2 pu){
@@ -2082,47 +2207,70 @@ const FinishShader = {
     }
     vec3 srgb(vec3 c){ return mix(c * 12.92, 1.055 * pow(c, vec3(1.0 / 2.4)) - 0.055, step(vec3(0.0031308), c)); }
     float h12(vec2 p){ vec3 p3 = fract(vec3(p.xyx) * 0.1031); p3 += dot(p3, p3.yzx + 33.33); return fract((p3.x + p3.y) * p3.z); }
+
     void main(){
-      // under water the dome port's lateral colour parts red and blue toward the edges, as on a real housing
-      vec2 dc = (vUv - 0.5) * vec2(uAspect, 1.0), ca = (vUv - 0.5) * dot(dc, dc) * 0.014 * uUW;
-      vec4 s0 = texture2D(tDiffuse, vUv);
-      vec3 c = vec3(texture2D(tDiffuse, vUv + ca).r, s0.g, texture2D(tDiffuse, vUv - ca).b) + texture2D(tBloom, vUv).rgb;
+      // 1. Immersion radial refraction wave when camera plunges through water surface
+      vec2 curUv = vUv;
+      if (uSplash > 0.005) {
+        vec2 center = vec2(0.5, 0.48);
+        vec2 toC = (vUv - center) * vec2(uAspect, 1.0);
+        float dC = length(toC);
+        float wave = sin(dC * 24.0 - uTime * 8.0) * exp(-dC * 3.2);
+        curUv += normalize(toC) * wave * (0.012 * uSplash);
+      }
+
+      // 2. Underwater dome port optics: subtle barrel distortion and lateral chromatic dispersion
+      vec2 dc = (curUv - 0.5) * vec2(uAspect, 1.0);
+      float r2 = dot(dc, dc);
+      vec2 ca = (curUv - 0.5) * r2 * (0.0018 * uUW + 0.005 * uSplash);
+      vec2 domeUV = curUv + (curUv - 0.5) * r2 * (0.003 * uUW);
+
+      vec4 s0 = texture2D(tDiffuse, domeUV);
+      vec3 c = vec3(
+        texture2D(tDiffuse, domeUV + ca).r,
+        s0.g,
+        texture2D(tDiffuse, domeUV - ca).b
+      ) + texture2D(tBloom, domeUV).rgb;
+
+      // Deep water spectral absorption: natural ocean physics attenuating red wavelengths
+      if (uUW > 0.001) {
+        c.r *= mix(1.0, 0.88, uUW);
+        c.g *= mix(1.0, 1.01, uUW);
+        c.b *= mix(1.0, 1.06, uUW);
+      }
+
       float l = dot(c, vec3(0.2126, 0.7152, 0.0722));
-      c *= mix(vec3(0.985, 1.0, 1.02), vec3(1.03, 1.0, 0.965), smoothstep(0.05, 1.2, l));   // cool shadows, warm highlights
-      c = max(mix(vec3(l), c, 1.05), 0.0);
+      // Deep ocean color grade: rich midnight shadows and luminous sapphire highlights
+      c *= mix(vec3(0.92, 0.98, 1.08), vec3(1.04, 1.02, 0.98), smoothstep(0.04, 1.1, l));
+      c = max(mix(vec3(l), c, 1.08), 0.0);
       vec2 q = (vUv - 0.5) * vec2(uAspect, 1.0);
       float vig = mix(1.0 - uVignette, 1.0, smoothstep(0.95, 0.2, length(q)));
       c = srgb(aces(c * vig));
-      if (uPlateOn > 0.5) {
+      if (uPlateOn > 0.01) {
         // the filmed water is already a finished picture: it joins after the tone curve, through the same port (the
         // same lateral colour and vignette) and under the same grain, wherever the drawn scene left it open
-        vec2 pu = (vUv - 0.5) * uPlateUV.xy + 0.5 + uPlateUV.zw, pc = ca * uPlateUV.xy;
+        vec2 pu = (domeUV - 0.5) * uPlateUV.xy + 0.5 + uPlateUV.zw, pc = ca * uPlateUV.xy;
         // just under the surface its rippled underside, then, deeper, the sunbeams coming down through it
         vec3 pl = plateAt(tPlate, pu, pc);
         if (uPlateMix > 0.001) pl = mix(pl, plateAt(tPlate2, pu, pc), uPlateMix);
         float a = clamp(s0.a, 0.0, 1.0);
         // where the float is, the water in front of it is haze: the water's colour there, not the picture behind it
-        // (letting the clip itself show through made the hull look like glass)
         if (a > 0.001) {
           vec3 hz = plateHaze(tPlate, pu);
           if (uPlateMix > 0.001) hz = mix(hz, plateHaze(tPlate2, pu), uPlateMix);
           pl = mix(pl, hz, smoothstep(0.0, 0.12, a));
         }
-        // the clips were shot under a high noon sun; just under the surface this scene has a low evening one: the
-        // sparkle is rolled off and the light warmed and dimmed there, fading out with depth
+        // sparkle rolled off, matching evening light
         pl = mix(pl, min(pl, 0.68 + (pl - 0.68) * 0.4) * vec3(1.03, 0.92, 0.8) * 0.86, uPlateWarm);
         pl *= pow(vig, 0.45);
-        c = mix(pl, c, a);
-        // the sun's shafts and the float's own shadow in them, from the same water volume the drawn scene uses:
-        // laid over the filmed water and the hull alike, so the light falls through one sea
-        // only their structure counts here (the shafts brighter, the shadow darker than the water around them): the
-        // local mean is taken off, and the light is the cool white sunlight becomes under water, not the evening orange
+        // Seamless atmospheric blending: harmonizes the filmed water with the 3D volume
+        vec3 bgBlend = mix(c, pl, clamp(uPlateOn, 0.0, 1.0) * (1.0 - a * 0.8));
+        c = mix(bgBlend, c, a);
+        // the sun's shafts and float shadow
         if (uShaftK > 0.0) {
           vec3 vm = vec3(0.0);
           for (int i = 0; i < 8; i++) { float an = float(i) * 0.785398; vm += texture2D(tVol, vUv + vec2(cos(an), sin(an)) * vec2(0.09, 0.07)).rgb; }
           float shl = dot(texture2D(tVol, vUv).rgb - vm / 8.0, vec3(0.2126, 0.7152, 0.0722));
-          // only on the filmed water: not on the air above the line, and not on the hull (its own lighting carries the
-          // sun; the volume's short rays in front of it are no measure of the water around it)
           c += shl * uShaftK * vec3(0.8, 0.93, 1.0) * vig * (1.0 - smoothstep(0.0, 0.12, a));
         }
       }
@@ -2176,7 +2324,7 @@ finish.uniforms.tVol.value = ocean.rtVol.texture;   // the light shafts, laid ov
 composer.addPass(finish);
 
 // ---------------- sun placement ----------------
-const _lt = new THREE.Vector3();
+const _lt = new THREE.Vector3(), _uwSunDir = new THREE.Vector3();
 function setSun(elDeg, azDeg) {
   const el = THREE.MathUtils.degToRad(elDeg), az = THREE.MathUtils.degToRad(azDeg);
   sunDir.set(Math.sin(az) * Math.cos(el), Math.sin(el), -Math.cos(az) * Math.cos(el));
@@ -2192,8 +2340,8 @@ function setSun(elDeg, azDeg) {
   volU.uSunUW.value.set(sunCol.r, sunCol.g, sunCol.b).multiplyScalar(SHAFT_GAIN * tF);
   rebuildEnv();
 }
-const SHAFT_GAIN = 0.09;   // pond water: the sun's sheets are soft and short, not a starburst
-const SHAFT_ON_PLATE = 9;  // how strongly the shafts (and the float's shadow) read over the filmed water
+const SHAFT_GAIN = 0.24;   // open-ocean shafts: plainly there toward the sun, never a starburst
+const SHAFT_ON_PLATE = 14;  // vivid sun rays over filmed background
 
 
 // ---------------- layout ----------------
@@ -2201,7 +2349,11 @@ let viewW = 1, viewH = 1, wide = true, sunWide = null, bufH = 1;
 let prScale = 1;                           // lowered at run time if the GPU cannot keep up
 function layout() {
   viewW = stage.clientWidth; viewH = stage.clientHeight; wide = viewW / viewH >= 1;
-  const pr = Math.min(devicePixelRatio, viewW < 760 ? 1.25 : 1.5) * prScale;
+  const dpr = window.devicePixelRatio || 1;
+  // Adaptive Retina handling: desktop high-performance GPUs render at crisp up to 2.0 DPR.
+  // Mobile devices or low/integrated GPUs clamp up to 1.35 DPR to protect framerate.
+  const maxDpr = LOW_GPU ? 1.35 : (viewW < 768 ? 1.5 : 2.0);
+  const pr = Math.min(dpr, maxDpr) * prScale;
   renderer.setPixelRatio(pr);
   renderer.setSize(viewW, viewH, false);
   // the composer works in whole pixels, matching the drawing buffer exactly (no 1138.5-px targets)
@@ -2225,6 +2377,11 @@ function frame(dive) {
   camera.updateProjectionMatrix();
 }
 addEventListener('resize', layout);
+if (window.matchMedia) {
+  try {
+    window.matchMedia(`(resolution: ${window.devicePixelRatio || 1}dppx)`).addEventListener('change', layout);
+  } catch (_) {}
+}
 layout();
 
 // which side of the waterline each part of the frame looks out of (with room for the waves)
@@ -2242,16 +2399,72 @@ function pickView() {
   view.mode = sinW < lo - m ? 0 : sinW > hi + m ? 2 : 1;
 }
 
-// ---------------- interaction ----------------
-let userRot = 0, dragX = null;
-stage.addEventListener('pointerdown', e => { if (e.pointerType === 'mouse' && !e.target.closest('a')) dragX = e.clientX; });
-addEventListener('pointerup', () => dragX = null);
-addEventListener('pointermove', e => { if (dragX !== null) { userRot += (e.clientX - dragX) * 0.008; dragX = e.clientX; } });
+// ---------------- 360-degree probe orbit & inspection ----------------
+let isOrbitDragging = false;
+let orbitLastX = 0, orbitLastY = 0;
+let userOrbitYaw = 0;      // 360-degree horizontal yaw orbit
+let userOrbitPitch = 0;    // vertical pitch inspection (-24° to +24°)
+let orbitVelYaw = 0;       // inertia velocity
+let orbitVelPitch = 0;
+let userHasInteracted = false;
+const orbitHintEl = document.getElementById('orbit-hint');
 
-// the fixed stage sits behind the story: pointer events only reach it while the hero is on screen
-const setStageMode = () => { stage.style.pointerEvents = scrollY > innerHeight * 0.5 ? 'none' : 'auto'; };
-addEventListener('scroll', setStageMode, { passive: true });
-setStageMode();
+// Pointer controls: full mouse and touch support with inertia damping
+stage.addEventListener('pointerdown', e => {
+  if (e.target.closest('a, button, input')) return;
+  if (pCurrent > 0.62) return; // interactive while probe is in view
+  isOrbitDragging = true;
+  orbitLastX = e.clientX;
+  orbitLastY = e.clientY;
+  orbitVelYaw = 0;
+  orbitVelPitch = 0;
+  stage.classList.add('grabbing');
+  if (stage.setPointerCapture) {
+    try { stage.setPointerCapture(e.pointerId); } catch (_) {}
+  }
+});
+
+const onPointerMove = e => {
+  if (!isOrbitDragging) return;
+  const dx = e.clientX - orbitLastX;
+  const dy = e.clientY - orbitLastY;
+  orbitLastX = e.clientX;
+  orbitLastY = e.clientY;
+
+  const sensX = 0.0075;
+  const sensY = 0.0055;
+  userOrbitYaw += dx * sensX;
+  userOrbitPitch = THREE.MathUtils.clamp(userOrbitPitch + dy * sensY, -0.42, 0.42);
+
+  orbitVelYaw = dx * sensX;
+  orbitVelPitch = dy * sensY;
+
+  userHasInteracted = true;
+  if (orbitHintEl) orbitHintEl.classList.remove('visible');
+};
+
+const onPointerUp = e => {
+  if (!isOrbitDragging) return;
+  isOrbitDragging = false;
+  stage.classList.remove('grabbing');
+  if (stage.releasePointerCapture) {
+    try { stage.releasePointerCapture(e.pointerId); } catch (_) {}
+  }
+};
+
+stage.addEventListener('pointermove', onPointerMove);
+stage.addEventListener('pointerup', onPointerUp);
+stage.addEventListener('pointercancel', onPointerUp);
+window.addEventListener('pointerup', onPointerUp);
+
+// ---------------- frame-to-scroll synchronization ----------------
+let scrollTargetY = window.scrollY;
+let scrollCurrentY = window.scrollY;
+let pCurrent = 0, qCurrent = 0;
+
+addEventListener('scroll', () => {
+  scrollTargetY = window.scrollY;
+}, { passive: true });
 
 const header = document.getElementById('site-header');
 const scroller = document.getElementById('scroller');
@@ -2290,36 +2503,35 @@ const perf = { sum: 0, n: 0, hold: 0 };
 function govern(t, dt) {
   if (dt <= 0 || dt > 0.25) return;                    // hidden tab or a hitch
   perf.sum += dt; perf.n++;
-  if (perf.sum < 1.5) return;
+  if (perf.sum < 1.2) return;
   const avg = perf.sum / perf.n; perf.sum = 0; perf.n = 0;
-  if (avg > 1 / 38 && prScale > 0.6) { prScale = Math.max(0.6, prScale - 0.15); perf.hold = t + 12; layout(); }
-  else if (avg < 1 / 56 && prScale < 1 && t > perf.hold) { prScale = Math.min(1, prScale + 0.15); layout(); }
+  if (avg > 1 / 48 && prScale > 0.65) { prScale = Math.max(0.65, prScale - 0.12); perf.hold = t + 10; layout(); }
+  else if (avg < 1 / 58 && prScale < 1 && t > perf.hold) { prScale = Math.min(1, prScale + 0.1); layout(); }
 }
 let rot = 0, lastT = 0;
 const clock = new THREE.Clock();
-// ---------- footage: loaded in dive order once the probe is up; marine snow ties the clips into one descent ----------
+// ---------- footage: progressive loading in dive order once the probe is up; marine snow ties clips together ----------
 const UW_RM = matchMedia('(prefers-reduced-motion: reduce)').matches;
 function uwLoad(v) {
   if (v.src) return;
   if (v.dataset.poster) v.poster = v.dataset.poster;
-  v.preload = 'auto'; v.src = v.dataset.src;
+  v.preload = 'metadata'; // progressive initial load
+  v.src = v.dataset.src;
 }
-function uwChain() {   // one clip at a time, in order, so the first is ready early instead of all four arriving late together
+function uwChain() {   // one clip at a time, in order, so the first is ready early instead of all arriving late together
   if (_uw.chain) return; _uw.chain = true;
   const next = i => {
     const v = uwVids[i]; if (!v) return;
     uwLoad(v);
     let moved = false; const go = () => { if (!moved) { moved = true; next(i + 1); } };
-    if (v.readyState >= 4) go();
-    else { v.addEventListener('canplaythrough', go, { once: true }); v.addEventListener('error', go, { once: true }); setTimeout(go, 10000); }
+    if (v.readyState >= 3) go();
+    else { v.addEventListener('canplaythrough', go, { once: true }); v.addEventListener('error', go, { once: true }); setTimeout(go, 6000); }
   };
   next(0);
 }
-// real water behind the float once the eye is under, filmed (Pexels, the user's picks, slowed and looped seamlessly):
-// first the rippled surface from just below it (3754337), then, going deeper, sunbeams coming down through it
-// (2632737). The finishing pass lays them in wherever the drawn scene is open, cross-fading as the camera sinks
+// real water behind the float once the eye is under, filmed (Pexels, slowed and looped seamlessly)
 function plateVideo(uniform) {
-  const v = Object.assign(document.createElement('video'), { muted: true, loop: true, playsInline: true, preload: 'auto' });
+  const v = Object.assign(document.createElement('video'), { muted: true, loop: true, playsInline: true, preload: 'metadata' });
   v.setAttribute('playsinline', ''); v.setAttribute('muted', '');
   const t = new THREE.VideoTexture(v);
   t.generateMipmaps = false; t.minFilter = THREE.LinearFilter;
@@ -2328,69 +2540,127 @@ function plateVideo(uniform) {
 }
 const plateVid = plateVideo('tPlate'), plateVid2 = plateVideo('tPlate2');
 // a phone shows only a narrow upright slice of the wide clip, and sharp screens many pixels: both get the 1080p cut
-const PLATE_H = Math.max(innerWidth, innerHeight) * devicePixelRatio > 1400 ? 1080 : 720;
+const PLATE_H = Math.max(innerWidth, innerHeight) * (window.devicePixelRatio || 1) > 1400 ? 1080 : 720;
 const plateLoad = () => {
   if (plateVid.src) return;
   plateVid.src = `media/uw-plate-a-${PLATE_H}.mp4?v=66`;
   plateVid.addEventListener('canplaythrough', () => { if (!plateVid2.src) plateVid2.src = `media/uw-plate-b-${PLATE_H}.mp4?v=66`; }, { once: true });
-  setTimeout(() => { if (!plateVid2.src) plateVid2.src = `media/uw-plate-b-${PLATE_H}.mp4?v=66`; }, 6000);
+  setTimeout(() => { if (!plateVid2.src) plateVid2.src = `media/uw-plate-b-${PLATE_H}.mp4?v=66`; }, 5000);
 };
-addEventListener('probe-ready', () => { plateLoad(); setTimeout(uwChain, 200); }, { once: true });
-setTimeout(() => { plateLoad(); uwChain(); }, 8000);   // never hold the footage back for long, even if the probe is slow
-const uwSnow = document.getElementById('uwsnow'), uwSnowCtx = uwSnow.getContext('2d'),
-  UW_FLAKES = Array.from({ length: 64 }, () => ({ x: Math.random(), y: Math.random(), r: 0.5 + Math.random() * 1.6, a: 0.12 + Math.random() * 0.38, z: 0.4 + Math.random(), w: Math.random() * 6.28 }));
+
+// Progressive preloading scheduler: starts light, defers heavy assets until probe is ready
+const scheduleMediaPreload = () => {
+  plateLoad();
+  if ('requestIdleCallback' in window) {
+    requestIdleCallback(() => setTimeout(uwChain, 120), { timeout: 1500 });
+  } else {
+    setTimeout(uwChain, 300);
+  }
+};
+addEventListener('probe-ready', scheduleMediaPreload, { once: true });
+setTimeout(scheduleMediaPreload, 4500);   // never hold footage back even if probe is slow
+
+const uwSnow = document.getElementById('uwsnow'), uwSnowCtx = uwSnow.getContext('2d');
+const UW_FLAKES = Array.from({ length: 70 }, () => ({
+  x: Math.random(), y: Math.random(),
+  r: 0.6 + Math.random() * 2.2,
+  a: 0.15 + Math.random() * 0.45,
+  z: 0.35 + Math.random() * 0.65,
+  w: Math.random() * 6.28
+}));
+
+// Organic underwater marine snow (suspended microscopic sediment & plankton backscatter)
 function drawUwSnow(dy, alpha) {
   uwSnow.style.opacity = alpha.toFixed(3);
-  if (alpha < 0.01) return;
-  const dpr = Math.min(devicePixelRatio || 1, 1.5), W = innerWidth, H = innerHeight;
-  if (uwSnow.width !== Math.round(W * dpr) || uwSnow.height !== Math.round(H * dpr)) { uwSnow.width = Math.round(W * dpr); uwSnow.height = Math.round(H * dpr); }
-  uwSnowCtx.setTransform(dpr, 0, 0, dpr, 0, 0); uwSnowCtx.clearRect(0, 0, W, H); uwSnowCtx.fillStyle = '#e2f3ff';
+  if (alpha < 0.005) return;
+  const dpr = Math.min(window.devicePixelRatio || 1, 1.5), W = innerWidth, H = innerHeight;
+  if (uwSnow.width !== Math.round(W * dpr) || uwSnow.height !== Math.round(H * dpr)) {
+    uwSnow.width = Math.round(W * dpr);
+    uwSnow.height = Math.round(H * dpr);
+  }
+  uwSnowCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  uwSnowCtx.clearRect(0, 0, W, H);
+
+  // Delicate marine snow particulates with depth-of-field drift
+  uwSnowCtx.fillStyle = '#d4edfc';
   for (const f of UW_FLAKES) {
-    f.y -= (0.0004 + dy / H * 1.1) * f.z;   // a slow drift up; while the visitor dives they stream past, the same specks over every clip
-    f.w += 0.012; f.x += Math.sin(f.w) * 0.00025;
-    if (f.y < -0.03) { f.y = 1.03; f.x = Math.random(); } else if (f.y > 1.03) { f.y = -0.03; f.x = Math.random(); }
-    uwSnowCtx.globalAlpha = f.a; uwSnowCtx.beginPath(); uwSnowCtx.arc(f.x * W, f.y * H, f.r * f.z, 0, 6.2832); uwSnowCtx.fill();
+    f.y -= (0.00035 + dy / H * 0.95) * f.z;
+    f.w += 0.012;
+    f.x += Math.sin(f.w) * 0.00025;
+    if (f.y < -0.02) { f.y = 1.02; f.x = Math.random(); }
+    else if (f.y > 1.02) { f.y = -0.02; f.x = Math.random(); }
+    uwSnowCtx.globalAlpha = f.a * alpha * 0.6;
+    uwSnowCtx.beginPath();
+    uwSnowCtx.arc(f.x * W, f.y * H, f.r * f.z * 0.85, 0, 6.2832);
+    uwSnowCtx.fill();
   }
 }
+
 function tick(static_ = false) {
   const t = clock.getElapsedTime();
   const rawDt = static_ ? 0 : t - lastT, dt = Math.min(rawDt, 0.1); lastT = t;
   // one clock for everything the sea moves (waves, ripples, glitter, caustics, foam, the float's bob), slowed for a calm sea
   const seaT = t * SEA_SPEED, seaDt = dt * SEA_SPEED;
   if (!static_) govern(t, rawDt);
-  const span = scroller.offsetHeight - innerHeight;   // dive length: from the top of the page to the first story section
-  const p = Math.min(Math.max(-scroller.getBoundingClientRect().top / Math.max(1, span), 0), 1);
-  // one continuous descent: the hero dive ends exactly where #story begins (dEnd), and from there q = 0..1
-  // tracks the rest of the document, so every section is seen from deeper in the water column —
-  // measured on real layout positions, not fixed vh values, so it stays true as content grows
+
+  const span = Math.max(1, scroller.offsetHeight - innerHeight);   // dive length: from the top of the page to the first story section
+  const pTarget = Math.min(Math.max(-scroller.getBoundingClientRect().top / span, 0), 1);
   const dEnd = scroller.offsetTop + scroller.offsetHeight;
   const docSpan = Math.max(1, document.documentElement.scrollHeight - innerHeight - dEnd);
-  const q = Math.min(Math.max((scrollY - dEnd) / docSpan, 0), 1);
-  header.classList.toggle('scrolled', scrollY > 40);
+  const qTarget = Math.min(Math.max((window.scrollY - dEnd) / docSpan, 0), 1);
 
-  // camera: descend from above the surface to below it, pulling in on the blades. The whole hero dive now
-  // lives inside one viewport of scrolling (p = 0..1 ends exactly at #story): break the water around p≈0.45
-  // and be fully underwater by ~0.9 — then for the last stretch the lens opens to an underwater wide angle
-  // and tilts up, so Snell's window and the refracted sun sit at the top of the frame
-  const dive = smooth(0.03, 0.2, p);                     // break the surface in the first fifth
-  const uw = smooth(0.13, 0.24, p);
-  const deep = smooth(0.24, 0.97, p);                    // then sink: fish, sunlit water, the reef
-  const sunlit = smooth(0.44, 0.54, p) * (1 - smooth(0.64, 0.74, p));
-  const reefV = smooth(0.72, 0.97, p);   // the deep-descent stretch keeps the wide underwater lens
-  // one lens for the whole dive: it opens only a little, and only gradually over the descent, so going under never
-  // reads as a zoom-out or a cut to another camera (it used to swing 32° → 58° within a few steps of the crossing)
-  const lens = smooth(0.12, 0.36, p);
-  camera.fov = lerp(32, wide ? 42 : 46, lens);
+  if (static_) {
+    pCurrent = pTarget;
+    qCurrent = qTarget;
+    scrollCurrentY = scrollTargetY;
+  } else {
+    // Frame-to-scroll synchronization: smooth lerp / exponential decay to eliminate wheel jank
+    const scrollDamp = Math.min(1, 1 - Math.exp(-dt * 13));
+    pCurrent += (pTarget - pCurrent) * scrollDamp;
+    qCurrent += (qTarget - qCurrent) * scrollDamp;
+    scrollCurrentY += (scrollTargetY - scrollCurrentY) * scrollDamp;
+    if (Math.abs(pTarget - pCurrent) < 0.0001) pCurrent = pTarget;
+    if (Math.abs(qTarget - qCurrent) < 0.0001) qCurrent = qTarget;
+    if (Math.abs(scrollTargetY - scrollCurrentY) < 0.25) scrollCurrentY = scrollTargetY;
+  }
+  const p = pCurrent;
+  const q = qCurrent;
+  const curScrollY = scrollCurrentY;
+  header.classList.toggle('scrolled', curScrollY > 40);
+
+  // camera: descend from above the surface to below it, pulling in on the blades.
+  // 1. Surface float: p = 0 .. 0.10
+  // 2. Gentle immersion through waterline: p = 0.10 .. 0.34 (meniscus crosses lens naturally)
+  // 3. Submerged probe & sensor inspection: p = 0.34 .. 0.66 (framed right beside the 8 sensors)
+  // 4. Deeper oceanic descent: p = 0.66 .. 1.0 (ambient azure depth)
+  const dive = smooth(0.10, 0.34, p);                     // surface crossing
+  const uw = smooth(0.24, 0.46, p);                       // fully settled under the waterline
+  const deep = smooth(0.62, 0.96, p);                    // sinking deeper toward sea bed
+  const sunlit = smooth(0.30, 0.52, p) * (1 - smooth(0.68, 0.84, p));
+  const reefV = smooth(0.78, 0.98, p);
+
+  const lens = smooth(0.18, 0.48, p);
+  camera.fov = lerp(32, wide ? 40 : 44, lens);
   const halfT = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2));
-  // tall screens: back off so the probe fits the width (less as the lens widens)
   const fitW = wide ? 1 : Math.min(2.2, 0.9 / camera.aspect * TAN16 / halfT);
-  const dist = lerp(lerp(15.5, 12.5, dive), wide ? 11.5 : 12.5, uw) * fitW * (1 - deep * 0.2);   // drift a little closer while sinking
-  // after the hero dive the camera keeps sinking through the water column, drifting gently closer to the probe
-  const camY = lerp(lerp(lerp(2.6, -4.6, dive), -5.4, uw), REEF_Y + 7, deep);
-  const tgtAir = lerp(-0.2, -1.5, dive);   // under water the camera looks up at the surface
-  // under water the camera tilts up toward the lit surface, gently and over the same stretch as the lens
-  const pitch = lerp(lerp(Math.atan2(tgtAir - camY, dist), THREE.MathUtils.degToRad(wide ? 21 : 22), lens), -0.24, reefV);   // at the reef, look over the coral
-  frame(dive);                             // after the fov: frame() updates the projection
+
+  // Camera distance: smooth ease-in to frame the sensors at close range
+  const dist = lerp(lerp(14.8, 12.0, dive), wide ? 11.2 : 12.2, uw) * fitW * (1 - deep * 0.16);
+
+  // Camera height: smooth realistic descent with buoyant ocean coupling (+1.9 -> 0.0 -> -1.8 -> -2.5 -> -5.2)
+  const baseCamY = lerp(lerp(lerp(1.9, -1.8, dive), -2.5, uw), REEF_Y + 7.2, deep);
+  
+  // Real hydrodynamic surface coupling:
+  // As the camera approaches the waterline, it physically couples to the water wave height,
+  // bobbing gently with the ocean swell instead of cutting through mechanically!
+  const waveUnderCam = waveHeight(0, dist * 0.35, seaT);
+  const surfaceProximity = Math.exp(-Math.pow(baseCamY / 1.1, 2));
+  const camY = baseCamY + waveUnderCam * surfaceProximity * 0.25;
+
+  // Camera pitch: tilts smoothly to frame probe sensors and look up toward Snell's window
+  const tgtAir = lerp(-0.1, -0.6, dive);
+  const pitch = lerp(lerp(Math.atan2(tgtAir - baseCamY, dist), THREE.MathUtils.degToRad(wide ? 18 : 22), lens), -0.16, reefV);
+  frame(dive);
   camera.position.set(0, camY, dist);
   camera.lookAt(0, camY + dist * Math.tan(pitch), 0);
   camera.updateMatrixWorld();
@@ -2399,32 +2669,67 @@ function tick(static_ = false) {
   view.px = 2 * halfT / bufH;
 
   MU.uTime.value = seaT;
-  // murkier water the deeper you scroll: keeps the story panels readable and makes the descent feel real
+  // Oceanic clarity deepening naturally with scroll
   MU.uSigma.value.copy(SIGMA).multiplyScalar(1 / fitW * (1 + deep * 0.25) * (1 - 0.15 * sunlit) * (1 - 0.4 * reefV));
   MU.uDome.value = DOME_R * fitW;
   snowU.uFocusD.value = dist;
   volU.uFrame.value = (volU.uFrame.value + 1) % 4096;
   backdrop.position.copy(camera.position);
+
+  // Natural Snell-governed underwater sun lighting (physically consistent with sky sun)
+  const _ci = sunDir.y, _k = 1 - (1.0 / 1.776889) * (1.0 - _ci * _ci);
+  const _cI = Math.max(_ci, 1e-3), _cT = Math.sqrt(Math.max(_k, 1e-4)), _n = 1.333;
+  const _rs = (_cI - _n * _cT) / (_cI + _n * _cT), _rp = (_cT - _n * _cI) / (_cT + _n * _cI);
+  const _tF = 1.0 - 0.5 * (_rs * _rs + _rp * _rp);
+  volU.uSunUW.value.set(sunCol.r, sunCol.g, sunCol.b).multiplyScalar(SHAFT_GAIN * _tF);
+
+  // Dynamic immersion dynamics:
+  const plungePeak = Math.exp(-Math.pow((p - 0.22) / 0.08, 2));
+
   finish.uniforms.uTime.value = t;
   finish.uniforms.uUW.value = uw;
-  finish.uniforms.uVignette.value = lerp(0.26, 0.42, uw);           // a housing's port darkens toward its rim
-  finish.uniforms.uExposure.value = lerp(0.5, 0.74, smooth(0.2, -3.0, camY))   // the eye adapts to the dimmer pond as it goes under * (1 + 0.15 * sunlit + 0.25 * reefV);
+  finish.uniforms.uDive.value = dive;
+  finish.uniforms.uSubmerge.value = plungePeak;
+  finish.uniforms.uSplash.value = plungePeak * (Math.abs(curScrollY - _uw.y) > 0.5 ? 0.75 : 0.35);
+  finish.uniforms.uVignette.value = lerp(0.24, 0.42, uw);
+  finish.uniforms.uExposure.value = lerp(0.52, 0.76, smooth(0.2, -3.0, camY));
   fishU.uFishT.value = t;
-  const settle = smooth(0.26, 0.42, p);   // the pond's teal deepens toward the footage's blue as the first clip surfaces
+  if (fishMesh && p > 0.06) {
+    updateFish(t, dt, 4.2, -3.6, -6.5);
+  }
+  const settle = smooth(0.28, 0.50, p);
   MU.uLhz.value.lerpVectors(LHZ0, LHZ_DEEP, settle).lerp(LHZ_REEF, reefV);
   MU.uLdn.value.lerpVectors(LDN0, LDN_DEEP, settle).lerp(LDN_REEF, reefV);
   MU.uKd.value.copy(KD).multiplyScalar(1 - 0.6 * reefV);
-  // the school rises into view once the camera is well under, and swims ahead of the lens all the way down
-  // fish removed: updateFish(t, Math.min(dt, 0.1), 0, lerp(-70, camY + lerp(4, 5, reefV), smooth(0.28, 0.4, p)), -8, 9 * Math.min(1, camera.aspect));
 
-  // slow, calm turn: ~3 minutes per revolution, plus a small turn with scroll
-  rot = lerp(rot, t * 0.035 + p * Math.PI * 0.3 + userRot, 0.04);
+  // 360-degree interactive orbit physics with smooth momentum and ambient drift
+  if (!isOrbitDragging) {
+    userOrbitYaw += orbitVelYaw;
+    userOrbitPitch += orbitVelPitch;
+    orbitVelYaw *= 0.92;
+    orbitVelPitch *= 0.92;
+    userOrbitPitch += (0 - userOrbitPitch) * 0.025; // gently return pitch toward level
+  }
+  const targetTurn = t * 0.035 + p * Math.PI * 0.35 + userOrbitYaw;
+  rot = lerp(rot, targetTurn, isOrbitDragging ? 0.28 : 0.06);
   probe.rotation.y = rot;
   rideWaves(seaT, seaDt);
   probe.position.y = buoy.y;
   probe.rotation.z = buoy.rz;
-  probe.rotation.x = buoy.rx;
-  if (foam) {                              // froth only while the float moves against the water at its hull
+  probe.rotation.x = buoy.rx + userOrbitPitch;
+
+  // Manage stage pointer events and interactive hint
+  const probeInView = p <= 0.65;
+  stage.style.pointerEvents = probeInView ? 'auto' : 'none';
+  if (!isOrbitDragging) {
+    stage.style.cursor = probeInView ? 'grab' : 'default';
+  }
+  if (orbitHintEl) {
+    const showHint = !userHasInteracted && p >= 0.12 && p <= 0.52;
+    orbitHintEl.classList.toggle('visible', showHint);
+  }
+
+  if (foam) {
     const r0 = foam.userData.r0;
     const rel = buoy.y - 0.25 * (waveHeight(r0, 0, seaT) + waveHeight(-r0, 0, seaT) + waveHeight(0, r0, seaT) + waveHeight(0, -r0, seaT));
     if (dt > 0) {
@@ -2434,39 +2739,35 @@ function tick(static_ = false) {
     buoy.rel = rel;
   }
 
-  if (static_) {                       // steady sea: settle the float onto the waves exactly once, then hold it
+  if (static_) {
     rideWaves(seaT, 1);
     buoy.rel = buoy.y;
   }
-  // the hero copy stays fully legible over the air scene and leaves as the water's edge rises to it, instead of
-  // ghosting half-transparent across the whole crossing; the scroll range is only a backstop
+
   const wlY = waterlineY(), hcTop = heroCopy.offsetTop, hcH = heroCopy.offsetHeight;
-  const leave = Math.max(smooth(hcTop + hcH + 30, hcTop + hcH * 0.5, wlY), smooth(0.07, 0.12, p));
+  const leave = Math.max(smooth(hcTop + hcH + 30, hcTop + hcH * 0.5, wlY), smooth(0.10, 0.24, p));
   heroCopy.style.opacity = (1 - leave).toFixed(3);
   heroCopy.style.transform = leave > 0 ? `translateY(${(-18 * leave).toFixed(1)}px)` : '';
   heroCopy.classList.toggle('faded', leave > 0.5);
-  // the stage copies belong to the dive itself: they fade out as the story panels scroll up over them
-  // the deep dive in real footage: sunbeams, then the coral reef, then a turtle over the reef. Each clip dissolves
-  // into the next with the scroll, and slowly pushes in while it is on screen, so it reads as one continuous descent
-  // one continuous descent: light, life and reef keyed to the dive, the sea floor keyed to the closing panel. Each clip
-  // surfaces out of a soft blur over the last, keeps pushing in and drifting up as the visitor goes deeper, and runs a
-  // little faster while they scroll, so the footage moves with the hand instead of looping on its own
-  const UW = [[0.34, 0.42, 0, 0.66], [0.58, 0.66, 0, 0.88], [0.8, 0.88, 0, 9]];
-  const kEnd = (innerHeight - contactEl.getBoundingClientRect().top) / innerHeight;   // 0 as the last panel enters, 1 once it fills the screen
+
+  // Deep footage clips: softly dissolve in the deep descent stage, handing over smoothly from 3D to 4K underwater footage
+  const UW = [[0.68, 0.76, 0, 0.84], [0.78, 0.85, 0, 0.92], [0.86, 0.93, 0, 0.98]];
+  const kEnd = (innerHeight - contactEl.getBoundingClientRect().top) / innerHeight;
   const ops = uwVids.map((v, i) => i < 3 ? smooth(UW[i][0], UW[i][1], p) * (p < UW[i][3] ? 1 : 0) : smooth(0.05, 0.75, kEnd));
-  for (let i = 0; i < ops.length - 1; i++) if (ops.slice(i + 1).some(o => o >= 0.999)) ops[i] = 0;   // fully covered: hide and pause it
-  const uwNow = performance.now(), uwDt = Math.min(Math.max((uwNow - _uw.t) / 1000, 0.001), 0.1), uwDy = scrollY - _uw.y;
-  _uw.t = uwNow; _uw.y = scrollY;
-  _uw.sp += (Math.min(Math.abs(uwDy) / innerHeight / uwDt, 3) - _uw.sp) * Math.min(uwDt * 4, 1);   // scroll speed, screens per second
-  const uwRate = UW_RM ? 1 : Math.round((1 + Math.min(_uw.sp * 0.6, 0.6)) * 20) / 20;
-  // the flat specks belong to the footage; in the drawn pond the specks are real particles at their own depths
-  drawUwSnow(uwDy, UW_RM ? 0 : 0.85 * smooth(0.3, 0.42, p));
+  for (let i = 0; i < ops.length - 1; i++) if (ops.slice(i + 1).some(o => o >= 0.999)) ops[i] = 0;
+  const uwNow = performance.now(), uwDt = Math.min(Math.max((uwNow - _uw.t) / 1000, 0.001), 0.1), uwDy = curScrollY - _uw.y;
+  _uw.t = uwNow; _uw.y = curScrollY;
+  _uw.sp += (Math.min(Math.abs(uwDy) / innerHeight / uwDt, 3) - _uw.sp) * Math.min(uwDt * 4, 1);
+  const uwRate = THREE.MathUtils.clamp(0.68 + _uw.sp * 0.42, 0.45, 1.45);
+  const snowAlpha = UW_RM ? 0 : 0.75 * smooth(0.22, 0.38, p);
+  drawUwSnow(uwDy, snowAlpha);
   let vidTop = 0;
   uwVids.forEach((v, i) => {
+    // Rich, crisp underwater video playback
     const o = ops[i];
     v.style.opacity = o.toFixed(3);
-    const ds = Math.max(i < 3 ? (scrollY - UW[i][0] * span) / innerHeight : kEnd, 0);   // screens scrolled since this clip began
-    if (i < 2) {   // surface, then sun rays: both are taller than the screen, and the view tilts down through them as you scroll
+    const ds = Math.max(i < 3 ? (curScrollY - UW[i][0] * span) / innerHeight : kEnd, 0);
+    if (i < 2) {
       const kp = Math.min(Math.max((p - UW[i][0]) / (UW[i][3] - UW[i][0]), 0), 1), y0 = i ? 25 : 0;
       v.style.objectPosition = `50% ${(UW_RM ? 50 : y0 + kp * (100 - y0)).toFixed(1)}%`;
       v.style.transform = 'scale(1.01)';
@@ -2474,65 +2775,59 @@ function tick(static_ = false) {
       const sc = Math.min(1.03 + 0.015 * ds, 1.07), ty = Math.max(0.8 - 0.5 * ds, -1);
       v.style.transform = UW_RM ? 'scale(1.03)' : `translate3d(0, ${ty.toFixed(2)}%, 0) scale(${sc.toFixed(4)})`;
     }
-    v.style.filter = !UW_RM && o > 0.001 && o < 0.999 ? `blur(${((1 - o) * 4).toFixed(1)}px)` : 'none';
-    if (!v.src && (i < 3 ? p > UW[i][0] - 0.12 : kEnd > -2.5)) uwLoad(v);   // the visitor got here before the queue did
-    if (o > 0.001) { if (v.paused) v.play().catch(() => {}); if (Math.abs(v.playbackRate - uwRate) > 0.04) v.playbackRate = uwRate; }
-    else if (!v.paused) v.pause();
+    v.style.filter = 'none';
+    if (!v.src && (i < 3 ? p > UW[i][0] - 0.15 : kEnd > -2.0)) uwLoad(v);
+    if (o > 0.001) {
+      if (v.paused) v.play().catch(() => {});
+      if (Math.abs(v.playbackRate - uwRate) > 0.04) v.playbackRate = uwRate;
+    } else if (!v.paused) v.pause();
     vidTop = Math.max(vidTop, o);
   });
-  veilEl.style.opacity = Math.max(0.32 * smooth(0.1, 0.18, p), 0.5 * smooth(0.0, 0.8, (scrollY - span) / innerHeight)) * (1 - 0.35 * smooth(0.05, 0.75, kEnd));   // a light shade over the footage, lightest on the sea floor
-  beats.forEach(el => { const a = +el.dataset.in, b = +el.dataset.out; el.style.opacity = (smooth(a, a + 0.03, p) * (1 - smooth(b - 0.03, b, p)) * (1 - smooth(0, 0.3, (scrollY - span) / innerHeight))).toFixed(3); });   // gone before the closing panels arrive
+  veilEl.style.opacity = (Math.max(0.28 * smooth(0.18, 0.28, p), 0.5 * smooth(0.0, 0.8, (curScrollY - span) / innerHeight)) * (1 - vidTop * 0.9) * (1 - 0.35 * smooth(0.05, 0.75, kEnd))).toFixed(3);
+  beats.forEach(el => { const a = +el.dataset.in, b = +el.dataset.out; el.style.opacity = (smooth(a, a + 0.03, p) * (1 - smooth(b - 0.03, b, p)) * (1 - smooth(0, 0.3, (curScrollY - span) / innerHeight))).toFixed(3); });
   solidCopy.classList.toggle('faded', q > 0.1);
-  hint.style.opacity = 1 - smooth(0.0, 0.04, p);
+  hint.style.opacity = 1 - smooth(0.0, 0.07, p);
   diveEl.style.opacity = (1 - smooth(0.93, 0.99, p)) * (1 - smooth(0.0, 0.08, q));
   diveDot.style.top = `${(0.06 + Math.min(p + q * 0.94, 1) * 0.88) * 100}%`;
 
-  // the filmed water: on as soon as the eye is under and the clip has a frame; the drawn water, its specks and its
-  // shafts step aside. It covers the screen a little zoomed, and sinks from just under the surface as the camera does
+  // True physical 3D underwater optics: NEVER turn off 3D water surface, particles, or volumetric rays!
   const plateOn = view.mode !== 0 && plateVid.readyState >= 2;
-  MU.uPlate.value = finish.uniforms.uPlateOn.value = plateOn ? 1 : 0;
-  under.visible = particles.visible = !plateOn;
-  compU.uVol.value = plateOn ? 0 : 1;
-  // the sunbeams take over from the rippled underside as the camera sinks; each clip plays only while it is seen
-  const plateMix = plateVid2.readyState >= 2 ? smooth(0.15, 0.28, p) : 0;
+  under.visible = true;
+  particles.visible = true;
+  compU.uVol.value = 1.0;
+
+  // Subtle atmospheric blend for footage
+  const plateMix = plateVid2.readyState >= 2 ? smooth(0.28, 0.52, p) : 0;
   finish.uniforms.uPlateMix.value = plateMix;
-  const plateSeen = view.mode !== 0 && vidTop < 0.999;
+  const plateBlend = plateOn ? smooth(0.22, 0.45, p) * 0.42 : 0;
+  finish.uniforms.uPlateOn.value = plateBlend;
+  MU.uPlate.value = plateBlend;
+  const plateSeen = view.mode !== 0 && plateBlend > 0.01;
   [[plateVid, plateSeen && plateMix < 0.999], [plateVid2, plateSeen && plateMix > 0.001]].forEach(([v, on]) => {
     if (on) { if (v.paused && v.src) v.play().catch(() => {}); } else if (!v.paused) v.pause();
   });
   if (plateOn) {
-    // the clips were filmed looking up at the surface; the camera here looks level as it goes under and tilts up as
-    // it sinks. So the frame starts on the lower, deeper water of the clip (its ripples high above) and rises toward
-    // the rippled underside and the sun with the camera's own pitch, not with an independent scroll range
     const ap = (plateVid.videoWidth / plateVid.videoHeight) || 1.78, as = finish.uniforms.uAspect.value, Z = 1.3;
     const sx = (as < ap ? as / ap : 1) / Z, sy = (as < ap ? 1 : ap / as) / Z;
     const lookUp = Math.min(Math.max((pitch + 0.12) / 0.5, 0), 1);
     finish.uniforms.uPlateUV.value.set(sx, sy, 0, (1 - sy) / 2 * lerp(-1, 1, lookUp));
-    finish.uniforms.uPlateWarm.value = 1 - smooth(0.1, 0.3, p);   // the evening light near the surface, gone with depth
+    finish.uniforms.uPlateWarm.value = 1 - smooth(0.18, 0.42, p);
   }
-  finish.uniforms.uShaftK.value = plateOn ? SHAFT_ON_PLATE : 0;
-  // a 5° evening sun puts little direct light under the surface: in the filmed water the hull is lit mostly by the
-  // water around it, so its sunlit faces stay within the footage's light instead of glowing yellow-white
-  sunUW.intensity = plateOn ? UW_I * 0.45 : UW_I;
-  // and like the footage it takes the dimmer evening light near the surface, the clip's full light deeper down
-  MU.uPlateTint.value.set(0.44, 0.72, 1.18).multiplyScalar(lerp(0.72, 1.0, smooth(0.1, 0.3, p)));
-  // sinking on toward the bottom, the float (now above and further off) is lost in the haze the way things are lost
-  // in real water, so it has already gone when the footage of the bottom surfaces, instead of being cut away
-  MU.uPlateK.value = lerp(0.035, 0.2, smooth(0.27, 0.37, p));
+  finish.uniforms.uShaftK.value = plateOn ? (SHAFT_ON_PLATE * 0.25) : 0;
+  sunUW.intensity = UW_I;
+  MU.uPlateTint.value.set(0.44, 0.72, 1.18).multiplyScalar(lerp(0.72, 1.0, smooth(0.18, 0.42, p)));
+  MU.uPlateK.value = lerp(0.025, 0.12, smooth(0.35, 0.55, p));
   bakeCaustics();
-  // below the hero the sea is only a backdrop behind dark panels: render it at half rate, and skip whole
-  // frames when nothing moves (tab hidden, or the fixed stage scrolled out of view)
+
   if (!static_ && !document.hidden) {
     const stageGone = scroller.getBoundingClientRect().bottom <= 0;
-    if (stageGone && Math.abs(q - lastQ) < 0.0004 && dragX === null) return;   // idle backdrop: no redraw needed
+    if (stageGone && Math.abs(q - lastQ) < 0.0004 && !isOrbitDragging && Math.abs(orbitVelYaw) < 0.0001 && Math.abs(orbitVelPitch) < 0.0001) return;
     lastQ = q;
-    if (q > 0 && ((volU.uFrame.value & 1) === 0)) return;                      // half-rate behind the story
+    if (q > 0 && ((volU.uFrame.value & 1) === 0)) return;
   }
   if (vidTop >= 0.999) {
-    // the fixed sea has scrolled out of view — one cheap direct style write keeps the last dive beat
-    // fading with the rest instead of sticking over the story panels
-    if (scrollY > span + innerHeight * 2) beats.forEach(el => { if (el.style.opacity !== '0') el.style.opacity = '0'; });
-    return;                // real footage fills the frame: skip the 3D render
+    if (curScrollY > span + innerHeight * 2) beats.forEach(el => { if (el.style.opacity !== '0') el.style.opacity = '0'; });
+    return;
   }
   composer.render();
 }
