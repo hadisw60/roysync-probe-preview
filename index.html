@@ -34,7 +34,7 @@
      of the first story section, so scrolling always feels like sinking — never like "waiting for the scene" */
   /* the last beat ("Works on any farm") rides over the trust and contact sections, so the dive only needs
      enough runway for beats one through four — a shorter scroller brings the story panels right after them */
-  #scroller { position: relative; height: 640vh; }
+  #scroller { position: relative; height: 1000vh; }   /* 640vh for the 3D dive + 360vh of filmed descent, see diveP() */
   /* the story keeps flowing underwater: the 3D sea stays behind it, deepening with scroll */
   #stage { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; overflow: hidden; z-index: 0; }
   #story, footer { position: relative; z-index: 2; }
@@ -474,14 +474,14 @@
       <h2>When oxygen drops, <em>it acts</em></h2>
       <p>It turns the aerator on first, then sends you a message. You don't have to be awake.</p>
     </div>
-    <div class="copy beat" data-in="0.84" data-out="1.01">
+    <div class="copy beat" data-in="0.969" data-out="1.01">
       <h2>Works on <em>any farm</em></h2>
       <p>Solar powered, nothing to wire. It reports over satellite, Wi-Fi or LTE.</p>
     </div>
     <div class="copy" id="solid-copy"></div>
-    <video class="uwv" muted loop playsinline preload="none" poster="media/dive-1-calm.jpg?v=60" data-poster="media/dive-1-calm.jpg?v=60" data-src="media/dive-1-calm.mp4?v=60" aria-hidden="true"></video>
-    <video class="uwv" muted loop playsinline preload="none" poster="media/dive-2-bubbles.jpg?v=60" data-poster="media/dive-2-bubbles.jpg?v=60" data-src="media/dive-2-bubbles.mp4?v=60" aria-hidden="true"></video>
-    <video class="uwv" muted loop playsinline preload="none" poster="media/dive-4-reef.jpg?v=60" data-poster="media/dive-4-reef.jpg?v=60" data-src="media/dive-4-reef.mp4?v=60" aria-hidden="true"></video>
+    <video class="uwv" muted loop playsinline preload="none" poster="media/dive-1-bubbles.jpg?v=70" data-poster="media/dive-1-bubbles.jpg?v=70" data-src="media/dive-1-bubbles.mp4?v=70" aria-hidden="true"></video>
+    <video class="uwv" muted loop playsinline preload="none" poster="media/dive-2-trout.jpg?v=70" data-poster="media/dive-2-trout.jpg?v=70" data-src="media/dive-2-trout.mp4?v=70" aria-hidden="true"></video>
+    <video class="uwv" muted loop playsinline preload="none" poster="media/dive-3-sunrays.jpg?v=70" data-poster="media/dive-3-sunrays.jpg?v=70" data-src="media/dive-3-sunrays.mp4?v=70" aria-hidden="true"></video>
     <div id="veil" aria-hidden="true"></div>
     <canvas id="uwsnow" aria-hidden="true"></canvas>
     <div id="orbit-hint" class="orbit-hint" aria-hidden="true">
@@ -562,6 +562,22 @@
 </footer>
 
 <script>
+  // dive progress p (0..1) from pixels scrolled into #scroller. The 3D part (p 0..KNEE) keeps the length it had
+  // when the scroller was 640vh; everything after KNEE is the filmed descent and gets the extra 360vh, so the
+  // clips sink past one after another instead of flashing by in the last few percent of the scroll.
+  const DIVE_BASE = 540, DIVE_DEEP = 360, DIVE_KNEE = 0.86;   // vh of 3D dive, vh of filmed descent, p where film starts
+  function diveSpans() {
+    const span = Math.max(1, document.getElementById('scroller').offsetHeight - innerHeight);
+    return [span, span * DIVE_BASE / (DIVE_BASE + DIVE_DEEP)];
+  }
+  function diveP(y) {
+    const [span, base] = diveSpans(), a = DIVE_KNEE * base;
+    return y <= a ? Math.max(y / base, 0) : Math.min(DIVE_KNEE + (1 - DIVE_KNEE) * (y - a) / (span - a), 1);
+  }
+  function diveY(p) {
+    const [span, base] = diveSpans(), a = DIVE_KNEE * base;
+    return p <= DIVE_KNEE ? p * base : a + (p - DIVE_KNEE) / (1 - DIVE_KNEE) * (span - a);
+  }
   // fade elements in as they enter the viewport, lightly staggered within each group
   document.querySelectorAll('.params .param, .features .feature, .steps .step, ul.points li').forEach((el, i) => {
     el.style.transitionDelay = (i % 5) * 70 + 'ms';
@@ -570,8 +586,7 @@
   document.querySelectorAll('.reveal').forEach(el => io.observe(el));
   document.querySelectorAll('[data-dive]').forEach(l => l.addEventListener('click', e => {
     e.preventDefault();
-    const sc = document.getElementById('scroller');
-    scrollTo({ top: (sc.offsetHeight - innerHeight) * +l.dataset.dive, behavior: 'smooth' });
+    scrollTo({ top: diveY(+l.dataset.dive), behavior: 'smooth' });
   }));
   const capIO = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add('on'); capIO.unobserve(e.target); } }), { rootMargin: '0px 0px -10% 0px' });
   document.querySelectorAll('.cap').forEach(el => capIO.observe(el));
@@ -2547,7 +2562,7 @@ descTex.generateMipmaps = false; descTex.minFilter = THREE.LinearFilter;
 const PLATE_H = Math.max(innerWidth, innerHeight) * (window.devicePixelRatio || 1) > 1400 ? 1080 : 720;
 const plateLoad = () => {
   if (plateVid.src) return;
-  descVid.src = 'media/dive-0-descent.mp4?v=68';
+  // descVid is no longer loaded: the bubbles clip (#stage .uwv) takes over where the sinking used to play
   plateVid.src = `media/uw-plate-a-${PLATE_H}.mp4?v=66`;
   plateVid.addEventListener('canplaythrough', () => { if (!plateVid2.src) plateVid2.src = `media/uw-plate-b-${PLATE_H}.mp4?v=66`; }, { once: true });
   setTimeout(() => { if (!plateVid2.src) plateVid2.src = `media/uw-plate-b-${PLATE_H}.mp4?v=66`; }, 5000);
@@ -2609,7 +2624,7 @@ function tick(static_ = false) {
   if (!static_) govern(t, rawDt);
 
   const span = Math.max(1, scroller.offsetHeight - innerHeight);   // dive length: from the top of the page to the first story section
-  const pTarget = Math.min(Math.max(-scroller.getBoundingClientRect().top / span, 0), 1);
+  const pTarget = diveP(-scroller.getBoundingClientRect().top);
   const dEnd = scroller.offsetTop + scroller.offsetHeight;
   const docSpan = Math.max(1, document.documentElement.scrollHeight - innerHeight - dEnd);
   const qTarget = Math.min(Math.max((window.scrollY - dEnd) / docSpan, 0), 1);
@@ -2755,12 +2770,18 @@ function tick(static_ = false) {
   heroCopy.style.transform = leave > 0 ? `translateY(${(-18 * leave).toFixed(1)}px)` : '';
   heroCopy.classList.toggle('faded', leave > 0.5);
 
-  // Deep footage clips: softly dissolve in the deep descent stage, handing over smoothly from 3D to 4K underwater footage
-  // (the sinking just under the surface is not one of them: it is filmed water behind the float, see descVid)
-  const UW = [[0.86, 0.9, 0, 0.94], [0.92, 0.95, 0, 0.999]], ND = UW.length;
+  // The filmed descent: bubbles as the float drops out of view (the first film of the dive), then the fish, then
+  // sun rays reaching the sea bed — most of it in the long stretch diveP gives p 0.86..1. Each clip dissolves into
+  // the next and sinks past the camera while it is on screen, so scrolling reads as going down.
+  // [fade in from, fully in at] — a clip stays until the next one has fully covered it
+  const UW = [[0.75, 0.79], [0.875, 0.89], [0.935, 0.95]], ND = UW.length, FISH = 1;
   const kEnd = (innerHeight - contactEl.getBoundingClientRect().top) / innerHeight;
-  const ops = uwVids.map((v, i) => i < ND ? smooth(UW[i][0], UW[i][1], p) * (p < UW[i][3] ? 1 : 0) : smooth(0.05, 0.75, kEnd));
+  const post = smooth(0, 0.6, (curScrollY - span) / innerHeight);   // the first story section sliding in over the film
+  const ops = uwVids.map((v, i) => smooth(UW[i][0], UW[i][1], p));
   for (let i = 0; i < ops.length - 1; i++) if (ops.slice(i + 1).some(o => o >= 0.999)) ops[i] = 0;
+  for (let i = 0; i < ND; i++) ops[i] *= 1 - post;
+  ops[FISH] = Math.max(ops[FISH], smooth(0.05, 0.75, kEnd));        // the fish come back behind the contact section
+  const depth = smooth(0.86, 1, p);                                 // 0 just under the surface .. 1 at the bottom
   const uwNow = performance.now(), uwDt = Math.min(Math.max((uwNow - _uw.t) / 1000, 0.001), 0.1), uwDy = curScrollY - _uw.y;
   _uw.t = uwNow; _uw.y = curScrollY;
   _uw.sp += (Math.min(Math.abs(uwDy) / innerHeight / uwDt, 3) - _uw.sp) * Math.min(uwDt * 4, 1);
@@ -2772,17 +2793,12 @@ function tick(static_ = false) {
     // Rich, crisp underwater video playback
     const o = ops[i];
     v.style.opacity = o.toFixed(3);
-    const ds = Math.max(i < ND ? (curScrollY - UW[i][0] * span) / innerHeight : kEnd, 0);
-    if (i < 2) {   // the two tall clips: the view tilts down through them as you scroll
-      const kp = Math.min(Math.max((p - UW[i][0]) / (UW[i][3] - UW[i][0]), 0), 1), y0 = i ? 25 : 0;
-      v.style.objectPosition = `50% ${(UW_RM ? 50 : y0 + kp * (100 - y0)).toFixed(1)}%`;
-      v.style.transform = 'scale(1.01)';
-    } else {
-      const sc = Math.min(1.03 + 0.015 * ds, 1.07), ty = Math.max(0.8 - 0.5 * ds, -1);
-      v.style.transform = UW_RM ? 'scale(1.03)' : `translate3d(0, ${ty.toFixed(2)}%, 0) scale(${sc.toFixed(4)})`;
-    }
-    v.style.filter = 'none';
-    if (!v.src && (i < ND ? p > UW[i][0] - 0.15 : kEnd > -2.0)) uwLoad(v);
+    // sinking: from the moment the clip starts to fade in until the next one has covered it, the picture drifts
+    // up and closes in a little — the camera going down. The overscale keeps the edges covered at every aspect.
+    const k = Math.min(Math.max((p - UW[i][0]) / ((i + 1 < ND ? UW[i + 1][1] : 1) - UW[i][0]), 0), 1);
+    v.style.transform = UW_RM ? 'scale(1.03)' : `translate3d(0, ${(6 - 12 * k).toFixed(2)}%, 0) scale(${(1.14 + 0.06 * k).toFixed(4)})`;
+    v.style.filter = UW_RM ? 'none' : `brightness(${(1.04 - 0.22 * depth).toFixed(3)})`;   // a little less light the deeper you go
+    if (!v.src && (p > UW[i][0] - 0.15 || (i === FISH && kEnd > -2.0))) uwLoad(v);
     if (o > 0.001) {
       if (v.paused) v.play().catch(() => {});
       if (Math.abs(v.playbackRate - uwRate) > 0.04) v.playbackRate = uwRate;
@@ -2793,7 +2809,7 @@ function tick(static_ = false) {
   beats.forEach(el => { const a = +el.dataset.in, b = +el.dataset.out; el.style.opacity = (smooth(a, a + 0.03, p) * (1 - smooth(b - 0.03, b, p)) * (1 - smooth(0, 0.3, (curScrollY - span) / innerHeight))).toFixed(3); });
   solidCopy.classList.toggle('faded', q > 0.1);
   hint.style.opacity = 1 - smooth(0.0, 0.07, p);
-  diveEl.style.opacity = (1 - smooth(0.93, 0.99, p)) * (1 - smooth(0.0, 0.08, q));
+  diveEl.style.opacity = (1 - smooth(0.975, 0.995, p)) * (1 - smooth(0.0, 0.08, q));
   diveDot.style.top = `${(0.06 + Math.min(p + q * 0.94, 1) * 0.88) * 100}%`;
 
   // True physical 3D underwater optics: NEVER turn off 3D water surface, particles, or volumetric rays!
@@ -2865,8 +2881,7 @@ if (REDUCED) {
   let lastP = -1;
   const stillFrame = () => {
     // same layout-based dive mapping as the animated branch
-    const span = Math.max(1, scroller.offsetHeight - innerHeight);
-    const p = Math.min(Math.max(-scroller.getBoundingClientRect().top / span, 0), 1);
+    const p = diveP(-scroller.getBoundingClientRect().top);
     if (Math.abs(p - lastP) < 0.0008) return;
     lastP = p;
     tick(true);
