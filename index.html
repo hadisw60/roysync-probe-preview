@@ -443,7 +443,6 @@
   </a>
   <div class="navlinks">
     <a href="#solution" data-dive="0.3">Solution</a>
-    <a href="#trust">Device</a>
   </div>
   <a class="btn cta" href="contact.html">Contact us</a>
   </nav>
@@ -482,7 +481,6 @@
     <div class="copy" id="solid-copy"></div>
     <video class="uwv" muted loop playsinline preload="none" poster="media/dive-1-calm.jpg?v=60" data-poster="media/dive-1-calm.jpg?v=60" data-src="media/dive-1-calm.mp4?v=60" aria-hidden="true"></video>
     <video class="uwv" muted loop playsinline preload="none" poster="media/dive-2-bubbles.jpg?v=60" data-poster="media/dive-2-bubbles.jpg?v=60" data-src="media/dive-2-bubbles.mp4?v=60" aria-hidden="true"></video>
-    <video class="uwv" muted loop playsinline preload="none" poster="media/dive-3-cave.jpg?v=60" data-poster="media/dive-3-cave.jpg?v=60" data-src="media/dive-3-cave.mp4?v=60" aria-hidden="true"></video>
     <video class="uwv" muted loop playsinline preload="none" poster="media/dive-4-reef.jpg?v=60" data-poster="media/dive-4-reef.jpg?v=60" data-src="media/dive-4-reef.mp4?v=60" aria-hidden="true"></video>
     <div id="veil" aria-hidden="true"></div>
     <canvas id="uwsnow" aria-hidden="true"></canvas>
@@ -542,7 +540,6 @@
       <h4>Pages</h4>
       <a href="#top">Home</a>
       <a href="#solution" data-dive="0.3">Solution</a>
-      <a href="#trust">Device</a>
       <a href="contact.html">Contact us</a>
     </nav>
     <div class="ft-col">
@@ -2538,11 +2535,19 @@ function plateVideo(uniform) {
   finish.uniforms[uniform].value = t;
   return v;
 }
-const plateVid = plateVideo('tPlate'), plateVid2 = plateVideo('tPlate2');
+const plateVid = plateVideo('tPlate'), plateVid2 = plateVideo('tPlate2'), plateTexA = finish.uniforms.tPlate.value;
+// right after the crossing, the water behind the float is the sinking: bubbles falling away from the sunlit surface
+// toward the stony bottom (Pexels 14772713, its first 3 s run backwards and slowed). Played once, never looped, so it
+// does not jump back up to the surface; it starts over only when the visitor goes back above it
+const descVid = Object.assign(document.createElement('video'), { muted: true, playsInline: true, preload: 'auto' });
+descVid.setAttribute('playsinline', ''); descVid.setAttribute('muted', '');
+const descTex = new THREE.VideoTexture(descVid);
+descTex.generateMipmaps = false; descTex.minFilter = THREE.LinearFilter;
 // a phone shows only a narrow upright slice of the wide clip, and sharp screens many pixels: both get the 1080p cut
 const PLATE_H = Math.max(innerWidth, innerHeight) * (window.devicePixelRatio || 1) > 1400 ? 1080 : 720;
 const plateLoad = () => {
   if (plateVid.src) return;
+  descVid.src = 'media/dive-0-descent.mp4?v=68';
   plateVid.src = `media/uw-plate-a-${PLATE_H}.mp4?v=66`;
   plateVid.addEventListener('canplaythrough', () => { if (!plateVid2.src) plateVid2.src = `media/uw-plate-b-${PLATE_H}.mp4?v=66`; }, { once: true });
   setTimeout(() => { if (!plateVid2.src) plateVid2.src = `media/uw-plate-b-${PLATE_H}.mp4?v=66`; }, 5000);
@@ -2719,7 +2724,7 @@ function tick(static_ = false) {
   probe.rotation.x = buoy.rx + userOrbitPitch;
 
   // Manage stage pointer events and interactive hint
-  const probeInView = p <= 0.65;
+  const probeInView = p <= 0.62;
   stage.style.pointerEvents = probeInView ? 'auto' : 'none';
   if (!isOrbitDragging) {
     stage.style.cursor = probeInView ? 'grab' : 'default';
@@ -2751,9 +2756,10 @@ function tick(static_ = false) {
   heroCopy.classList.toggle('faded', leave > 0.5);
 
   // Deep footage clips: softly dissolve in the deep descent stage, handing over smoothly from 3D to 4K underwater footage
-  const UW = [[0.68, 0.76, 0, 0.84], [0.78, 0.85, 0, 0.92], [0.86, 0.93, 0, 0.98]];
+  // (the sinking just under the surface is not one of them: it is filmed water behind the float, see descVid)
+  const UW = [[0.86, 0.9, 0, 0.94], [0.92, 0.95, 0, 0.999]], ND = UW.length;
   const kEnd = (innerHeight - contactEl.getBoundingClientRect().top) / innerHeight;
-  const ops = uwVids.map((v, i) => i < 3 ? smooth(UW[i][0], UW[i][1], p) * (p < UW[i][3] ? 1 : 0) : smooth(0.05, 0.75, kEnd));
+  const ops = uwVids.map((v, i) => i < ND ? smooth(UW[i][0], UW[i][1], p) * (p < UW[i][3] ? 1 : 0) : smooth(0.05, 0.75, kEnd));
   for (let i = 0; i < ops.length - 1; i++) if (ops.slice(i + 1).some(o => o >= 0.999)) ops[i] = 0;
   const uwNow = performance.now(), uwDt = Math.min(Math.max((uwNow - _uw.t) / 1000, 0.001), 0.1), uwDy = curScrollY - _uw.y;
   _uw.t = uwNow; _uw.y = curScrollY;
@@ -2766,8 +2772,8 @@ function tick(static_ = false) {
     // Rich, crisp underwater video playback
     const o = ops[i];
     v.style.opacity = o.toFixed(3);
-    const ds = Math.max(i < 3 ? (curScrollY - UW[i][0] * span) / innerHeight : kEnd, 0);
-    if (i < 2) {
+    const ds = Math.max(i < ND ? (curScrollY - UW[i][0] * span) / innerHeight : kEnd, 0);
+    if (i < 2) {   // the two tall clips: the view tilts down through them as you scroll
       const kp = Math.min(Math.max((p - UW[i][0]) / (UW[i][3] - UW[i][0]), 0), 1), y0 = i ? 25 : 0;
       v.style.objectPosition = `50% ${(UW_RM ? 50 : y0 + kp * (100 - y0)).toFixed(1)}%`;
       v.style.transform = 'scale(1.01)';
@@ -2776,7 +2782,7 @@ function tick(static_ = false) {
       v.style.transform = UW_RM ? 'scale(1.03)' : `translate3d(0, ${ty.toFixed(2)}%, 0) scale(${sc.toFixed(4)})`;
     }
     v.style.filter = 'none';
-    if (!v.src && (i < 3 ? p > UW[i][0] - 0.15 : kEnd > -2.0)) uwLoad(v);
+    if (!v.src && (i < ND ? p > UW[i][0] - 0.15 : kEnd > -2.0)) uwLoad(v);
     if (o > 0.001) {
       if (v.paused) v.play().catch(() => {});
       if (Math.abs(v.playbackRate - uwRate) > 0.04) v.playbackRate = uwRate;
@@ -2806,12 +2812,28 @@ function tick(static_ = false) {
   [[plateVid, plateSeen && plateMix < 0.999], [plateVid2, plateSeen && plateMix > 0.001]].forEach(([v, on]) => {
     if (on) { if (v.paused && v.src) v.play().catch(() => {}); } else if (!v.paused) v.pause();
   });
-  if (plateOn) {
-    const ap = (plateVid.videoWidth / plateVid.videoHeight) || 1.78, as = finish.uniforms.uAspect.value, Z = 1.3;
+  // the sinking takes over the filmed water as soon as the lens is under, and hands on to the deep clips
+  const descK = view.mode !== 0 && descVid.readyState >= 2 ? smooth(0.72, 0.77, p) * (1 - smooth(0.87, 0.9, p)) : 0;
+  if (descK > 0.001) {
+    finish.uniforms.tPlate.value = descTex;
+    finish.uniforms.uPlateMix.value = 0;
+    finish.uniforms.uPlateOn.value = MU.uPlate.value = Math.max(plateBlend, descK);
+    under.visible = particles.visible = descK < 0.999;   // only the float stays drawn in front of the footage
+    compU.uVol.value = 1 - descK;
+    if (descVid.paused && !descVid.ended) descVid.play().catch(() => {});
+    if (Math.abs(descVid.playbackRate - uwRate) > 0.04) descVid.playbackRate = uwRate;
+  } else {
+    finish.uniforms.tPlate.value = plateTexA;
+    if (!descVid.paused) descVid.pause();
+    if (p < 0.68 && descVid.currentTime > 0) descVid.currentTime = 0;
+  }
+  if (plateOn || descK > 0.001) {
+    const pv = descK > 0.001 ? descVid : plateVid;
+    const ap = (pv.videoWidth / pv.videoHeight) || 1.78, as = finish.uniforms.uAspect.value, Z = 1.3;
     const sx = (as < ap ? as / ap : 1) / Z, sy = (as < ap ? 1 : ap / as) / Z;
     const lookUp = Math.min(Math.max((pitch + 0.12) / 0.5, 0), 1);
     finish.uniforms.uPlateUV.value.set(sx, sy, 0, (1 - sy) / 2 * lerp(-1, 1, lookUp));
-    finish.uniforms.uPlateWarm.value = 1 - smooth(0.18, 0.42, p);
+    finish.uniforms.uPlateWarm.value = (1 - smooth(0.18, 0.42, p)) * (1 - descK);   // the sinking was filmed at noon
   }
   finish.uniforms.uShaftK.value = plateOn ? (SHAFT_ON_PLATE * 0.25) : 0;
   sunUW.intensity = UW_I;
