@@ -196,6 +196,7 @@
     .inq .btn { animation: none; }
   }
 </style>
+<script src="assets/whole-video.js?v=71"></script>
 </head>
 <body>
 
@@ -217,7 +218,7 @@
 
 <section class="cv" aria-label="Contact RoySync">
   <video autoplay muted playsinline preload="auto" poster="media/contact-farm.jpg?v=59" aria-hidden="true"></video>
-  <script>(v => { v.src = 'media/contact-farm-' + (innerWidth >= 900 ? '1080' : '720') + '.mp4?v=59'; })(document.currentScript.previousElementSibling);</script>
+  <script>(v => { loadWholeVideo(v, 'media/contact-farm-' + (innerWidth >= 900 ? '1080' : '720') + '.mp4?v=59'); })(document.currentScript.previousElementSibling);</script>
   <div class="shade"></div>
   <div class="tag" id="cv-tag" aria-hidden="true">
     <i></i><i></i>

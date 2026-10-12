@@ -14,6 +14,7 @@
 <link rel="preload" href="assets/fonts/inter.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="probe-baked.glb?v=65" as="fetch" crossorigin>
 <link rel="preload" href="assets/waternormals.jpg" as="image">
+<script src="assets/whole-video.js?v=71"></script>
 <style>
   @font-face { font-family: 'Inter'; font-style: normal; font-weight: 400 600; font-display: swap; src: url(assets/fonts/inter.woff2) format('woff2'); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
   @font-face { font-family: 'Sora'; font-style: normal; font-weight: 500 700; font-display: swap; src: url(assets/fonts/sora.woff2) format('woff2'); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
@@ -34,7 +35,7 @@
      of the first story section, so scrolling always feels like sinking — never like "waiting for the scene" */
   /* the last beat ("Works on any farm") rides over the trust and contact sections, so the dive only needs
      enough runway for beats one through four — a shorter scroller brings the story panels right after them */
-  #scroller { position: relative; height: 1000vh; }   /* 640vh for the 3D dive + 360vh of filmed descent, see diveP() */
+  #scroller { position: relative; height: 1240vh; }   /* 640vh for the 3D dive + 600vh of filmed descent, see diveP() */
   /* the story keeps flowing underwater: the 3D sea stays behind it, deepening with scroll */
   #stage { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; overflow: hidden; z-index: 0; }
   #story, footer { position: relative; z-index: 2; }
@@ -563,9 +564,9 @@
 
 <script>
   // dive progress p (0..1) from pixels scrolled into #scroller. The 3D part (p 0..KNEE) keeps the length it had
-  // when the scroller was 640vh; everything after KNEE is the filmed descent and gets the extra 360vh, so the
+  // when the scroller was 640vh; everything after KNEE is the filmed descent and gets the extra 600vh, so the
   // clips sink past one after another instead of flashing by in the last few percent of the scroll.
-  const DIVE_BASE = 540, DIVE_DEEP = 360, DIVE_KNEE = 0.86;   // vh of 3D dive, vh of filmed descent, p where film starts
+  const DIVE_BASE = 540, DIVE_DEEP = 600, DIVE_KNEE = 0.86;   // vh of 3D dive, vh of filmed descent, p where film starts
   function diveSpans() {
     const span = Math.max(1, document.getElementById('scroller').offsetHeight - innerHeight);
     return [span, span * DIVE_BASE / (DIVE_BASE + DIVE_DEEP)];
@@ -710,17 +711,17 @@ const MSAA = LOW_GPU ? 2 : 4;
 // ---------------- waves: one Gerstner sum shared by the surface, foam, waterline, snow and the float ----------------
 // True gravity is 124 units/s² at 79 mm per unit. The sea runs at half speed (S_MO = 2): G_EFF = g / S², so every
 // wave keeps its real dispersion, and the ripple and caustic fields scroll at the matching phase speeds.
-// The user asked for a calmer sea: quarter speed (S_MO = 4) and waves at WAVE_GAIN of their former height.
-const S_MO = 4;
+// A calm sea between the wave sets below: the steady waves at 0.45 of their height, at the same half-speed sea as
+// the sets (one clock for everything; the quarter-speed sea of 2026-10-02 made the sets look like another film).
+const S_MO = 2, SEA_SPEED = 1, SWELL_GAIN = 0.45, CHOP_GAIN = 0.45;
 const G_EFF = 124 / (S_MO * S_MO);
-const RIPPLE_V = 9;                                  // ripple/caustic scroll speed, slowed with S_MO (was 18 at S_MO = 2)
-const WAVE_GAIN = 0.45;                              // overall wave height
-const SEA_SPEED = 0.4;                               // slows every sea motion together (waves, ripples, glitter, caustics, foam, bob)
+const RIPPLE_V = 36 / S_MO;                          // ripple/caustic scroll speed, slowed with S_MO (18 at S_MO = 2)
+// SEA_SPEED slows every sea motion together (waves, ripples, glitter, caustics, foam, bob)
 const WIND = Math.atan2(0.94, 0.34);                 // the sea runs toward the camera, a little to the right
 // (heading offset °, wavelength, amplitude): a long, low open-ocean swell (20 m, 7 s), then wind chop of ka 0.03–0.055
 const WAVE_BASE = [[-14, 250, 0.2], [0, 23, 0.1], [27, 13.5, 0.07], [-21, 8.2, 0.06], [46, 5.1, 0.042], [-38, 3.2, 0.028], [12, 2.1, 0.018]];
-const WAVE_DEF = WAVE_BASE.map(([off, lam, amp]) => [off, lam, amp * WAVE_GAIN]);
-const NW = WAVE_DEF.length;
+const WAVE_DEF = WAVE_BASE.map(([off, lam, amp]) => [off, lam, amp * (lam > 100 ? SWELL_GAIN : CHOP_GAIN)]);
+const NWB = WAVE_DEF.length, NSET = 2, NW = NWB + NSET;   // the steady sea, then two slots for the wave sets below
 const WAVE_SUM = WAVE_DEF.reduce((s, w) => s + w[2], 0);
 const WA = [], WB = [];                              // (dir.x, dir.z, k, amplitude) · (omega, phase, steepness Q, wavelength)
 WAVE_DEF.forEach(([off, lam, amp], i) => {
@@ -728,9 +729,63 @@ WAVE_DEF.forEach(([off, lam, amp], i) => {
   // steepness from the original height, so lower waves are also gentler (rounder crests), not just smaller
   const amp0 = WAVE_BASE[i][2];
   WA.push(new THREE.Vector4(Math.cos(a), Math.sin(a), k, amp));
-  WB.push(new THREE.Vector4(Math.sqrt(G_EFF * k), 1.3 + i * 2.17, Math.min(lam > 100 ? 1 : 1.5, 0.55 / (k * amp0 * NW)), lam));
+  WB.push(new THREE.Vector4(Math.sqrt(G_EFF * k), 1.3 + i * 2.17, Math.min(lam > 100 ? 1 : 1.5, 0.55 / (k * amp0 * NWB)), lam));
 });
-const WAVE_U = { uWA: { value: WA }, uWB: { value: WB } };
+// Wave sets: the sea stays calm, but now and then a group of bigger waves rolls in from the distance, lifts, tilts
+// and carries the float, and runs on past it. Sometimes one wave, sometimes a few in a row, at uneven gaps, and each
+// set from its own heading. A set is a Gerstner wave whose height is a sum of Gaussian groups travelling along its
+// heading at group speed (half its crest speed, so crests rise at the back of a group and die at its front, as in a
+// real set). Two slots, so a new set can come from a new heading while the last one is still running out; groups
+// that follow close behind a set share its heading.
+// 3.2 m long, up to ~8 cm high: measured on the hero framing, 10 cm moved the float through 40% of the screen height
+const SET_LAM = 40, SET_K = 2 * Math.PI / SET_LAM, SET_AMP = 1.0;        // 3.2 m long, up to ~10 cm high
+const SET_W = Math.sqrt(G_EFF * SET_K);                                  // the same dispersion as the steady sea
+const SET_CG = 0.5 * SET_W / SET_K;                                      // group speed, sea-time units
+const SET_FROM = -140, SET_TO = 60;                                      // where a group starts and ends along its heading
+for (let j = 0; j < NSET; j++) {
+  WA.push(new THREE.Vector4(0, 1, SET_K, SET_AMP));                     // heading: set when a set starts in this slot
+  WB.push(new THREE.Vector4(SET_W, 0.7 + j * 1.9, 1, SET_LAM));         // Q = 1: round orbits, as in deep water
+}
+const SET_EV = Array.from({ length: 4 }, () => new THREE.Vector4(0, 1, 0, -1));   // per group: centre, half-width, gain, slot
+const sets = { live: [], next: -1, follow: false, slot: 0, head: 0 };
+function setEnv(slot, x, z) {
+  const a = WA[NWB + slot], s = a.x * x + a.y * z;
+  let e = 0;
+  for (const v of SET_EV) if (v.w === slot) { const d = (s - v.x) / v.y; e += v.z * Math.exp(-d * d); }
+  return e;
+}
+function stepSets(t) {   // t = sea time; starts new groups at uneven gaps and moves the live ones
+  const rnd = (a, b) => a + Math.random() * (b - a);
+  const first = sets.next < 0;
+  if (first) sets.next = t + 3.5 * SEA_SPEED - (0 - SET_FROM) / SET_CG;   // the first reaches the float ~3.5 s in
+  if (t >= sets.next && sets.live.length < SET_EV.length) {
+    let slot = sets.slot;
+    if (!sets.follow) slot = [...Array(NSET).keys()].find(j => !sets.live.some(e => e.slot === j)) ?? -1;
+    if (slot < 0) sets.next = t + 2 * SEA_SPEED;    // both headings still running out: try again shortly
+    else {
+      if (!sets.follow) {   // a new set: a new heading within ±40° of straight at the camera, away from the last one
+        let h = first ? rnd(-15, 15) : rnd(-40, 40);
+        for (let k = 0; !first && k < 8 && Math.abs(h - sets.head) < 20; k++) h = rnd(-40, 40);
+        const a = THREE.MathUtils.degToRad(90 + h);
+        WA[NWB + slot].x = Math.cos(a); WA[NWB + slot].y = Math.sin(a);
+        sets.slot = slot; sets.head = h;
+      }
+      const r = Math.random();   // one wave · two or three · a long set of several
+      const [w, g] = r < 0.45 ? [0.3, rnd(0.8, 1)] : r < 0.8 ? [0.6, rnd(0.65, 0.85)] : [0.9, rnd(0.55, 0.7)];
+      sets.live.push({ t0: sets.next, w: w * SET_LAM, g, slot });
+      // gaps between arrivals: mostly 8–16 s of calm; fairly often another group close behind, from the same heading
+      sets.follow = Math.random() < 0.3;
+      sets.next += (sets.follow ? rnd(3, 6) : rnd(8, 16)) * SEA_SPEED;
+    }
+  }
+  sets.live = sets.live.filter(e => SET_FROM + SET_CG * (t - e.t0) < SET_TO + 2 * e.w);
+  SET_EV.forEach((v, j) => {
+    const e = sets.live[j];
+    const c = e ? SET_FROM + SET_CG * (t - e.t0) : 0;
+    if (e) v.set(c, e.w, e.g * smoothJS(0, 60, c - SET_FROM), e.slot); else v.set(0, 1, 0, -1);   // builds up as it comes
+  });
+}
+const WAVE_U = { uWA: { value: WA }, uWB: { value: WB }, uSet: { value: SET_EV } };
 const smoothJS = (a, b, x) => { const t = Math.min(Math.max((x - a) / (b - a), 0), 1); return t * t * (3 - 2 * t); };
 const waveDamp = r => 0.45 + 0.55 * smoothJS(1.2, 4.5, r);        // the float calms the chop right around it (not the swell)
 function waveHeight(x, z, t) {
@@ -738,9 +793,20 @@ function waveHeight(x, z, t) {
   let h = 0;
   for (let i = 0; i < NW; i++) {
     const a = WA[i], b = WB[i];
-    h += a.w * (b.w > 100 ? 1 : dm) * (1 - smoothJS(b.w * 4, b.w * 7, r)) * Math.sin(a.z * (a.x * x + a.y * z) - b.x * t + b.y);
+    h += a.w * (i >= NWB ? setEnv(i - NWB, x, z) : b.w > 100 ? 1 : dm) * (1 - smoothJS(b.w * 4, b.w * 7, r)) * Math.sin(a.z * (a.x * x + a.y * z) - b.x * t + b.y);
   }
   return h;
+}
+function waveSurge(x, z, t, out) {   // the horizontal part of the displacement: how far the water at (x, z) has moved
+  const r = Math.hypot(x, z), dm = waveDamp(r);
+  let sx = 0, sz = 0;
+  for (let i = 0; i < NW; i++) {
+    const a = WA[i], b = WB[i];
+    const A = a.w * (i >= NWB ? setEnv(i - NWB, x, z) : b.w > 100 ? 1 : dm) * (1 - smoothJS(b.w * 4, b.w * 7, r));
+    const c = b.z * A * Math.cos(a.z * (a.x * x + a.y * z) - b.x * t + b.y);
+    sx += a.x * c; sz += a.y * c;
+  }
+  return out.set(sx, sz);
 }
 
 // ---------------- shared state: sun, water medium ----------------
@@ -803,14 +869,21 @@ float rays(vec3 p){
 }`;
 
 const WAVES = /* glsl */`
-uniform vec4 uWA[${NW}], uWB[${NW}];
+uniform vec4 uWA[${NW}], uWB[${NW}], uSet[4];
 float waveDamp(float r){ return mix(0.45, 1.0, smoothstep(1.2, 4.5, r)); }
+float setEnv(float slot, vec2 dir, vec2 x){     // the wave sets: Gaussian groups along their slot's heading
+  float s = dot(dir, x), e = 0.0;
+  for (int j = 0; j < 4; j++) { float d = (s - uSet[j].x) / uSet[j].y; e += uSet[j].z * exp(-d * d) * step(abs(uSet[j].w - slot), 0.5); }
+  return e;
+}
+// how much of wave i stands at x: the sets by their groups, the swell everywhere, the chop calmed near the float
+float waveGain(int i, vec4 a, vec4 b, float dm, vec2 x){ return i >= ${NWB} ? setEnv(float(i - ${NWB}), a.xy, x) : (b.w > 100.0 ? 1.0 : dm); }
 vec3 wavePos(vec2 x0, float t){                 // Gerstner displacement of the rest point x0
   float r = length(x0), dm = waveDamp(r);
   vec3 P = vec3(x0.x, 0.0, x0.y);
   for (int i = 0; i < ${NW}; i++) {
     vec4 a = uWA[i], b = uWB[i];
-    float A = a.w * (b.w > 100.0 ? 1.0 : dm) * (1.0 - smoothstep(b.w * 4.0, b.w * 7.0, r));
+    float A = a.w * waveGain(i, a, b, dm, x0) * (1.0 - smoothstep(b.w * 4.0, b.w * 7.0, r));
     float th = a.z * dot(a.xy, x0) - b.x * t + b.y;
     P.xz += b.z * A * a.xy * cos(th);
     P.y += A * sin(th);
@@ -821,16 +894,21 @@ float waveHeight(vec2 x, float t){
   float r = length(x), dm = waveDamp(r), h = 0.0;
   for (int i = 0; i < ${NW}; i++) {
     vec4 a = uWA[i], b = uWB[i];
-    h += a.w * (b.w > 100.0 ? 1.0 : dm) * (1.0 - smoothstep(b.w * 4.0, b.w * 7.0, r)) * sin(a.z * dot(a.xy, x) - b.x * t + b.y);
+    h += a.w * waveGain(i, a, b, dm, x) * (1.0 - smoothstep(b.w * 4.0, b.w * 7.0, r)) * sin(a.z * dot(a.xy, x) - b.x * t + b.y);
   }
   return h;
+}
+float waterAt(vec2 X, float t){                // height of the surface standing at world point X: the waves move the
+  vec2 x0 = X;                                   // water sideways, so first find the rest point that has moved to X
+  for (int k = 0; k < 3; k++) x0 += X - wavePos(x0, t).xz;
+  return wavePos(x0, t).y;
 }
 vec2 waveSlope(vec2 x0, float t, float dist, out float lost){   // dh/dx, dh/dz; waves too fine to resolve become roughness
   float dm = waveDamp(length(x0));
   vec3 n = vec3(0.0, 1.0, 0.0); lost = 0.0;
   for (int i = 0; i < ${NW}; i++) {
     vec4 a = uWA[i], b = uWB[i];
-    float kA = a.z * a.w * (b.w > 100.0 ? 1.0 : dm), w = 1.0 - smoothstep(b.w * 30.0, b.w * 90.0, dist);
+    float kA = a.z * a.w * waveGain(i, a, b, dm, x0), w = 1.0 - smoothstep(b.w * 30.0, b.w * 90.0, dist);
     float th = a.z * dot(a.xy, x0) - b.x * t + b.y;
     n.xz -= a.xy * (kA * w * cos(th));
     n.y -= b.z * kA * w * sin(th);
@@ -1387,6 +1465,7 @@ scene.add(particles);
 
 // ---------------- the probe ----------------
 const probe = new THREE.Group();
+probe.rotation.order = 'XZY';   // spin about its own axis (y) first, then tilt that axis with the water (x, z)
 // two versions of the float: the decimated hero mesh for the eye, a light proxy for the mirror, refraction and shadow
 const probeMain = new THREE.Group(), probeProxy = new THREE.Group();
 probeProxy.visible = false;
@@ -1406,8 +1485,9 @@ MATS.head.defines.PROBE_AO = MATS.paye.defines.PROBE_AO = '';   // these two car
 function patchProbe(sh) {
   Object.assign(sh.uniforms, MU, WAVE_U);   // the waves too: where the water actually stands against the hull
   sh.vertexShader = sh.vertexShader
-    .replace('#include <common>', '#include <common>\nuniform float uApparent;\nvarying vec3 vWPos;\nvarying vec3 vLPos;\nvarying float vAO;\n#ifdef PROBE_AO\nattribute float aAO;\n#endif')
-    // seen through the surface at a grazing angle, the submerged hull is squeezed up toward the waterline
+    .replace('#include <common>', '#include <common>\nuniform float uApparent, uTime;\n' + WAVES + '\nvarying vec3 vWPos;\nvarying vec3 vLPos;\nvarying float vAO;\n#ifdef PROBE_AO\nattribute float aAO;\n#endif')
+    // seen through the surface at a grazing angle, the submerged hull is squeezed up toward the waterline: the water
+    // actually standing at it, not y = 0, which a passing wave set lifts the water well above
     .replace('#include <project_vertex>', `vec4 wApp = modelMatrix * vec4(transformed, 1.0);
       vWPos = wApp.xyz; vLPos = transformed;
       #ifdef PROBE_AO
@@ -1415,18 +1495,21 @@ function patchProbe(sh) {
       #else
       vAO = 1.0;
       #endif
-      wApp.y *= wApp.y < 0.0 ? uApparent : 1.0;
+      if (uApparent < 1.0) { float hS = waterAt(wApp.xz, uTime); wApp.y = wApp.y < hS ? hS + (wApp.y - hS) * uApparent : wApp.y; }
       vec4 mvPosition = viewMatrix * wApp;
       gl_Position = projectionMatrix * mvPosition;`);
   sh.fragmentShader = sh.fragmentShader
-    .replace('#include <common>', '#include <common>\nvarying vec3 vWPos;\nvarying vec3 vLPos;\nvarying float vAO;\nuniform float uPlate, uPlateK;\nuniform vec3 uPlateTint;\n' + NOISE + MEDIUM + WAVES + UWLIGHT + CAUSTIC + RAYS)
+    .replace('#include <common>', '#include <common>\nvarying vec3 vWPos;\nvarying vec3 vLPos;\nvarying float vAO;\nuniform float uPlate, uPlateK, uApparent;\nuniform vec3 uPlateTint;\n' + NOISE + MEDIUM + WAVES + UWLIGHT + CAUSTIC + RAYS)
     .replace('#include <color_fragment>', `#include <color_fragment>
+      // height above the water standing at this point of the hull (a passing set moves it well off y = 0)
+      float yW = vWPos.y < -4.0 ? vWPos.y : vWPos.y - waterAt(vWPos.xz, uTime);   // (deep down, e.g. the fish, y will do)
+      if (uApparent < 1.0 && yW > 0.03) discard;                 // what the surface refracts: only what is under it
       float wet = 1.0 - smoothstep(0.04, 0.22, vLPos.y);          // the band the bobbing keeps wet, and all below it
       float grain = vnoise(vLPos.xz * 23.0 + vLPos.y * 7.0) * 0.6 + vnoise(vLPos.xy * 61.0 + 3.7) * 0.4;
-      diffuseColor.rgb *= mix(1.0, 0.8, wet * step(0.0, vWPos.y)) * (0.985 + 0.03 * grain);`)
+      diffuseColor.rgb *= mix(1.0, 0.8, wet * step(0.0, yW)) * (0.985 + 0.03 * grain);`)
     .replace('#include <roughnessmap_fragment>', `#include <roughnessmap_fragment>
-      roughnessFactor = mix(roughnessFactor * (0.82 + 0.36 * grain), 0.1, wet * step(0.0, vWPos.y));`)
-    .replace('#include <lights_fragment_maps>', `float uwF = smoothstep(0.02, -0.1, vWPos.y);
+      roughnessFactor = mix(roughnessFactor * (0.82 + 0.36 * grain), 0.1, wet * step(0.0, yW));`)
+    .replace('#include <lights_fragment_maps>', `float uwF = smoothstep(0.02, -0.1, yW);
       if (uwF < 0.999) {                                         // the sky probe is only needed above the water
       #include <lights_fragment_maps>
       }
@@ -1434,8 +1517,8 @@ function patchProbe(sh) {
       if (uwF > 0.0) {                                           // under water the ambient reflection is soft and diffuse
         vec3 wN = inverseTransformDirection(geometryNormal, viewMatrix);
         vec3 wR = inverseTransformDirection(reflect(-geometryViewDir, geometryNormal), viewMatrix);
-        iblIrradiance = mix(iblIrradiance, uwIrradiance(wN, vWPos.y), uwF);
-        radiance = mix(radiance, uwRadiance(wR, vWPos.y, material.roughness) * 0.18, uwF);
+        iblIrradiance = mix(iblIrradiance, uwIrradiance(wN, yW), uwF);
+        radiance = mix(radiance, uwRadiance(wR, yW, material.roughness) * 0.18, uwF);
         #ifdef USE_CLEARCOAT
         clearcoatRadiance *= mix(1.0, 0.05, uwF);
         #endif
@@ -1457,23 +1540,23 @@ function patchProbe(sh) {
         #endif
       }
       if (uwF > 0.0) {
-        float dep = max(-vWPos.y, 0.0);
+        float dep = max(-yW, 0.0);
         // Soft, organic caustics softly playing across the surfaces without harsh artificial glints
         vec3 caust = causticRGB(vWPos, dep) * exp(-uSigma * dep / max(-uLt.y, 0.3));
         vec3 k = mix(vec3(1.0), caust, 0.16);
         reflectedLight.directDiffuse *= mix(vec3(1.0), k, uwF);
       }`)
     .replace('#include <opaque_fragment>', `#include <opaque_fragment>
-      if (uPlate > 0.5 && uMode > 0.5 && uMode < 1.5 && vWPos.y > waveHeight(vWPos.xz, uTime)) {
+      if (uPlate > 0.5 && uMode > 0.5 && uMode < 1.5 && yW > 0.0) {
         // the dry part, looked at from under the water: outside Snell's window the underside is a mirror, so nothing
         // above the surface (the head, out in the air) can be seen from here; the filmed water shows instead
         gl_FragColor = vec4(0.0);
-      } else if (uPlate > 0.5 && (vWPos.y < 0.0 || (uMode > 0.5 && uMode < 1.5))) {
+      } else if (uPlate > 0.5 && (yW < 0.0 || (uMode > 0.5 && uMode < 1.5))) {
         // with filmed water behind it, the haze between the lens and the hull is that same water: the hull keeps only
         // what reaches the lens (absorbed and tinted by it) as alpha, and the footage shows through the rest
         float Lw = max(length(vWPos - uEye) - uDome, 0.0);
         gl_FragColor = vec4(gl_FragColor.rgb * exp(-uSigma * Lw) * uPlateTint, exp(-uPlateK * Lw));
-      } else gl_FragColor.rgb = applyWater(gl_FragColor.rgb, vWPos);`);
+      } else gl_FragColor.rgb = applyWater(gl_FragColor.rgb, uMode < 0.5 ? vec3(vWPos.x, yW, vWPos.z) : vWPos);`);
 }
 MATS.head.onBeforeCompile = MATS.paye.onBeforeCompile = patchProbe;
 
@@ -2498,16 +2581,38 @@ function waterlineY() {
 }
 const TAN16 = Math.tan(THREE.MathUtils.degToRad(16));
 
-// the float rides the same waves: heave from the height under it, tilt from the slope across it, with a little lag
-const buoy = { y: 0, rx: 0, rz: 0, rel: 0 };
-function rideWaves(t, dt) {
+// the float rides the same waves: heave from the height under it, tilt from the slope across it, and the surge of
+// the water it sits in (without it the water slides under a still float, which reads as the float pulling away)
+const buoy = { y: 0, rx: 0, rz: 0, rel: 0, sx: 0, sz: 0, vrx: 0, vrz: 0, t: -1, dt: 0 }, _surge = new THREE.Vector2();
+const cam = { bob: 0 };   // how far the camera has ridden up with the float
+// The tilt has inertia: the slope pushes the float over, its ballast pulls it back upright, so a wave rocks it a
+// little past upright and it swings once or twice before it settles (a small ballasted float: ~1.1 s roll period,
+// damping 0.3 from its flat collar; it follows the slope, it does not exaggerate it).
+const ROLL_K = (2 * Math.PI / 1.1) ** 2, ROLL_C = 2 * 0.3 * Math.sqrt(ROLL_K), ROLL_GAIN = 1;
+function rideWaves(t) {   // t = sea time; the step is measured from it, so it is real time whatever the caller passes
+  const dt = buoy.t < 0 ? 0 : Math.min(Math.max((t - buoy.t) / SEA_SPEED, 0), 0.25);   // a slow frame is caught up
+  const first = buoy.t < 0;
+  buoy.t = t;
+  if (dt === 0 && !first) return;          // called twice in a frame (keep the step of the first call)
+  buoy.dt = dt;
   const R = 1.3;
   const hx1 = waveHeight(R, 0, t), hx0 = waveHeight(-R, 0, t), hz1 = waveHeight(0, R, t), hz0 = waveHeight(0, -R, t);
   const hy = (2 * waveHeight(0, 0, t) + hx1 + hx0 + hz1 + hz0) / 6;
-  const a = 1 - Math.exp(-dt * 3);
+  const tz = Math.atan((hx1 - hx0) / (2 * R)) * ROLL_GAIN, tx = -Math.atan((hz1 - hz0) / (2 * R)) * ROLL_GAIN;
+  waveSurge(0, 0, t, _surge);
+  if (first || UW_RM) {                    // reduced motion, or the very first frame: just sit on the water
+    buoy.y = hy; buoy.rz = tz; buoy.rx = tx; buoy.sx = _surge.x; buoy.sz = _surge.y; buoy.vrx = buoy.vrz = 0;
+    return;
+  }
+  const a = 1 - Math.exp(-dt * 16);        // heave and surge follow the water closely (~60 ms behind it)
   buoy.y += (hy - buoy.y) * a;
-  buoy.rz += (Math.atan((hx1 - hx0) / (2 * R)) * 0.8 - buoy.rz) * a;
-  buoy.rx += (-Math.atan((hz1 - hz0) / (2 * R)) * 0.8 - buoy.rx) * a;
+  buoy.sx += (_surge.x - buoy.sx) * a;
+  buoy.sz += (_surge.y - buoy.sz) * a;
+  const n = Math.ceil(dt * 120), h = dt / n;   // the rocking in small steps, so a slow device rocks the same
+  for (let i = 0; i < n; i++) {
+    buoy.vrz += (ROLL_K * (tz - buoy.rz) - ROLL_C * buoy.vrz) * h; buoy.rz += buoy.vrz * h;
+    buoy.vrx += (ROLL_K * (tx - buoy.rx) - ROLL_C * buoy.vrx) * h; buoy.rx += buoy.vrx * h;
+  }
 }
 
 // keep the motion smooth on slow GPUs: render fewer pixels when frames take too long, more when there is room
@@ -2524,22 +2629,14 @@ let rot = 0, lastT = 0;
 const clock = new THREE.Clock();
 // ---------- footage: progressive loading in dive order once the probe is up; marine snow ties clips together ----------
 const UW_RM = matchMedia('(prefers-reduced-motion: reduce)').matches;
-function uwLoad(v) {
-  if (v.src) return;
+function uwLoad(v) {   // the whole clip, in small pieces (assets/whole-video.js); its poster shows until it is in
+  if (v._load) return v._load;
   if (v.dataset.poster) v.poster = v.dataset.poster;
-  v.preload = 'metadata'; // progressive initial load
-  v.src = v.dataset.src;
+  return v._load = loadWholeVideo(v, v.dataset.src);
 }
 function uwChain() {   // one clip at a time, in order, so the first is ready early instead of all arriving late together
   if (_uw.chain) return; _uw.chain = true;
-  const next = i => {
-    const v = uwVids[i]; if (!v) return;
-    uwLoad(v);
-    let moved = false; const go = () => { if (!moved) { moved = true; next(i + 1); } };
-    if (v.readyState >= 3) go();
-    else { v.addEventListener('canplaythrough', go, { once: true }); v.addEventListener('error', go, { once: true }); setTimeout(go, 6000); }
-  };
-  next(0);
+  uwVids.reduce((prev, v) => prev.then(() => uwLoad(v)), Promise.resolve());
 }
 // real water behind the float once the eye is under, filmed (Pexels, slowed and looped seamlessly)
 function plateVideo(uniform) {
@@ -2560,23 +2657,15 @@ const descTex = new THREE.VideoTexture(descVid);
 descTex.generateMipmaps = false; descTex.minFilter = THREE.LinearFilter;
 // a phone shows only a narrow upright slice of the wide clip, and sharp screens many pixels: both get the 1080p cut
 const PLATE_H = Math.max(innerWidth, innerHeight) * (window.devicePixelRatio || 1) > 1400 ? 1080 : 720;
-const plateLoad = () => {
-  if (plateVid.src) return;
+const plateLoad = () => {   // both plates whole, in small pieces (assets/whole-video.js): a first, it is seen first
   // descVid is no longer loaded: the bubbles clip (#stage .uwv) takes over where the sinking used to play
-  plateVid.src = `media/uw-plate-a-${PLATE_H}.mp4?v=66`;
-  plateVid.addEventListener('canplaythrough', () => { if (!plateVid2.src) plateVid2.src = `media/uw-plate-b-${PLATE_H}.mp4?v=66`; }, { once: true });
-  setTimeout(() => { if (!plateVid2.src) plateVid2.src = `media/uw-plate-b-${PLATE_H}.mp4?v=66`; }, 5000);
+  return plateVid._load || (plateVid._load = loadWholeVideo(plateVid, `media/uw-plate-a-${PLATE_H}.mp4?v=66`)
+    .then(() => loadWholeVideo(plateVid2, `media/uw-plate-b-${PLATE_H}.mp4?v=66`)));
 };
 
 // Progressive preloading scheduler: starts light, defers heavy assets until probe is ready
-const scheduleMediaPreload = () => {
-  plateLoad();
-  if ('requestIdleCallback' in window) {
-    requestIdleCallback(() => setTimeout(uwChain, 120), { timeout: 1500 });
-  } else {
-    setTimeout(uwChain, 300);
-  }
-};
+// one clip at a time, in the order they are seen: the plates first, then the dive clips
+const scheduleMediaPreload = () => { plateLoad().then(uwChain); };
 addEventListener('probe-ready', scheduleMediaPreload, { once: true });
 setTimeout(scheduleMediaPreload, 4500);   // never hold footage back even if probe is slow
 
@@ -2621,6 +2710,7 @@ function tick(static_ = false) {
   const rawDt = static_ ? 0 : t - lastT, dt = Math.min(rawDt, 0.1); lastT = t;
   // one clock for everything the sea moves (waves, ripples, glitter, caustics, foam, the float's bob), slowed for a calm sea
   const seaT = t * SEA_SPEED, seaDt = dt * SEA_SPEED;
+  if (!UW_RM) stepSets(seaT);   // reduced motion: no sets, the sea holds still
   if (!static_) govern(t, rawDt);
 
   const span = Math.max(1, scroller.offsetHeight - innerHeight);   // dive length: from the top of the page to the first story section
@@ -2675,7 +2765,12 @@ function tick(static_ = false) {
   // bobbing gently with the ocean swell instead of cutting through mechanically!
   const waveUnderCam = waveHeight(0, dist * 0.35, seaT);
   const surfaceProximity = Math.exp(-Math.pow(baseCamY / 1.1, 2));
-  const camY = baseCamY + waveUnderCam * surfaceProximity * 0.25;
+  // At the surface the camera follows the float a little, a beat late, as a camera operator would: it rides 40% of the
+  // float's heave, so a passing set moves the horizon and keeps the float framed. (Riding the water under the lens
+  // instead was measured to be worse: that water is out of phase with the float's, so the two motions added up.)
+  // It fades out as the dive starts, which has its own waterline crossing.
+  cam.bob += (buoy.y - cam.bob) * (1 - Math.exp(-buoy.dt * 4));
+  const camY = baseCamY + waveUnderCam * surfaceProximity * 0.25 + 0.4 * cam.bob * (1 - dive);
 
   // Camera pitch: tilts smoothly to frame probe sensors and look up toward Snell's window
   const tgtAir = lerp(-0.1, -0.6, dive);
@@ -2733,8 +2828,10 @@ function tick(static_ = false) {
   const targetTurn = t * 0.035 + p * Math.PI * 0.35 + userOrbitYaw;
   rot = lerp(rot, targetTurn, isOrbitDragging ? 0.28 : 0.06);
   probe.rotation.y = rot;
-  rideWaves(seaT, seaDt);
-  probe.position.y = buoy.y;
+  rideWaves(seaT);
+  probe.position.set(buoy.sx, buoy.y, buoy.sz);
+  // what the surface refracts is clipped just above the water at the float, with room for the slope across the hull
+  CLIP_UNDER[0].constant = 0.03 + Math.max(0, waveHeight(0, 0, seaT)) + 0.4;
   probe.rotation.z = buoy.rz;
   probe.rotation.x = buoy.rx + userOrbitPitch;
 
@@ -2749,18 +2846,18 @@ function tick(static_ = false) {
     orbitHintEl.classList.toggle('visible', showHint);
   }
 
-  if (foam) {
-    const r0 = foam.userData.r0;
+  if (foam) {   // froth while the float works against the water: heaving through it, or rocking (the hull's edge moving)
+    const r0 = foam.userData.r0, fdt = buoy.dt;
     const rel = buoy.y - 0.25 * (waveHeight(r0, 0, seaT) + waveHeight(-r0, 0, seaT) + waveHeight(0, r0, seaT) + waveHeight(0, -r0, seaT));
-    if (dt > 0) {
-      const v = Math.abs(rel - buoy.rel) / dt;
-      foamU.uFoam.value += (Math.min(1, Math.max(0, (v - 0.04) * 4)) - foamU.uFoam.value) * (1 - Math.exp(-dt * 3));
+    if (fdt > 0) {
+      const v = Math.abs(rel - buoy.rel) / fdt + 0.25 * r0 * Math.hypot(buoy.vrx, buoy.vrz);
+      foamU.uFoam.value += (Math.min(1, Math.max(0, (v - 0.04) * 4)) - foamU.uFoam.value) * (1 - Math.exp(-fdt * 3));
     }
     buoy.rel = rel;
   }
 
   if (static_) {
-    rideWaves(seaT, 1);
+    rideWaves(seaT);
     buoy.rel = buoy.y;
   }
 
@@ -2798,7 +2895,7 @@ function tick(static_ = false) {
     const k = Math.min(Math.max((p - UW[i][0]) / ((i + 1 < ND ? UW[i + 1][1] : 1) - UW[i][0]), 0), 1);
     v.style.transform = UW_RM ? 'scale(1.03)' : `translate3d(0, ${(6 - 12 * k).toFixed(2)}%, 0) scale(${(1.14 + 0.06 * k).toFixed(4)})`;
     v.style.filter = UW_RM ? 'none' : `brightness(${(1.04 - 0.22 * depth).toFixed(3)})`;   // a little less light the deeper you go
-    if (!v.src && (p > UW[i][0] - 0.15 || (i === FISH && kEnd > -2.0))) uwLoad(v);
+    if (!v._load && (p > UW[i][0] - 0.15 || (i === FISH && kEnd > -2.0))) uwLoad(v);   // scrolled ahead of the chain
     if (o > 0.001) {
       if (v.paused) v.play().catch(() => {});
       if (Math.abs(v.playbackRate - uwRate) > 0.04) v.playbackRate = uwRate;
