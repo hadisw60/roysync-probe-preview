@@ -1,0 +1,656 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">   <!-- review copy of contact.html for the boss; not linked from the site -->
+<title>Contact — RoySync</title>
+<meta name="description" content="Talk to RoySync about water-quality monitoring for your fish farm. Request a pilot or write to us.">
+<link rel="icon" type="image/png" href="assets/favicon.png">
+<link rel="preload" href="assets/fonts/sora.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="assets/fonts/inter.woff2" as="font" type="font/woff2" crossorigin>
+<style>
+  @font-face { font-family: 'Inter'; font-style: normal; font-weight: 400 600; font-display: swap; src: url(assets/fonts/inter.woff2) format('woff2'); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+  @font-face { font-family: 'Sora'; font-style: normal; font-weight: 500 700; font-display: swap; src: url(assets/fonts/sora.woff2) format('woff2'); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+  :root {
+    /* palette from the logo, same as the landing: deep navy, white, steel-to-ice blue */
+    --bg: #050c16; --panel: rgba(255,255,255,.04); --line: rgba(170,210,255,.12);
+    --fg: #f2f7fc; --muted: #a7bccf; --faint: #6f879e;
+    --accent: #4f9fe0; --accent-2: #9fd0f7; --accent-deep: #1f4e79; --glow: rgba(79,159,224,.35);
+    --head: Sora, Inter, system-ui, sans-serif;
+    --ok: #34d399; --warn: #fbbf24;
+    --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  html, body { margin: 0; background: var(--bg); color: var(--fg); font-family: Inter, system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+  h1, h2, h3, h4, .logo b { font-family: var(--head); }
+  a { color: inherit; text-decoration: none; }
+
+  /* ---- surface-to-seabed backdrop: one still, tinted live by the depth gauge ---- */
+  #stage { position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; }
+  #stage .plate { position: absolute; inset: -6%; background: url("media/contact-farm.jpg?v=59") center/cover no-repeat;
+                  opacity: .55; transform: scale(1.04); transition: filter 1.2s ease, opacity 1.2s ease; will-change: filter; }
+  #stage::after { content: ""; position: absolute; inset: 0;
+    background: radial-gradient(120% 90% at 50% 0%, rgba(4,11,21,.3), rgba(4,11,21,.85) 72%),
+                linear-gradient(180deg, rgba(4,11,21,.55), rgba(4,11,21,.3) 34%, rgba(4,11,21,.88)); }
+  @media (prefers-reduced-motion: reduce) { #stage .plate { transition: none; } }
+
+  /* ---- header ---- */
+  header { position: fixed; top: 0; left: 0; right: 0; z-index: 10; display: flex; align-items: center; justify-content: space-between;
+           padding: 22px 6vw; transition: background .4s, backdrop-filter .4s; }
+  header.scrolled { background: rgba(5,14,26,.6); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); }
+  .logo { display: flex; align-items: center; gap: 12px; font-weight: 600; font-size: 19px; letter-spacing: -.01em; }
+  .logo img { width: 40px; height: 40px; border-radius: 50%; display: block; }
+  .logo i { font-style: normal; font-size: 11px; font-weight: 600; letter-spacing: .12em; color: var(--accent-2);
+            border: 1px solid rgba(159,208,247,.4); border-radius: 999px; padding: 3px 8px 2px; margin-left: 2px; }
+  .backlink { font-size: 14px; color: #d6e6f3; transition: color .2s; }
+  .backlink:hover { color: #fff; }
+  @media (max-width: 640px) { header { padding: 16px 20px; } }
+
+  /* ---- depth rail: the signature — a dive gauge that darkens the sea as you descend ---- */
+  #gauge { position: fixed; left: 26px; top: 50%; transform: translateY(-50%); z-index: 9; display: flex; align-items: center; gap: 14px;
+           font-family: var(--mono); font-size: 11px; letter-spacing: .08em; color: var(--faint); pointer-events: none; }
+  #gauge .track { position: relative; width: 1px; height: 46vh; background: var(--line); }
+  #gauge .track::before, #gauge .track::after { content: ""; position: absolute; left: -3px; width: 7px; height: 1px; background: rgba(255,255,255,.18); }
+  #gauge .track::before { top: 0; } #gauge .track::after { bottom: 0; }
+  #gauge .cursor { position: absolute; left: -4px; top: 0; width: 9px; height: 9px; border-radius: 50%;
+                   background: var(--accent-2); box-shadow: 0 0 14px var(--glow); transition: top .12s linear; }
+  #gauge .read { min-width: 62px; }
+  #gauge .read b { display: block; font-weight: 500; color: var(--fg); font-size: 13px; letter-spacing: .04em; }
+  #gauge .zone { display: block; margin-top: 3px; text-transform: uppercase; letter-spacing: .18em; font-size: 10px; color: var(--accent-2); }
+  @media (max-width: 1080px) { #gauge { display: none; } }
+
+  /* ---- opening: one full-screen clip with the headline over it; the page then scrolls on to the desk ---- */
+  .cv { position: relative; z-index: 2; height: 100vh; min-height: 560px; overflow: hidden; display: flex; align-items: flex-end;
+        padding: 0 6vw 16vh; background: #04122a url("media/contact-farm.jpg?v=59") center/cover no-repeat; }
+  .cv video, .cv .shade { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .cv video { object-fit: cover; transition: opacity .9s ease; }
+  .cv .shade { background: linear-gradient(180deg, rgba(3,10,20,.4) 0%, rgba(3,10,20,0) 26%, rgba(3,10,20,.1) 58%, rgba(5,12,22,.94) 100%),
+                           radial-gradient(70% 60% at 18% 82%, rgba(3,10,20,.5), transparent 70%); }
+  .cv .copy { position: relative; max-width: 1140px; width: 100%; margin: 0 auto; }
+  .cv p.lead { margin-bottom: 30px; max-width: 470px; }
+  .cv .copy { pointer-events: none; } .cv .copy a { pointer-events: auto; }   /* the headline stays left of the probe and its callout */
+  .cv .cue { position: absolute; left: 50%; bottom: 26px; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; gap: 10px;
+             font-family: var(--mono); font-size: 10px; letter-spacing: .3em; text-transform: uppercase; color: rgba(220,236,250,.75); }
+  .cv .cue::after { content: ""; width: 1px; height: 34px; background: linear-gradient(rgba(220,236,250,.85), transparent); transform-origin: top; animation: cue 2.2s ease-in-out infinite; }
+  @keyframes cue { 0% { transform: scaleY(0); opacity: 1; } 70% { transform: scaleY(1); opacity: 1; } 100% { transform: scaleY(1); opacity: 0; } }
+  #gauge { transition: opacity .5s; } body.hero-on #gauge { opacity: 0; }
+  /* the callout: a ring on the AquaRoy head with a slow ping, a leader and a label; the script places it on the head */
+  .cv .tag { position: absolute; left: 0; top: 0; z-index: 1; --r: 15px; pointer-events: none; opacity: 0; transition: opacity .6s ease; will-change: transform; }
+  .cv .tag.on { opacity: 1; }
+  .cv .tag i { position: absolute; left: calc(var(--r) * -1); top: calc(var(--r) * -1); width: calc(var(--r) * 2); height: calc(var(--r) * 2); border-radius: 50%;
+               border: 1.5px solid rgba(159,208,247,.95); box-shadow: 0 0 12px rgba(79,159,224,.45), inset 0 0 8px rgba(79,159,224,.25); }
+  .cv .tag i + i { border-color: rgba(159,208,247,.75); box-shadow: none; animation: ping 2.6s cubic-bezier(.2,.6,.3,1) infinite; }
+  @keyframes ping { from { transform: scale(1); opacity: .9; } to { transform: scale(2.7); opacity: 0; } }
+  .cv .tag svg { position: absolute; left: calc(var(--r) * .7); top: calc(var(--r) * -.7 - 40px); width: 104px; height: 40px; overflow: visible; }
+  .cv .tag polyline { fill: none; stroke: rgba(159,208,247,.9); stroke-width: 1.5; }
+  .cv .tag circle { fill: #9fd0f7; }
+  .cv .tag .chip { position: absolute; left: calc(var(--r) * .7 + 106px); top: calc(var(--r) * -.7 - 34px); transform: translateY(-50%); white-space: nowrap;
+                   padding: 9px 13px 10px; border-radius: 11px; background: rgba(5,14,26,.62); border: 1px solid rgba(159,208,247,.3);
+                   backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); box-shadow: 0 12px 30px rgba(0,0,0,.28); }
+  .cv .tag .chip b { display: block; font-size: 10.5px; font-weight: 600; letter-spacing: .2em; text-transform: uppercase; color: var(--accent-2); margin-bottom: 3px; }
+  .cv .tag .chip span { display: block; font-family: var(--head); font-size: 16px; font-weight: 600; letter-spacing: -.01em; color: #fff; }
+  .cv .tag.flip svg { left: auto; right: calc(var(--r) * .7); transform: scaleX(-1); }
+  .cv .tag.flip .chip { left: auto; right: calc(var(--r) * .7 + 106px); }
+  @media (max-width: 640px) { .cv .tag svg { width: 70px; } .cv .tag .chip { left: calc(var(--r) * .7 + 72px); padding: 7px 10px 8px; } .cv .tag.flip .chip { right: calc(var(--r) * .7 + 72px); }
+    .cv .tag .chip b { font-size: 9px; } .cv .tag .chip span { font-size: 13px; } }
+  @media (prefers-reduced-motion: reduce) { .cv .tag i + i { animation: none; opacity: 0; } }
+  /* proof: the RoySync dashboard on a phone, the readings the float sends, in the app's own look (front_end Dashboard.jsx).
+     Everything inside is in cqw, so the phone keeps its proportions at any width. */
+  .cv .proof { position: absolute; z-index: 2; right: max(6vw, calc((100vw - 1140px) / 2)); bottom: 13vh; width: clamp(150px, min(17vw, 30vh), 250px); margin: 0;
+               container-type: inline-size; }
+  .cv .proof .phone { position: relative; aspect-ratio: 71.6 / 147.6; border-radius: 16.4cqw; transform: rotate(-1.5deg);
+                      animation: hold 9s ease-in-out infinite;
+                      /* the titanium band: dark, catching the warm low sun at the top-left and bottom-right corners */
+                      background: linear-gradient(152deg, #a2978b 0%, #5a544e 7%, #2a2826 18%, #322f2c 46%, #1c1b1a 72%, #4f4a45 90%, #9b9084 100%);
+                      box-shadow: inset 0 0 0 .28cqw rgba(255,240,225,.22), inset 0 0 1.4cqw rgba(0,0,0,.75),
+                                  0 0 0 .3cqw rgba(0,0,0,.6), 0 2.5cqw 5cqw rgba(0,0,0,.35), 0 16cqw 34cqw -6cqw rgba(0,0,0,.7); }
+  @keyframes hold { 0%, 100% { transform: translateY(0) rotate(-1.5deg); } 50% { transform: translateY(-1.6cqw) rotate(-.9deg); } }
+  /* side buttons: action, volume up/down on the left, power on the right */
+  .cv .proof .btn { position: absolute; left: -.8cqw; width: 1.2cqw; border-radius: .7cqw 0 0 .7cqw;
+                    background: linear-gradient(90deg, #6f675f, #33302d 55%, #1f1d1b); }
+  .cv .proof .btn.act { top: 18%; height: 4.6%; } .cv .proof .btn.vu { top: 26%; height: 9%; } .cv .proof .btn.vd { top: 37%; height: 9%; }
+  .cv .proof .btn.pw { left: auto; right: -.8cqw; top: 30%; height: 14%; border-radius: 0 .7cqw .7cqw 0; background: linear-gradient(270deg, #6f675f, #33302d 55%, #1f1d1b); }
+  /* the black glass round the display, then the display itself */
+  .cv .proof .glass { position: absolute; inset: 1.6cqw; border-radius: 14.8cqw; padding: 2.5cqw; background: #050505;
+                      box-shadow: inset 0 0 0 .2cqw rgba(255,255,255,.06); }
+  .cv .proof .screen { position: relative; height: 100%; border-radius: 12.3cqw; overflow: hidden; background: #000; isolation: isolate; }
+  .cv .proof .island { position: absolute; z-index: 3; left: 50%; top: 2.2cqw; width: 28cqw; height: 8.4cqw; transform: translateX(-50%); border-radius: 99px;
+                       background: radial-gradient(circle at 80% 50%, #1e2c3c 0 1.1cqw, #0b1119 1.7cqw, #000 2.2cqw); }
+  /* the glass catching the light: a soft diagonal sheen over the display */
+  .cv .proof .screen::after { content: ""; position: absolute; inset: 0; z-index: 4; pointer-events: none;
+                              background: linear-gradient(114deg, rgba(255,255,255,.16) 0%, rgba(255,255,255,.05) 24%, rgba(255,255,255,0) 38%),
+                                          radial-gradient(120% 50% at 100% 100%, rgba(255,196,150,.07), transparent 60%); }
+  /* the app: the dashboard's deep ocean with its teal and green glows, its cards, status pills and colours */
+  .cv .proof .app { color: #f0fdf9; font-family: Inter, system-ui, sans-serif; line-height: 1.25; padding: 0 5cqw;
+                    background: radial-gradient(70% 40% at 8% 18%, rgba(6,182,212,.16), transparent 70%),
+                                radial-gradient(70% 40% at 95% 80%, rgba(34,197,94,.12), transparent 70%),
+                                linear-gradient(170deg, #031822 0%, #062435 50%, #03141c 100%); }
+  .cv .proof .sb { display: flex; justify-content: space-between; align-items: center; height: 12.6cqw; padding: 0 2.4cqw 0 5.4cqw;
+                   font: 600 3.7cqw/1 -apple-system, "SF Pro Text", Inter, system-ui, sans-serif; letter-spacing: .01em; }
+  .cv .proof .sb svg { height: 2.9cqw; width: auto; margin-left: 1.1cqw; fill: #fff; }
+  .cv .proof .ah { display: flex; align-items: center; gap: 2cqw; margin-top: .6cqw; }
+  .cv .proof .ah img { width: 7cqw; height: 7cqw; border-radius: 50%; box-shadow: 0 0 2.4cqw rgba(13,148,136,.45); }
+  .cv .proof .ah b { font: 700 4.3cqw/1 Sora, Inter, sans-serif; letter-spacing: -.01em; }
+  .cv .proof .ah .bell { margin-left: auto; position: relative; display: flex; }
+  .cv .proof .ah .bell svg { width: 4cqw; height: 4.4cqw; fill: #9fb3c4; }
+  .cv .proof .ah .bell i { position: absolute; right: -.4cqw; top: -.4cqw; width: 1.7cqw; height: 1.7cqw; border-radius: 50%; background: #ef4444;
+                           box-shadow: 0 0 0 .5cqw #052232; }
+  .cv .proof .tt { margin-top: 5cqw; }
+  .cv .proof .tt b { display: block; font: 700 5.6cqw/1.1 Sora, Inter, sans-serif; letter-spacing: -.02em; }
+  .cv .proof .tt b em { font-style: normal; color: #14a394; }
+  .cv .proof .tt span { display: block; margin-top: 1.2cqw; font-size: 3cqw; color: #bae4d5; }
+  .cv .proof .lbl { display: flex; align-items: center; justify-content: space-between; margin: 5cqw 0 2.4cqw; font-size: 2.4cqw; font-weight: 600;
+                    letter-spacing: .2em; text-transform: uppercase; color: #14a394; }
+  .cv .proof .lbl i { font-style: normal; letter-spacing: .1em; color: #22c55e; }
+  .cv .proof .lbl i::before { content: ""; display: inline-block; width: 1.4cqw; height: 1.4cqw; margin-right: 1cqw; border-radius: 50%; background: #22c55e;
+                              vertical-align: .15cqw; animation: livedot 1.6s ease-in-out infinite; }
+  @keyframes livedot { 50% { opacity: .25; } }
+  .cv .proof .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2.4cqw; }
+  .cv .proof .pc { padding: 2.8cqw 2.8cqw 3cqw; border-radius: 3.6cqw; background: rgba(8,64,66,.38); border: .25cqw solid rgba(13,148,136,.22); }
+  .cv .proof .pc.warn { border-color: rgba(245,158,11,.3); box-shadow: 0 0 4cqw rgba(245,158,11,.08); }
+  .cv .proof .pc .k { display: flex; justify-content: space-between; align-items: center; font-size: 2.6cqw; font-weight: 600; letter-spacing: .04em; }
+  .cv .proof .pc .k s { text-decoration: none; padding: .6cqw 1.3cqw; border-radius: 1.2cqw; font-size: 2.1cqw; letter-spacing: .02em; text-transform: none;
+                        color: #22c55e; background: rgba(34,197,94,.12); }
+  .cv .proof .pc.warn .k s { color: #f59e0b; background: rgba(245,158,11,.13); }
+  .cv .proof .pc .v { margin-top: 2.2cqw; font: 700 6.2cqw/1 Inter, sans-serif; letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+  .cv .proof .pc .v small { margin-left: .8cqw; font-size: 2.6cqw; font-weight: 500; color: #bae4d5; letter-spacing: 0; }
+  .cv .proof .v b { font-weight: inherit; transition: opacity .3s; }
+  .cv .proof .chart { margin-top: 2.4cqw; padding: 3cqw 3cqw 2.4cqw; border-radius: 3.6cqw; background: rgba(8,64,66,.38); border: .25cqw solid rgba(13,148,136,.22); }
+  .cv .proof .chart .h { font-size: 2.9cqw; font-weight: 600; }
+  .cv .proof .chart .h span { display: block; margin-top: .7cqw; font-size: 2.2cqw; font-weight: 500; color: #f59e0b; }
+  .cv .proof .plot { position: relative; height: 28cqw; margin-top: 2.6cqw; }
+  .cv .proof .plot svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+  .cv .proof .plot .dot { position: absolute; width: 2cqw; height: 2cqw; margin: -1cqw 0 0 -1cqw; border-radius: 50%; background: #ef4444;
+                          box-shadow: 0 0 0 .8cqw rgba(239,68,68,.25); transition: top .6s ease; }
+  .cv .proof .axis { display: flex; justify-content: space-between; margin-top: 1.4cqw; font-size: 1.9cqw; color: rgba(186,228,213,.6); }
+  .cv .proof .eq { display: flex; align-items: center; gap: 2.4cqw; margin-top: 2.4cqw; padding: 2.6cqw 3cqw; border-radius: 3.6cqw;
+                   background: rgba(8,64,66,.38); border: .25cqw solid rgba(13,148,136,.22); }
+  .cv .proof .eq svg { width: 6.4cqw; height: 6.4cqw; padding: 1.4cqw; border-radius: 1.8cqw; background: rgba(13,148,136,.2); fill: #2dd4bf; }
+  .cv .proof .eq b { display: block; font-size: 2.9cqw; font-weight: 600; }
+  .cv .proof .eq span { display: block; margin-top: .5cqw; font-size: 2.2cqw; color: #bae4d5; }
+  .cv .proof .eq u { margin-left: auto; position: relative; width: 8.6cqw; height: 5cqw; border-radius: 99px; background: #22c55e; }
+  .cv .proof .eq u::after { content: ""; position: absolute; right: .6cqw; top: .6cqw; width: 3.8cqw; height: 3.8cqw; border-radius: 50%; background: #fff; }
+  .cv .proof .sys { display: flex; align-items: center; gap: 2.4cqw; margin-top: 2.4cqw; padding: 2.4cqw 3cqw; border-radius: 3.6cqw;
+                    background: rgba(34,197,94,.07); border: .25cqw solid rgba(34,197,94,.2); }
+  .cv .proof .sys > i { flex: none; width: 1.8cqw; height: 1.8cqw; border-radius: 50%; background: #22c55e; box-shadow: 0 0 2cqw #22c55e; }
+  .cv .proof .sys b { display: block; font-size: 2.6cqw; font-weight: 600; }
+  .cv .proof .sys span { display: block; margin-top: .4cqw; font-size: 2.1cqw; color: #bae4d5; font-variant-numeric: tabular-nums; }
+  .cv .proof .sys em { font-style: normal; }
+  /* the tab bar, frosted over the page, with the home indicator inside it */
+  .cv .proof .tabs { position: absolute; left: 0; right: 0; bottom: 0; z-index: 2; display: flex; justify-content: space-around; padding: 2.4cqw 3cqw 7.4cqw;
+                     background: rgba(3,18,26,.86); border-top: .25cqw solid rgba(13,148,136,.2); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
+  .cv .proof .tabs span { position: relative; display: flex; flex-direction: column; align-items: center; gap: .9cqw; font-size: 1.9cqw; font-weight: 500; color: #7f97a6; }
+  .cv .proof .tabs svg { width: 4.6cqw; height: 4.6cqw; fill: currentColor; }
+  .cv .proof .tabs .on { color: #2dd4bf; }
+  .cv .proof .tabs em { position: absolute; left: 55%; top: -1cqw; min-width: 3cqw; padding: .3cqw .6cqw; border-radius: 99px; background: #ef4444; color: #fff;
+                        font: 700 1.8cqw/1.2 Inter, sans-serif; text-align: center; }
+  .cv .proof .home { position: absolute; z-index: 3; left: 50%; bottom: 2cqw; width: 33cqw; height: 1.2cqw; transform: translateX(-50%); border-radius: 99px; background: rgba(255,255,255,.85); }
+  .cv .proof figcaption { margin-top: 18px; font-size: 12.5px; line-height: 1.45; color: rgba(225,238,250,.88); text-shadow: 0 1px 10px rgba(0,0,0,.7), 0 0 2px rgba(0,0,0,.5); }
+  .cv .proof figcaption b { display: block; font-size: 10px; letter-spacing: .2em; text-transform: uppercase; color: var(--accent-2); margin-bottom: 3px; font-weight: 600; }
+  @media (max-width: 760px) { .cv .proof { right: 20px; top: 84px; bottom: auto; width: 118px; }
+    .cv .proof figcaption { margin-top: 12px; font-size: 10.5px; } .cv .proof figcaption b { font-size: 8.5px; } }
+  @media (prefers-reduced-motion: reduce) { .cv .proof .phone { animation: none; } }
+  body.bg-alt .cv .tag { display: none; }   /* the AquaRoy callout is placed on the drone clip only */
+  #desk { scroll-margin-top: 120px; }
+  @media (max-width: 640px) { .cv { padding: 0 20px 14vh; } }
+  @media (prefers-reduced-motion: reduce) { .cv .cue::after { animation: none; } }
+
+  /* ---- desk ---- */
+  main { position: relative; z-index: 2; padding: 110px 6vw 0; }
+  .wrap { max-width: 1140px; margin: 0 auto; }
+  .kicker { font-family: var(--mono); font-size: 11px; letter-spacing: .26em; text-transform: uppercase; color: var(--accent-2); margin-bottom: 20px; }
+  h1.title { font-size: clamp(34px, 4.6vw, 64px); font-weight: 500; letter-spacing: -.04em; line-height: 1.02; margin: 0 0 20px;
+             text-shadow: 0 2px 18px rgba(0,0,0,.65); }
+  h1.title em { font-style: normal; color: var(--accent-2); }
+  p.lead { font-size: 17px; line-height: 1.65; color: #dfe6f2; max-width: 560px; margin: 0 0 clamp(56px, 9vh, 96px);
+           text-shadow: 0 2px 14px rgba(0,0,0,.6); }
+
+  /* ---- desk: form + ledger ---- */
+  .desk { display: grid; grid-template-columns: 1.15fr .85fr; gap: clamp(28px, 5vw, 72px); align-items: start; }
+  @media (max-width: 880px) { .desk { grid-template-columns: 1fr; } }
+
+  /* engraved sheet — floating label fields, quiet validation */
+  .inq { text-align: left; padding: clamp(24px, 4vw, 44px); border: 1px solid var(--line); border-radius: 24px;
+         background: rgba(6, 18, 32, .55); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+         box-shadow: 0 40px 90px rgba(0,0,0,.4); }
+  .inq .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .field { position: relative; }
+  .field input, .field textarea { width: 100%; font: inherit; font-size: 15px; color: var(--fg);
+    background: rgba(255,255,255,.04); border: 1px solid var(--line); border-radius: 12px;
+    padding: 24px 15px 10px; outline: none; caret-color: var(--accent-2); resize: vertical;
+    transition: border-color .25s, background .25s, box-shadow .25s; }
+  .field label { position: absolute; left: 16px; top: 17px; font-size: 12px; letter-spacing: .14em; text-transform: uppercase;
+                 color: var(--faint); pointer-events: none; transform-origin: left top;
+                 transition: transform .22s cubic-bezier(.22,.61,.36,1), color .22s; }
+  .field label i { font-style: normal; text-transform: none; letter-spacing: .02em; opacity: .6; }
+  .field input:focus, .field textarea:focus { border-color: var(--accent-2); background: rgba(79,159,224,.07);
+    box-shadow: 0 0 0 3px rgba(79,159,224,.18); }
+  .field input:focus + label, .field textarea:focus + label,
+  .field input:not(:placeholder-shown) + label, .field textarea:not(:placeholder-shown) + label {
+    transform: translateY(-9px) scale(.82); color: var(--accent-2); }
+  .field.bad input, .field.bad textarea { border-color: rgba(251,191,24,.65); }
+  .field.bad label { color: var(--warn); }
+  .form-foot { display: flex; align-items: center; gap: 18px; margin-top: 26px; flex-wrap: wrap; }
+  .btn { display: inline-block; background: linear-gradient(135deg, #e3f3ff 0%, #9fd0f7 48%, #5fa9e6 100%); color: #06182b;
+         border: 0; border-radius: 999px; padding: 13px 26px; font: inherit; font-size: 15px; font-weight: 600; cursor: pointer;
+         box-shadow: 0 10px 30px var(--glow), inset 0 1px 0 rgba(255,255,255,.7); transition: transform .25s ease, box-shadow .25s ease, filter .25s; }
+  .btn:hover { transform: translateY(-2px); filter: brightness(1.06); box-shadow: 0 16px 40px var(--glow), inset 0 1px 0 rgba(255,255,255,.7); }
+  @keyframes breathe { 0%,100% { box-shadow: 0 10px 30px var(--glow); } 50% { box-shadow: 0 14px 44px rgba(79,159,224,.55); } }
+  .inq .btn { animation: breathe 3.2s ease-in-out infinite; }
+  .form-foot .quiet { font-size: 13px; color: var(--faint); }
+  .form-foot .quiet a { color: var(--accent-2); text-decoration: underline; text-underline-offset: 3px; }
+  .form-status { min-height: 20px; margin: 16px 0 0; font-size: 14px; line-height: 1.5; opacity: 0; transform: translateY(6px);
+                 transition: opacity .5s ease, transform .5s ease; }
+  .form-status.show { opacity: 1; transform: none; }
+  .form-status.ok { color: var(--ok); }
+  .form-status.err { color: var(--warn); }
+  @media (max-width: 640px) { .inq .grid { grid-template-columns: 1fr; gap: 16px; } .form-foot { gap: 12px; } }
+
+  /* the side ledger: hairlines, mono values — same language as the trust strip */
+  .lines { display: flex; flex-direction: column; }
+  .lines .row { padding: 22px 0; border-top: 1px solid var(--line); }
+  .lines .row:last-child { border-bottom: 1px solid var(--line); }
+  .lines .lab { font-size: 11px; letter-spacing: .18em; text-transform: uppercase; color: var(--faint); margin-bottom: 6px; }
+  .lines .val { font-size: 17px; font-weight: 500; }
+  .lines .val a { color: var(--accent-2); transition: color .2s; }
+  .lines .val a:hover { color: #fff; }
+  .lines .val.mono { font-family: var(--mono); font-size: 15px; }
+  .lines .note { font-size: 13px; color: var(--muted); margin-top: 4px; line-height: 1.5; }
+
+  /* ---- what happens next: numbered steps on a hairline ---- */
+  .next { margin-top: clamp(72px, 12vh, 130px); }
+  .next h2 { font-size: clamp(22px, 2.6vw, 30px); font-weight: 500; letter-spacing: -.02em; margin: 0 0 34px; }
+  .steps { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: clamp(20px, 4vw, 48px);
+           border-top: 1px solid var(--line); }
+  .steps li { padding: 26px 0 0; position: relative; }
+  .steps li::before { content: attr(data-n); font-family: var(--mono); font-size: 11px; letter-spacing: .14em; color: var(--accent-2); display: block; margin-bottom: 10px; }
+  .steps b { display: block; font-weight: 600; font-size: 15px; margin-bottom: 6px; }
+  .steps span { font-size: 13.5px; line-height: 1.55; color: var(--muted); }
+  @media (max-width: 880px) { .steps { grid-template-columns: 1fr; gap: 0; } .steps li { padding: 20px 0; border-bottom: 1px solid var(--line); } }
+
+  /* footer, after bluesonde's: brand and email first, then the pages, then the company's registered details (UK law asks for them) */
+  footer { position: relative; z-index: 2; margin-top: clamp(72px, 12vh, 130px); padding: 72px 6vw 30px; border-top: 1px solid var(--line); color: #9fb4c8; font-size: 14px; line-height: 1.6;
+           background: linear-gradient(180deg, rgba(4,12,22,.9), #03080f 65%); }
+  .ft { display: grid; grid-template-columns: 1.5fr 1fr 1.1fr 1.3fr; gap: 40px; max-width: 1140px; margin: 0 auto; }
+  .ft h4 { margin: 0 0 16px; font-size: 12px; font-weight: 600; letter-spacing: .16em; text-transform: uppercase; color: var(--accent-2); }
+  .ft-col { display: flex; flex-direction: column; gap: 8px; }
+  .ft-col a { width: fit-content; transition: color .2s; } .ft-col a:hover { color: #fff; }
+  .ft-brand .logo { margin-bottom: 16px; }
+  .ft-brand p { margin: 0 0 18px; max-width: 280px; }
+  .ft-mail { display: inline-flex; color: #fff; font-weight: 500; padding-bottom: 3px; border-bottom: 1px solid rgba(159,208,247,.45); transition: border-color .2s; }
+  .ft-mail:hover { border-color: #fff; }
+  .ft-bottom { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 10px 24px; max-width: 1140px; margin: 56px auto 0; padding-top: 22px;
+               border-top: 1px solid var(--line); font-size: 12.5px; color: #6f879e; }
+  @media (max-width: 900px) { .ft { grid-template-columns: 1fr 1fr; } }
+  @media (max-width: 540px) { footer { padding: 52px 16px 24px; font-size: 13px; } .ft { grid-template-columns: 1fr 1fr; gap: 28px 18px; } .ft-brand { grid-column: 1 / -1; } }
+
+  .reveal { opacity: 0; transform: translateY(26px); transition: opacity .9s cubic-bezier(.22,.61,.36,1), transform .9s cubic-bezier(.22,.61,.36,1); }
+  .reveal.in { opacity: 1; transform: none; }
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    .reveal { opacity: 1; transform: none; transition: none; }
+    .inq .btn { animation: none; }
+  }
+</style>
+<script src="assets/whole-video.js?v=71"></script>
+</head>
+<body>
+
+<header role="banner">
+  <a class="logo" href="./" aria-label="RoySync Gen2 home">
+    <img src="assets/logo.png" alt="" width="40" height="40">
+    <b>RoySync</b><i>Gen2</i>
+  </a>
+  <a class="backlink" href="./#contact">← Back to the dive</a>
+</header>
+
+<div id="stage" aria-hidden="true"><div class="plate"></div></div>
+
+<!-- depth gauge: descends with you, tints the sea darker as it does -->
+<div id="gauge" aria-hidden="true">
+  <div class="track"><span class="cursor" id="gauge-cursor"></span></div>
+  <div class="read"><b id="gauge-depth">0 m</b><span class="zone" id="gauge-zone">surface</span></div>
+</div>
+
+<section class="cv" aria-label="Contact RoySync">
+  <video autoplay muted playsinline preload="auto" poster="media/contact-farm.jpg?v=59" aria-hidden="true"></video>
+  <script>(v => { loadWholeVideo(v, 'media/contact-farm-' + (innerWidth >= 900 ? '1080' : '720') + '.mp4?v=59'); })(document.currentScript.previousElementSibling);</script>
+  <div class="shade"></div>
+  <div class="tag" id="cv-tag" aria-hidden="true">
+    <i></i><i></i>
+    <svg viewBox="0 0 104 40" preserveAspectRatio="none"><polyline points="0,40 34,6 100,6" vector-effect="non-scaling-stroke"/><circle cx="100" cy="6" r="2.6"/></svg>
+    <div class="chip"><b>AquaRoy Device</b><span>Autonomous Water Guardian</span></div>
+  </div>
+  <div class="copy">
+    <div class="kicker reveal">Contact · info@roysync.com</div>
+    <h1 class="title reveal">Tell us about<br>your <em>water.</em></h1>
+    <p class="lead reveal">Ponds, species, tank count — or just the thing that keeps you up at night. One working day for an answer. Pilot plans within a week.</p>
+    <a class="btn reveal" href="#desk">Get in touch</a>
+  </div>
+  <figure class="proof reveal">
+    <div class="phone">
+      <i class="btn act"></i><i class="btn vu"></i><i class="btn vd"></i><i class="btn pw"></i>
+      <div class="glass"><div class="screen app" role="img" aria-label="The RoySync dashboard on a phone: live dissolved oxygen, temperature, pH and conductivity from the float">
+        <div class="sb" aria-hidden="true"><span>9:41</span><span>
+          <svg viewBox="0 0 18 12"><rect y="8" width="3" height="4" rx=".8"/><rect x="5" y="5.5" width="3" height="6.5" rx=".8"/><rect x="10" y="3" width="3" height="9" rx=".8"/><rect x="15" width="3" height="12" rx=".8"/></svg>
+          <svg viewBox="0 0 16 12"><path d="M8 2.3c2.4 0 4.6.9 6.3 2.5l1.3-1.4C13.5 1.4 10.9.3 8 .3S2.5 1.4.4 3.4l1.3 1.4C3.4 3.2 5.6 2.3 8 2.3zm0 3.6c1.4 0 2.6.5 3.6 1.4l1.3-1.4C11.6 4.7 9.9 4 8 4S4.4 4.7 3.1 5.9l1.3 1.4c1-.9 2.2-1.4 3.6-1.4zM8 9.4c-.6 0-1 .2-1.4.5L8 11.6l1.4-1.7c-.4-.3-.8-.5-1.4-.5z"/></svg>
+          <svg viewBox="0 0 27 12"><rect x=".6" y=".6" width="22.8" height="10.8" rx="3.2" fill="none" stroke="#fff" stroke-opacity=".5" stroke-width="1.1"/><rect x="2.2" y="2.2" width="16" height="7.6" rx="1.8"/><path d="M25 4.1v3.8c.8-.3 1.3-1.1 1.3-1.9s-.5-1.6-1.3-1.9z" fill-opacity=".5"/></svg>
+        </span></div>
+        <div class="ah" aria-hidden="true"><img src="assets/logo.png" alt=""><b>RoySync</b>
+          <span class="bell"><svg viewBox="0 0 24 24"><path d="M12 22.5a2.6 2.6 0 0 0 2.6-2.6H9.4a2.6 2.6 0 0 0 2.6 2.6zm7.2-6.2V11a7.2 7.2 0 0 0-5.6-7V3.3a1.6 1.6 0 0 0-3.2 0V4a7.2 7.2 0 0 0-5.6 7v5.3l-2 2v1h18.4v-1z"/></svg><i></i></span></div>
+        <div class="tt" aria-hidden="true"><b>Pool 1 <em>Analytics</em></b><span>Raceway · Rainbow trout · Live telemetry</span></div>
+        <div class="lbl" aria-hidden="true">Live parameters <i>Live</i></div>
+        <div class="grid" aria-hidden="true">
+          <div class="pc warn"><div class="k">DO <s>Warning</s></div><div class="v"><b data-k="do">5.4</b><small>mg/L</small></div></div>
+          <div class="pc"><div class="k">Temp <s>Optimal</s></div><div class="v"><b data-k="temp">14.8</b><small>°C</small></div></div>
+          <div class="pc"><div class="k">pH <s>Optimal</s></div><div class="v"><b data-k="ph">7.4</b><small>pH</small></div></div>
+          <div class="pc"><div class="k">EC <s>Optimal</s></div><div class="v"><b data-k="ec">1.2</b><small>mS/cm</small></div></div>
+        </div>
+        <div class="chart" aria-hidden="true">
+          <div class="h">Dissolved Oxygen · 24 h<span>Drop below 7.0 mg/L detected</span></div>
+          <div class="plot">
+            <svg viewBox="0 0 160 60" preserveAspectRatio="none">
+              <defs><linearGradient id="do-fill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ef4444" stop-opacity=".34"/><stop offset="1" stop-color="#ef4444" stop-opacity="0"/></linearGradient></defs>
+              <path d="M0 15H160M0 30H160M0 45H160" stroke="rgba(13,148,136,.18)" stroke-width="1" vector-effect="non-scaling-stroke"/>
+              <path d="M0 25.7H160" stroke="#f59e0b" stroke-opacity=".7" stroke-width="1" stroke-dasharray="3 3" vector-effect="non-scaling-stroke"/>
+              <path class="area" fill="url(#do-fill)"/>
+              <path class="line" fill="none" stroke="#ef4444" stroke-width="1.7" stroke-linejoin="round" stroke-linecap="round" vector-effect="non-scaling-stroke"/>
+            </svg>
+            <span class="dot"></span>
+          </div>
+          <div class="axis"><span>24h</span><span>12h</span><span>Now</span></div>
+        </div>
+        <div class="eq" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><path d="M3 8.2h10.6a3.2 3.2 0 1 0-3.2-3.2h2.2a1 1 0 1 1 1 1H3zm0 4.1h15.2a3.2 3.2 0 1 1-3.2 3.2h2.2a1 1 0 1 0 1-1H3zm0 4.1h7.5v2.2H3z"/></svg>
+          <div><b>Main Aerator</b><span>Auto mode</span></div><u></u>
+        </div>
+        <div class="sys" aria-hidden="true"><i></i><div><b>System status</b><span>All sensors reporting · updated <em>3</em> s ago</span></div></div>
+        <nav class="tabs" aria-hidden="true">
+          <span><svg viewBox="0 0 24 24"><path d="M12 3.2 3 10.6V21h6.2v-6.1h5.6V21H21V10.6z"/></svg>Home</span>
+          <span class="on"><svg viewBox="0 0 24 24"><path d="M3 3h8v9H3zm10 0h8v5h-8zm0 7h8v11h-8zM3 14h8v7H3z"/></svg>Dashboard</span>
+          <span><svg viewBox="0 0 24 24"><path d="M12 22.5a2.6 2.6 0 0 0 2.6-2.6H9.4a2.6 2.6 0 0 0 2.6 2.6zm7.2-6.2V11a7.2 7.2 0 0 0-5.6-7V3.3a1.6 1.6 0 0 0-3.2 0V4a7.2 7.2 0 0 0-5.6 7v5.3l-2 2v1h18.4v-1z"/></svg>Alerts<em>1</em></span>
+          <span><svg viewBox="0 0 24 24"><path d="M5 2.5h10l4.5 4.5v14.5H5zm3 15.5h2.2v-5H8zm4 0h2.2V9.5H12zm4 0h2.2v-3H16z"/></svg>Reports</span>
+        </nav>
+        <span class="island"></span>
+        <span class="home"></span>
+      </div></div>
+    </div>
+    <script>   // the dashboard ticks like the live one: the real app's 24 h oxygen curve, readings that move a little every few seconds
+      (app => {
+        const DO = [8.2, 8.0, 7.9, 7.5, 7.2, 6.8, 6.5, 6.1, 5.9, 5.7, 5.5, 5.4, 5.4, 5.5, 5.4, 5.4, 5.4];   // Dashboard.jsx METRICS.do
+        const Y = v => 60 - (v - 3) / 7 * 60, X = i => i * 160 / (DO.length - 1);
+        const draw = () => {
+          let d = `M0 ${Y(DO[0]).toFixed(2)}`;
+          for (let i = 0; i < DO.length - 1; i++) {   // Catmull-Rom through the readings, as cubic Béziers
+            const p0 = DO[Math.max(i - 1, 0)], p1 = DO[i], p2 = DO[i + 1], p3 = DO[Math.min(i + 2, DO.length - 1)], k = 1 / 6, w = X(1);
+            d += ` C${(X(i) + w * k * 2).toFixed(2)} ${(Y(p1) + (Y(p2) - Y(p0)) * k).toFixed(2)} ${(X(i + 1) - w * k * 2).toFixed(2)} ${(Y(p2) - (Y(p3) - Y(p1)) * k).toFixed(2)} ${X(i + 1)} ${Y(p2).toFixed(2)}`;
+          }
+          app.querySelector('.line').setAttribute('d', d);
+          app.querySelector('.area').setAttribute('d', d + ' L160 60 L0 60Z');
+          const dot = app.querySelector('.dot'); dot.style.left = '100%'; dot.style.top = (Y(DO[DO.length - 1]) / 60 * 100) + '%';
+        };
+        draw();
+        const live = { do: [5.4, 0.1, 1], temp: [14.8, 0.1, 1], ph: [7.4, 0.1, 1] };   // [centre, step, decimals]
+        const agoEl = app.querySelector('.sys em'); let ago = 3;
+        setInterval(() => { agoEl.textContent = ++ago; }, 1000);
+        setInterval(() => {
+          const k = Object.keys(live)[Math.floor(Math.random() * 3)], [c, s, n] = live[k], el = app.querySelector(`[data-k="${k}"]`);
+          const v = (c + s * (Math.floor(Math.random() * 3) - 1)).toFixed(n);
+          if (v === el.textContent) return;
+          ago = 0;
+          el.style.opacity = 0;
+          setTimeout(() => { el.textContent = v; el.style.opacity = 1; if (k === 'do') { DO[DO.length - 1] = +v; draw(); } }, 300);
+        }, 2600);
+      })(document.currentScript.previousElementSibling.querySelector('.app'));
+    </script>
+    <figcaption><b>Your water, live</b>Every reading from the float, on your phone, wherever you are.</figcaption>
+  </figure>
+  <a class="cue" href="#desk">Scroll</a>
+</section>
+
+<main>
+  <div class="wrap">
+    <div class="desk" id="desk">
+      <form class="inq reveal" id="inquiry-form" novalidate>
+        <div class="grid">
+          <div class="field">
+            <input id="f-name" name="name" type="text" autocomplete="name" placeholder=" " required>
+            <label for="f-name">Name</label>
+          </div>
+          <div class="field">
+            <input id="f-email" name="email" type="email" autocomplete="email" placeholder=" " required>
+            <label for="f-email">Email</label>
+          </div>
+        </div>
+        <div class="field" style="margin-top:20px">
+          <input id="f-org" name="org" type="text" autocomplete="organization" placeholder=" ">
+          <label for="f-org">Farm or company <i>(optional)</i></label>
+        </div>
+        <div class="field" style="margin-top:20px">
+          <textarea id="f-msg" name="message" rows="5" placeholder=" "></textarea>
+          <label for="f-msg">What would you like to monitor?</label>
+        </div>
+        <div class="form-foot">
+          <button class="btn" type="submit">Send message</button>
+          <span class="quiet">Or write to <a href="mailto:info@roysync.com?subject=Pilot%20request">info@roysync.com</a></span>
+        </div>
+        <p class="form-status" id="form-status" role="status" aria-live="polite"></p>
+      </form>
+
+      <aside class="lines reveal" aria-label="Direct contact">
+        <div class="row">
+          <div class="lab">Email</div>
+          <div class="val"><a href="mailto:info@roysync.com">info@roysync.com</a></div>
+          <div class="note">Sales, pilots, technical questions — one inbox, human answers.</div>
+        </div>
+        <div class="row">
+          <div class="lab">Response time</div>
+          <div class="val">Within one working day</div>
+          <div class="note">Pilot proposals usually land within a week.</div>
+        </div>
+        <div class="row">
+          <div class="lab">Registered design</div>
+          <div class="val mono">REG. 6535677</div>
+          <div class="note">The device you're asking about is protected intellectual property.</div>
+        </div>
+      </aside>
+    </div>
+
+    <section class="next reveal" aria-label="What happens next">
+      <h2>What happens next</h2>
+      <ol class="steps">
+        <li data-n="01"><b>We read your note</b><span>A person, not a queue. If we need more detail, we ask one short question.</span></li>
+        <li data-n="02"><b>Pilot plan in a week</b><span>Device count, placement, connectivity options and a clear price — nothing hidden.</span></li>
+        <li data-n="03"><b>Float in the water</b><span>Drop it, it reports. You watch your pond from a dashboard within days.</span></li>
+      </ol>
+    </section>
+  </div>
+</main>
+
+<footer>
+  <div class="ft">
+    <div class="ft-brand">
+      <a class="logo" href="./"><img src="assets/logo.png" alt="" width="40" height="40" loading="lazy"><b>RoySync</b></a>
+      <p>Water-quality monitoring for fish farms.</p>
+      <a class="ft-mail" href="mailto:info@roysync.com">info@roysync.com</a>
+    </div>
+    <nav class="ft-col" aria-label="Footer">
+      <h4>Pages</h4>
+      <a href="./">Home</a>
+      <a href="./">Solution</a>
+      <a href="#desk">Contact us</a>
+    </nav>
+    <div class="ft-col">
+      <h4>Company</h4>
+      <span>ROYSYNC LTD</span>
+      <span>Company No. 17360256</span>
+      <span>Registered in England and Wales</span>
+    </div>
+    <div class="ft-col">
+      <h4>Registered office</h4>
+      <span>35 Peacock Drive</span>
+      <span>Highfields Caldecote</span>
+      <span>Cambridge CB23 7FE, United Kingdom</span>
+    </div>
+  </div>
+  <div class="ft-bottom">
+    <span>© 2026 ROYSYNC LTD. All rights reserved.</span>
+    <span>Registered design No. 6535677</span>
+  </div>
+</footer>
+
+<script>
+  // reveals, same easing family as the dive captions
+  const io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } }), { threshold: 0.15 });
+  document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+
+  // depth gauge: page progress becomes a descent — 0 → 40 m, and the sea darkens with it
+  (() => {
+    const plate = document.querySelector('#stage .plate');
+    const cur = document.getElementById('gauge-cursor');
+    const depthEl = document.getElementById('gauge-depth');
+    const zoneEl = document.getElementById('gauge-zone');
+    if (!cur || !depthEl) return;
+    let raf = 0;
+    const zones = [[0, 'surface'], [0.25, 'midwater'], [0.55, 'reef'], [0.8, 'seabed']];
+    const update = () => {
+      raf = 0;
+      const max = Math.max(1, document.documentElement.scrollHeight - innerHeight);
+      const p = Math.min(1, Math.max(0, scrollY / max));
+      cur.style.top = (p * 100) + '%';
+      depthEl.textContent = Math.round(p * 40) + ' m';
+      let z = zones[0][1];
+      for (const [t, name] of zones) if (p >= t) z = name;
+      if (zoneEl.textContent !== z) zoneEl.textContent = z;
+      if (plate) {
+        const hue = 200 - p * 14;                       // cooler with depth
+        const bright = 0.92 - p * 0.5;                  // darker with depth
+        const sat = 1 - p * 0.45;                       // bleached by depth
+        plate.style.filter = `hue-rotate(${hue}deg) brightness(${bright.toFixed(3)}) saturate(${sat.toFixed(3)})`;
+        plate.style.opacity = (0.55 - p * 0.25).toFixed(3);
+      }
+    };
+    addEventListener('scroll', () => { if (!raf) raf = requestAnimationFrame(update); }, { passive: true });
+    addEventListener('resize', update, { passive: true });
+    update();
+  })();
+
+  // opening clip: plays through once, then fades through blue and starts again, so the climbing shot never jumps back;
+  // it pauses whenever it is off screen, and the depth gauge stays hidden while the clip fills the view
+  const cv = document.querySelector('.cv video');
+  if (cv) {
+    cv.addEventListener('ended', () => { cv.style.opacity = 0; setTimeout(() => { cv.currentTime = 0; cv.play().catch(() => {}); cv.style.opacity = 1; }, 900); });
+    new IntersectionObserver(([e]) => {
+      document.body.classList.toggle('hero-on', e.intersectionRatio > 0.4);
+      if (e.isIntersecting) cv.play().catch(() => {}); else cv.pause();
+    }, { threshold: [0, 0.4] }).observe(cv.parentElement);
+  }
+  // the callout rides the AquaRoy head: its position in every frame comes from the tracking the clip was made with
+  // (normalised to the frame) and is mapped through object-fit: cover. A portrait screen only shows a slice of the
+  // frame, so there the slice slides to keep the head in view
+  (async () => {
+    const v = cv, tag = document.getElementById('cv-tag');
+    if (!v || !tag) return;
+    let P; try { P = await fetch('media/contact-farm.json?v=59').then(r => r.json()); } catch (e) { return; }
+    let raf = 0, posX = -1;
+    const place = time => {
+      const n = P.p.length, f = Math.min(Math.max(time * P.fps, 0), n - 1), i = Math.floor(f), k = f - i;
+      const a = P.p[i], b = P.p[Math.min(i + 1, n - 1)], nx = a[0] + (b[0] - a[0]) * k, ny = a[1] + (b[1] - a[1]) * k, ns = a[2] + (b[2] - a[2]) * k;
+      const cw = v.clientWidth, ch = v.clientHeight, s = Math.max(cw / P.w, ch / P.h), dw = P.w * s, dh = P.h * s;
+      let ox = (cw - dw) / 2;
+      if (dw > cw + 1) {
+        const want = Math.min(Math.max((nx * dw - cw * 0.4) / (dw - cw), 0), 1);
+        posX = posX < 0 ? want : posX + (want - posX) * 0.12;
+        v.style.objectPosition = (posX * 100).toFixed(2) + '% 50%'; ox = (cw - dw) * posX;
+      }
+      const x = ox + nx * dw, y = (ch - dh) / 2 + ny * dh;
+      tag.style.setProperty('--r', Math.max(13, ns * dw * 0.8).toFixed(1) + 'px');
+      tag.style.transform = `translate3d(${x.toFixed(1)}px, ${y.toFixed(1)}px, 0)`;
+      const fl = tag.classList.contains('flip');
+      if (!fl && x > cw - 300) tag.classList.add('flip'); else if (fl && x < cw - 380) tag.classList.remove('flip');
+      tag.classList.toggle('on', !v.paused && time > 1 && time < P.dur - 0.7 && v.style.opacity !== '0');
+    };
+    if ('requestVideoFrameCallback' in v) {   // exact: runs for every frame the video shows, with that frame's own time
+      const onFrame = (now, md) => { place(md.mediaTime); v.requestVideoFrameCallback(onFrame); };
+      v.requestVideoFrameCallback(onFrame);
+    } else {                                  // older browsers: follow currentTime on each repaint
+      const step = () => { raf = requestAnimationFrame(step); place(v.currentTime || 0); };
+      v.addEventListener('playing', () => { if (!raf) step(); });
+      v.addEventListener('pause', () => { cancelAnimationFrame(raf); raf = 0; });
+      if (!v.paused) step();
+    }
+    v.addEventListener('pause', () => tag.classList.remove('on'));
+  })();
+  const hdr = document.querySelector('header');
+  const frost = () => hdr.classList.toggle('scrolled', scrollY > 40);
+  addEventListener('scroll', frost, { passive: true }); frost();
+
+  // contact form: validate quietly, then hand off to email — no backend on the static site yet
+  const inq = document.getElementById('inquiry-form');
+  if (inq) {
+    const statusEl = document.getElementById('form-status');
+    const say = (msg, kind) => { statusEl.textContent = msg; statusEl.className = 'form-status show ' + kind; };
+    inq.addEventListener('submit', e => {
+      e.preventDefault();
+      const name = inq.name.value.trim(), email = inq.email.value.trim(), org = inq.org.value.trim(), msg = inq.message.value.trim();
+      let bad = null;
+      inq.querySelectorAll('.field').forEach(f => f.classList.remove('bad'));
+      if (!name) { bad = inq.name; }
+      else if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { bad = inq.email; }
+      if (bad) {
+        bad.closest('.field').classList.add('bad'); bad.focus();
+        say(bad === inq.email ? 'That email doesn\u2019t look right — mind checking it?' : 'Please fill this in before sending.', 'err');
+        return;
+      }
+      const body = ['Name: ' + name, 'Email: ' + email, org ? 'Farm: ' + org : '', msg ? 'Notes: ' + msg : ''].filter(Boolean).join('\n');
+      window.location.href = 'mailto:info@roysync.com?subject=' + encodeURIComponent('RoySync pilot request' + (org ? ' \u2014 ' + org : '')) + '&body=' + encodeURIComponent(body);
+      say('Your mail app should open with everything filled in. If nothing happened, write to info@roysync.com.', 'ok');
+      inq.reset();
+    });
+    inq.querySelectorAll('input, textarea').forEach(i => i.addEventListener('input', () => i.closest('.field')?.classList.remove('bad')));
+  }
+</script>
+<!-- PREVIEW-BG: compare background clips; removed before shipping -->
+<div id="bgpick" style="position:fixed;left:12px;bottom:12px;z-index:50;background:rgba(5,14,26,.86);border:1px solid rgba(159,208,247,.3);border-radius:12px;padding:10px 12px;font:12px/1.4 system-ui;color:#dff0ff;max-width:min(560px,calc(100vw - 24px))">
+  <div style="margin-bottom:6px;opacity:.8">پس‌زمینه (فقط پیش‌نمایش): <b id="bgname"></b></div>
+  <div id="bgbtns" style="display:flex;flex-wrap:wrap;gap:6px"></div>
+</div>
+<script>
+(() => {
+  const P = 'media/bgpick/';   // local copies of the Pexels 960p files (this network stalls on long remote loads)
+  const BG = [
+    ['0 · now: drone over the pen', null],
+    ['1 · fog over a pond at sunrise', 'bg1.mp4'],
+    ['2 · fog over a water pond', 'bg2.mp4'],
+    ['3 · dawn at a small pond', 'bg3.mp4'],
+    ['4 · misty morning lake', 'bg4.mp4'],
+    ['5 · sunset over fish farms and mountains', 'bg5.mp4'],
+    ['6 · sunset reflections on water', 'bg6.mp4'],
+    ['7 · calm water, gentle ripples', 'bg7.mp4'],
+    ['8 · fish in calm green water', 'bg8.mp4'],
+    ['9 · modern fish hatchery from above', 'bg9.mp4'],
+    ['10 · fish pond from above', 'bg10.mp4'],
+    ['11 · your own farm (clips 32 + 31)', '../farm-bg-' + (innerWidth >= 900 ? '1080' : '720') + '.mp4'],
+  ];
+  let v = document.querySelector('.cv > video'); const name = document.getElementById('bgname'), box = document.getElementById('bgbtns');
+  const set = i => {
+    const [label, src] = BG[i];
+    name.textContent = label;
+    document.body.classList.toggle('bg-alt', i > 0);
+    // a fresh element: the page's own clip, still downloading, would otherwise take the old one back when it lands
+    if (src) { const nv = v.cloneNode(false); nv.removeAttribute('poster'); nv.dataset.want = '1'; nv.src = P + src; nv.loop = true; nv.muted = true; v.replaceWith(nv); v = nv; v.play().catch(() => {}); }
+    else if (i === 0 && v.dataset.want) { location.search = '?bg=0'; return; }   // back from a pick: reload the page's own clip
+    history.replaceState(null, '', '?bg=' + i);
+    [...box.children].forEach((b, j) => b.style.background = j === i ? '#4f9fe0' : 'rgba(159,208,247,.14)');
+  };
+  BG.forEach((b, i) => { const el = document.createElement('button'); el.textContent = i; el.title = b[0];
+    el.style.cssText = 'border:0;border-radius:7px;padding:5px 10px;color:#fff;cursor:pointer;font:600 12px system-ui';
+    el.onclick = () => set(i); box.appendChild(el); });
+  const q = +(new URLSearchParams(location.search).get('bg') || 0);
+  setTimeout(() => set(Math.min(Math.max(q, 0), BG.length - 1)), 50);
+})();
+</script>
+</body>
+</html>
