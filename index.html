@@ -41,6 +41,8 @@
   #story, footer { position: relative; z-index: 2; }
   #story h2.title, #story p.lead, #story h3 { text-shadow: 0 2px 16px rgba(0,0,0,.55); }
   #stage canvas { display: block; width: 100%; height: 100%; }
+  .film-mode #orbit-hint { display: none !important; }
+  .film-mode #stage { cursor: auto; }
   /* soft shade behind the text so it stays readable over a bright sky */
   #stage::before { content: ""; position: absolute; inset: 0; z-index: 3; pointer-events: none;
     background: linear-gradient(180deg, rgba(4,22,38,.4) 0%, rgba(4,22,38,0) 16%); }
@@ -566,7 +568,8 @@
   // dive progress p (0..1) from pixels scrolled into #scroller. The 3D part (p 0..KNEE) keeps the length it had
   // when the scroller was 640vh; everything after KNEE is the filmed descent and gets the extra 600vh, so the
   // clips sink past one after another instead of flashing by in the last few percent of the scroll.
-  const DIVE_BASE = 540, DIVE_DEEP = 600, DIVE_KNEE = 0.86;   // vh of 3D dive, vh of filmed descent, p where film starts
+  const FILMQ = !location.search.includes('3d');   // the dive as one film (?3d: the drawn dive and its filmed descent)
+  const DIVE_BASE = FILMQ ? 1000 : 540, DIVE_DEEP = FILMQ ? 140 : 600, DIVE_KNEE = 0.86;   // vh of 3D dive, vh of filmed descent, p where film starts
   function diveSpans() {
     const span = Math.max(1, document.getElementById('scroller').offsetHeight - innerHeight);
     return [span, span * DIVE_BASE / (DIVE_BASE + DIVE_DEEP)];
@@ -684,6 +687,16 @@ import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPa
 // the light shafts, their occlusion by the blades and the blue-green fade all come from the same medium.
 
 const stage = document.getElementById('stage');
+// the dive as one film, scrubbed by the scroll: the sky, down through the clouds onto the pond and the float, under
+// the water, the fish, the aerator's bubbles (Gemini clips and stills, one camera move, colour-matched under water)
+const FILM = !location.search.includes('3d');
+const KV = FILM ? Object.assign(document.createElement('video'), { muted: true, playsInline: true, preload: 'auto', poster: 'media/dive-film-1280.jpg?v=1' }) : null;
+if (KV) {
+  document.documentElement.classList.add('film-mode');
+  KV.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:1;pointer-events:none';
+  stage.appendChild(KV);
+  fetch('media/dive-film-1280.mp4?v=1').then(r => r.blob()).then(b => { KV.src = URL.createObjectURL(b); });   // whole, so every seek is local
+}
 const renderer = new THREE.WebGLRenderer({ antialias: false, powerPreference: 'high-performance' });
 renderer.toneMapping = THREE.NoToneMapping;          // exposure, ACES and sRGB are applied once, in the finishing pass
 renderer.shadowMap.enabled = true;
@@ -2736,6 +2749,33 @@ function tick(static_ = false) {
   }
   const p = pCurrent;
   const q = qCurrent;
+  if (KV && KV.readyState >= 1) {
+    // keyed to the copy: the sensors over the crossing, "fish are lost" over the school, "it acts" over the bubbles
+    const K = [[0, 0], [0.16, 14.0], [0.2, 17.5], [0.22, 18.0], [0.36, 22.0], [0.42, 23.6], [0.56, 27.0], [0.62, 28.2], [0.78, 31.4], [0.97, 32.5], [1, 32.5]];
+    let j = 1; while (j < K.length - 1 && p > K[j][0]) j++;
+    const end = KV.duration - 0.1;
+    const tt = Math.min(lerp(K[j - 1][1], K[j][1], Math.min(Math.max((p - K[j - 1][0]) / (K[j][0] - K[j - 1][0]), 0), 1)), end);
+    const now = performance.now() / 1000, dtR = Math.min(now - (KV._t ?? now), 0.1), d = tt - (KV._tt ?? tt);
+    KV._t = now; KV._tt = tt;
+    // at rest the film plays on slowly by itself for a moment (clouds drift, fish swim); a scroll then uses that lead
+    // up at half pace, so the picture never jumps back
+    let lead = KV._lead || 0;
+    if (Math.abs(d) > 1e-4) { KV._moved = now; lead = Math.max(0, lead - (d > 0 ? 0.5 * d : -2 * d)); }
+    const goal = Math.min(tt + lead, end);
+    let show = KV._show ?? goal;
+    if (now - (KV._moved || 0) > 0.3 && Math.abs(goal - show) < 0.05) {
+      const stop = Math.min(tt + 3, end);
+      if (KV.paused && !KV.seeking && KV.currentTime < stop) { KV.playbackRate = 0.4; KV.play().catch(() => {}); }
+      else if (!KV.paused && KV.currentTime >= stop) KV.pause();
+      show = KV.currentTime; lead = Math.max(0, show - tt);
+    } else {
+      if (!KV.paused) { KV.pause(); show = KV.currentTime; }
+      show += (goal - show) * (1 - Math.exp(-dtR * 6));   // the picture glides after the scroll instead of stepping with the wheel
+      if (Math.abs(KV.currentTime - show) > 1 / 48 && !KV.seeking) KV.currentTime = show;
+    }
+    KV._show = show; KV._lead = lead;
+    if (KV.readyState >= 2) renderer.domElement.style.visibility = 'hidden';
+  }
   const curScrollY = scrollCurrentY;
   header.classList.toggle('scrolled', curScrollY > 40);
 
@@ -2876,6 +2916,7 @@ function tick(static_ = false) {
   const kEnd = (innerHeight - contactEl.getBoundingClientRect().top) / innerHeight;
   const post = smooth(0, 0.6, (curScrollY - span) / innerHeight);   // the first story section sliding in over the film
   const ops = uwVids.map((v, i) => smooth(UW[i][0], UW[i][1], p));
+  if (FILM) ops.fill(0);   // the film has its own deep water
   for (let i = 0; i < ops.length - 1; i++) if (ops.slice(i + 1).some(o => o >= 0.999)) ops[i] = 0;
   for (let i = 0; i < ND; i++) ops[i] *= 1 - post;
   ops[FISH] = Math.max(ops[FISH], smooth(0.05, 0.75, kEnd));        // the fish come back behind the contact section
@@ -2953,6 +2994,7 @@ function tick(static_ = false) {
   sunUW.intensity = UW_I;
   MU.uPlateTint.value.set(0.44, 0.72, 1.18).multiplyScalar(lerp(0.72, 1.0, smooth(0.18, 0.42, p)));
   MU.uPlateK.value = lerp(0.025, 0.12, smooth(0.35, 0.55, p));
+  if (KV && KV.readyState >= 2) return;   // the film covers the screen: nothing 3D to draw
   bakeCaustics();
 
   if (!static_ && !document.hidden) {
