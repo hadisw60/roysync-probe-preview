@@ -695,7 +695,8 @@ if (KV) {
   document.documentElement.classList.add('film-mode');
   KV.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:1;pointer-events:none';
   stage.appendChild(KV);
-  fetch('media/dive-film-1280.mp4?v=1').then(r => r.blob()).then(b => { KV.src = URL.createObjectURL(b); });   // whole, so every seek is local
+  fetch('media/dive-film-1280.mp4?v=1').then(r => r.blob())
+    .then(b => { KV.src = URL.createObjectURL(new Blob([b], { type: 'video/mp4' })); });   // whole, so every seek is local; typed, since a redirect may serve it as bytes
 }
 const renderer = new THREE.WebGLRenderer({ antialias: false, powerPreference: 'high-performance' });
 renderer.toneMapping = THREE.NoToneMapping;          // exposure, ACES and sRGB are applied once, in the finishing pass
