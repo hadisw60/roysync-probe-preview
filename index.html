@@ -43,7 +43,6 @@
   #stage canvas { display: block; width: 100%; height: 100%; }
   .film-mode #orbit-hint { display: none !important; }
   .film-mode #stage { cursor: auto; }
-  .film-mode #scroller { height: 100vh; }
   /* soft shade behind the text so it stays readable over a bright sky */
   #stage::before { content: ""; position: absolute; inset: 0; z-index: 3; pointer-events: none;
     background: linear-gradient(180deg, rgba(4,22,38,.4) 0%, rgba(4,22,38,0) 16%); }
@@ -691,25 +690,11 @@ const stage = document.getElementById('stage');
 // the dive as one film, scrubbed by the scroll: the sky, down through the clouds onto the pond and the float, under
 // the water, the fish, the aerator's bubbles (Gemini clips and stills, one camera move, colour-matched under water)
 const FILM = !location.search.includes('3d');
-// film time at each dive point: the sensors over the crossing, "fish are lost" over the school, "it acts" over the bubbles
-const FILM_K = [[0, 0], [0.16, 14.0], [0.2, 17.5], [0.22, 18.0], [0.36, 22.0], [0.42, 23.6], [0.56, 27.0], [0.62, 28.2], [0.78, 31.4], [0.97, 31.9], [1, 32.5]];   // the last shot holds on "works on any farm"
-function filmP(t) {
-  let j = 1; while (j < FILM_K.length - 1 && t > FILM_K[j][1]) j++;
-  const [p0, t0] = FILM_K[j - 1], [p1, t1] = FILM_K[j];
-  return p0 + (p1 - p0) * Math.min(Math.max((t - t0) / (t1 - t0), 0), 1);
-}
 const KV = FILM ? Object.assign(document.createElement('video'), { muted: true, playsInline: true, preload: 'auto', poster: 'media/dive-film-1280.jpg?v=1' }) : null;
 if (KV) {
   document.documentElement.classList.add('film-mode');
   KV.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:1;pointer-events:none';
   stage.appendChild(KV);
-  // at the end it holds on the last shot for a while, then fades out and starts over from the sky
-  KV.addEventListener('ended', () => {
-    KV._ending = true;
-    setTimeout(() => { KV.style.transition = 'opacity .8s'; KV.style.opacity = '0'; }, 4000);
-    setTimeout(() => { KV.currentTime = 0; KV.play().catch(() => {}); KV.style.opacity = '1'; KV._ending = false; }, 4900);
-  });
-  KV.addEventListener('loadeddata', () => KV.play().catch(() => {}), { once: true });
   fetch('media/dive-film-1280.mp4?v=1').then(r => r.blob())
     .then(b => { KV.src = URL.createObjectURL(new Blob([b], { type: 'video/mp4' })); });   // whole, so every seek is local; typed, since a redirect may serve it as bytes
 }
@@ -2763,16 +2748,24 @@ function tick(static_ = false) {
     if (Math.abs(qTarget - qCurrent) < 0.0001) qCurrent = qTarget;
     if (Math.abs(scrollTargetY - scrollCurrentY) < 0.25) scrollCurrentY = scrollTargetY;
   }
-  // the film plays at its own pace and the page follows it: p is read back from the film's time, so the copy beats,
-  // the hero and the depth gauge keep to their shots without any scrolling; scrolling only leads on to the story
-  if (KV && KV.readyState >= 2) {
-    renderer.domElement.style.visibility = 'hidden';
-    const away = qCurrent > 0.04;   // the story covers the film: let it rest there
-    if (away && !KV.paused) KV.pause();
-    else if (!away && KV.paused && !KV._ending) KV.play().catch(() => {});
-  }
-  const p = KV && KV.readyState >= 1 ? filmP(KV.currentTime) : pCurrent;
+  const p = pCurrent;
   const q = qCurrent;
+  if (KV && KV.readyState >= 1) {
+    // keyed to the copy: the sensors over the crossing, "fish are lost" over the school, "it acts" over the bubbles
+    const K = [[0, 0], [0.16, 14.0], [0.2, 17.5], [0.22, 18.0], [0.36, 22.0], [0.42, 23.6], [0.56, 27.0], [0.62, 28.2], [0.78, 31.4], [0.97, 32.5], [1, 32.5]];
+    let j = 1; while (j < K.length - 1 && p > K[j][0]) j++;
+    const end = KV.duration - 0.1;
+    const tt = Math.min(lerp(K[j - 1][1], K[j][1], Math.min(Math.max((p - K[j - 1][0]) / (K[j][0] - K[j - 1][0]), 0), 1)), end);
+    // the film goes exactly where the scroll goes; it only glides the last step of each wheel notch, so it never stutters
+    const now = performance.now() / 1000, dtR = Math.min(now - (KV._t ?? now), 0.1);
+    KV._t = now;
+    let show = KV._show ?? tt;
+    show += (tt - show) * (1 - Math.exp(-dtR * 12));
+    if (Math.abs(tt - show) < 0.004) show = tt;
+    KV._show = show;
+    if (Math.abs(KV.currentTime - show) > 1 / 48 && !KV.seeking) KV.currentTime = show;
+    if (KV.readyState >= 2) renderer.domElement.style.visibility = 'hidden';
+  }
   const curScrollY = scrollCurrentY;
   header.classList.toggle('scrolled', curScrollY > 40);
 
