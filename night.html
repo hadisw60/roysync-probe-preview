@@ -11,7 +11,7 @@
   :root { --fg: #eaf2fb; --dim: #9fb2c8; --accent: #9fd0f7; }
   html, body { margin: 0; background: #03060c; color: var(--fg); font-family: Inter, system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
   #gl { position: fixed; inset: 0; width: 100vw; height: 100vh; display: block; }
-  #track { height: 2300vh; }
+  #track { height: 3000vh; }
   header { position: fixed; top: 0; left: 0; right: 0; display: flex; align-items: center; justify-content: space-between; padding: 22px clamp(16px, 4vw, 48px); z-index: 3; }
   .logo { display: flex; align-items: center; gap: 10px; color: var(--fg); text-decoration: none; font-family: Sora, sans-serif; font-weight: 600; font-size: 17px; }
   .logo img { width: 34px; height: 34px; }
@@ -174,7 +174,7 @@ renderer.outputColorSpace = THREE.SRGBColorSpace;
 const FOG = new THREE.Color(0x050b16);
 const scene = new THREE.Scene();
 scene.fog = new THREE.FogExp2(FOG, 0.011);
-const camera = new THREE.PerspectiveCamera(38, 1, 0.1, 2000);
+const camera = new THREE.PerspectiveCamera(38, 1, 0.1, 9000);
 
 // the moon: low, straight ahead of the opening shot, behind the float
 const MOON = new THREE.Vector3(0, Math.sin(THREE.MathUtils.degToRad(9)), -Math.cos(THREE.MathUtils.degToRad(9))).normalize();
@@ -351,8 +351,8 @@ probe.position.y = baseY;
 
 // ---- one crane move, in units of the float's height
 const S = H / 6.4;
-const path = new THREE.CatmullRomCurve3([[0, 5.5, 42], [13, 4.0, 18], [8.5, 1.8, 10], [3.6, 0.75, 8.2], [3.0, -0.9, 7.2], [6.5, -3.2, 8.5], [-3.5, -5.8, 7.5], [-1.2, -8.0, 4.6]].map(v => new THREE.Vector3(...v).multiplyScalar(S)));
-const look = new THREE.CatmullRomCurve3([[0, 2.6, -12], [0, 1.2, -1], [0, 1.1, 0], [0, 1.15, -0.8], [0, -0.6, 0], [0, -2.4, 0], [0, -2.8, 0], [0, -1.6, -0.5]].map(v => new THREE.Vector3(...v).multiplyScalar(S)));
+const path = new THREE.CatmullRomCurve3([[0, 255, 170], [9, 178, 118], [6, 100, 82], [2, 34, 58], [0, 5.5, 42], [13, 4.0, 18], [8.5, 1.8, 10], [3.6, 0.75, 8.2], [3.0, -0.9, 7.2], [6.5, -3.2, 8.5], [-3.5, -5.8, 7.5], [-1.2, -8.0, 4.6]].map(v => new THREE.Vector3(...v).multiplyScalar(S)));
+const look = new THREE.CatmullRomCurve3([[0, 170, -320], [0, 80, -150], [0, 0, -40], [0, 2, -15], [0, 2.6, -12], [0, 1.2, -1], [0, 1.1, 0], [0, 1.15, -0.8], [0, -0.6, 0], [0, -2.4, 0], [0, -2.8, 0], [0, -1.6, -0.5]].map(v => new THREE.Vector3(...v).multiplyScalar(S)));
 
 // ================= under the water =================
 // Not a literal pond either: a dark, cold room of water. The surface from below is a lit window (Snell's: the sky only
@@ -480,8 +480,93 @@ function swim(t, dt) {
 }
 
 const uwLight = new THREE.DirectionalLight(0x9fdfe8, 0); uwLight.position.copy(MOON_R).multiplyScalar(50); scene.add(uwLight);
+
+// ================= from the clouds =================
+// The page opens above a moonlit cloud deck and comes down through it: below, the pond in its dark land, the treeline
+// and a few lights of the farm on the shore. Puffs are soft billboards, brighter on the moon's side.
+// cloud puffs with a body: billowing noise inside a soft mask, lit from above, a few variants so the deck doesn't repeat
+const puffTexs = [0, 1, 2].map(v => {
+  const N = 256, c = document.createElement('canvas'); c.width = c.height = N; const g = c.getContext('2d'), img = g.createImageData(N, N);
+  const R = new Float32Array(64 * 64).map(() => Math.random());
+  const vn = (x, y) => { const xi = Math.floor(x), yi = Math.floor(y), xf = x - xi, yf = y - yi, u = xf * xf * (3 - 2 * xf), w = yf * yf * (3 - 2 * yf);
+    const h = (i, j) => R[((yi + j) & 63) * 64 + ((xi + i) & 63)];
+    return (h(0, 0) * (1 - u) + h(1, 0) * u) * (1 - w) + (h(0, 1) * (1 - u) + h(1, 1) * u) * w; };
+  for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) {
+    const nx = x / N, ny = y / N, r = Math.hypot((nx - 0.5) * 2, (ny - 0.55) * 2.6);
+    let f = 0, amp = 0.5, fr = 3 + v;
+    for (let o = 0; o < 5; o++) { f += vn(nx * fr + v * 7, ny * fr) * amp; amp *= 0.5; fr *= 2.03; }
+    const m = Math.min(Math.max((1 - r) / 0.65, 0), 1);
+    const a = Math.min(Math.max((f * 0.75 + m * 0.6 - 0.62) / 0.22, 0), 1) * m;
+    const lit = 0.55 + 0.45 * Math.min(Math.max(1 - ny * 1.15, 0), 1) + (f - 0.5) * 0.35;   // tops in the moonlight, bellies in shade
+    const k = (y * N + x) * 4, l = Math.min(Math.max(lit, 0), 1) * 255;
+    img.data[k] = l; img.data[k + 1] = l; img.data[k + 2] = l; img.data[k + 3] = a * 235;
+  }
+  g.putImageData(img, 0, 0);
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t;
+});
+const clouds = new THREE.Group(); scene.add(clouds);
+const deckC = [];
+for (let i = 0; i < 760; i++) {
+  const far = i >= 560;
+  const onPath = i < 26;   // a few right on the way down, so the lens goes through them
+  const a = Math.random() * Math.PI * 2, r = onPath ? Math.random() * 30 : far ? 950 + Math.random() * 2400 : 60 + Math.pow(Math.random(), 0.6) * 950;
+  const x = onPath ? 6 + (Math.random() - 0.5) * 40 : Math.cos(a) * r, z = onPath ? 88 + (Math.random() - 0.5) * 40 : Math.sin(a) * r - 40;
+  const y = onPath ? 118 + Math.random() * 26 : 108 + Math.random() * 44;
+  const moonSide = Math.max(0, -z / 900);   // the deck brightens toward the moon
+  const col = new THREE.Color(0.55 + 0.35 * moonSide, 0.6 + 0.35 * moonSide, 0.74 + 0.3 * moonSide); deckC.push(col);
+  const m = new THREE.SpriteMaterial({ map: puffTexs[i % 3], color: col.clone(),
+    transparent: true, depthWrite: false, fog: true, rotation: (Math.random() - 0.5) * 0.5, opacity: 0.95 });
+  const sp = new THREE.Sprite(m); sp.position.set(x * S, y * S, z * S); sp.scale.setScalar((onPath ? 50 : far ? 300 + Math.random() * 420 : 55 + Math.random() * 80) * S);
+  clouds.add(sp);
+}
+
+// the land round the pond: dark woods and fields, with the pond cut out of it so the water shows through
+const ground = (() => {
+  const N = 1024, W3 = 3000, px = N / W3, pr = 170 * px, c = document.createElement('canvas'); c.width = c.height = N;
+  const g = c.getContext('2d'); g.fillStyle = '#070b0b'; g.fillRect(0, 0, N, N);
+  for (let i = 0; i < 2600; i++) {   // woods and fields
+    g.fillStyle = ['#0a1110', '#050807', '#0c1310', '#0e1512'][i % 4];
+    g.beginPath(); g.ellipse(Math.random() * N, Math.random() * N, 2 + Math.random() * 14, 2 + Math.random() * 14, Math.random() * 3, 0, 6.28); g.fill();
+  }
+  const blob = (k, r0, j) => { g.beginPath(); for (let i = 0; i <= 64; i++) { const a = i / 64 * 6.283, r = r0 * (1 + j * Math.sin(a * 3 + 1) + j * 0.6 * Math.sin(a * 7 + 2));
+    const x = N / 2 + Math.cos(a) * r, y = N / 2 + Math.sin(a) * r; i ? g.lineTo(x, y) : g.moveTo(x, y); } g.closePath(); g.fillStyle = k; g.fill(); };
+  blob('#141c16', pr * 1.1, 0.05);   // a band of reeds on the shore
+  const map = new THREE.CanvasTexture(c); map.colorSpace = THREE.SRGBColorSpace;
+  const a = document.createElement('canvas'); a.width = a.height = N; const ga = a.getContext('2d');
+  ga.fillStyle = '#fff'; ga.fillRect(0, 0, N, N);
+  const g0 = g; ga.beginPath(); for (let i = 0; i <= 64; i++) { const t = i / 64 * 6.283, r = pr * (1 + 0.05 * Math.sin(t * 3 + 1) + 0.03 * Math.sin(t * 7 + 2));
+    const x = N / 2 + Math.cos(t) * r, y = N / 2 + Math.sin(t) * r; i ? ga.lineTo(x, y) : ga.moveTo(x, y); } ga.closePath(); ga.fillStyle = '#000'; ga.fill();
+  const alphaMap = new THREE.CanvasTexture(a), BIG = 24000, rep = BIG / W3;
+  [map, alphaMap].forEach(t => { t.wrapS = t.wrapT = THREE.ClampToEdgeWrapping; t.repeat.set(rep, rep); t.offset.set(-(rep - 1) / 2, -(rep - 1) / 2); });
+  const m = new THREE.Mesh(new THREE.PlaneGeometry(BIG, BIG), new THREE.MeshBasicMaterial({ map, color: 0x9aa8b0, alphaMap, alphaTest: 0.5 }));
+  m.rotation.x = -Math.PI / 2; m.position.y = 0.08; m.scale.setScalar(S); scene.add(m); return m;
+})();
+
+// the farm's lights on the shore: a few warm windows and a yard lamp, mirrored in the water
+const farm = (() => {
+  const P = [[150, 3, 95], [158, 2.5, 103], [163, 4, 88], [142, 2, 112], [171, 6, 97], [-120, 2.5, 128], [-128, 2, 120]];
+  const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(new Float32Array(P.flat().map(v => v * S)), 3));
+  const m = new THREE.ShaderMaterial({ transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, uniforms: { uPx: { value: 1 } },
+    vertexShader: `uniform float uPx; void main(){ vec4 mv = modelViewMatrix * vec4(position, 1.0); gl_PointSize = max(uPx * 900.0 / -mv.z, 2.0); gl_Position = projectionMatrix * mv; }`,
+    fragmentShader: `void main(){ float d = length(gl_PointCoord - 0.5); gl_FragColor = vec4(vec3(1.0, 0.72, 0.38) * 3.0 * smoothstep(0.5, 0.0, d), 1.0); }` });
+  const pts = new THREE.Points(g, m); pts.frustumCulled = false; scene.add(pts); return pts;
+})();
+const treeline = scene.children.find(o => o.isMesh && o.geometry && o.geometry.type === 'CylinderGeometry');
+const FOG_LOW = fogAbove.density, HORIZ = new THREE.Color().setRGB(0.02, 0.04, 0.08);
+const starsPts = scene.children.find(o => o.isPoints && o.material === starMat);
+let belowDeck = null;
+function altitude(y) {   // high up the haze thins so the pond shows far below; the treeline band is for the low views only
+  const hk = Math.min(Math.max((y / S - 10) / 110, 0), 1);
+  fogAbove.density = FOG_LOW * (1 - 0.75 * hk); fogAbove.color.copy(FOG).lerp(HORIZ, hk);
+  if (treeline) treeline.visible = !wasUnder && y < 60 * S;
+  moon.position.copy(camera.position).addScaledVector(MOON, 700); halo.position.copy(moon.position);
+  sky.position.copy(camera.position); if (starsPts) starsPts.position.copy(camera.position);
+  const below = y < 125 * S;   // from under the deck the clouds are their dark undersides
+  if (below !== belowDeck) { belowDeck = below; clouds.children.forEach((sp, i) => sp.material.color.copy(deckC[i]).multiplyScalar(below ? 0.32 : 1)); }
+}
+
 const hemi = scene.children.find(o => o.isHemisphereLight);
-const aboveOnly = scene.children.filter(o => o === sky || o === moon || o === halo || o === water || o === ring
+const aboveOnly = scene.children.filter(o => o === sky || o === moon || o === halo || o === water || o === ring || o === clouds || o === ground
   || (o.isPoints && o !== snow) || o.material === mistMat || (o.isMesh && o.geometry && o.geometry.type === 'CylinderGeometry'));
 
 // ================= the night that goes wrong =================
@@ -626,12 +711,13 @@ function layout() {
   const w = innerWidth, h = innerHeight;
   renderer.setSize(w, h, false); composer.setSize(w, h);
   camera.aspect = w / h; camera.fov = w < h ? 58 : 38; camera.updateProjectionMatrix();
-  grade.uniforms.uAsp.value = w / h; flyMat.uniforms.uPx.value = snowMat.uniforms.uPx.value = nearMat.uniforms.uPx.value = bubMat.uniforms.uPx.value = h * renderer.getPixelRatio() / 900;
+  grade.uniforms.uAsp.value = w / h; flyMat.uniforms.uPx.value = snowMat.uniforms.uPx.value = nearMat.uniforms.uPx.value = bubMat.uniforms.uPx.value = farm.material.uniforms.uPx.value = h * renderer.getPixelRatio() / 900;
 }
 addEventListener('resize', layout); layout();
 
 const copy = [...document.querySelectorAll('.copy')], hint = document.getElementById('hint');
 let sCross = 0.5; for (let k = 0; k <= 400; k++) { if (path.getPointAt(k / 400).y < 0) { sCross = k / 400; break; } }
+let sLow = 0.2; for (let k = 0; k <= 400; k++) { if (path.getPointAt(k / 400).y < 7 * S) { sLow = k / 400; break; } }
 const band = (x, a, b, f = 0.05) => Math.min(Math.max((x - a) / f, 0), 1) * Math.min(Math.max((b - x) / f, 0), 1);
 const clock = new THREE.Clock();
 let s = 0, last = 0;
@@ -640,7 +726,7 @@ renderer.setAnimationLoop(() => {
   const track = document.documentElement.scrollHeight - innerHeight, target = track > 0 ? scrollY / track : 0;
   s += (target - s) * (1 - Math.exp(-dt * 3.5));        // the camera eases after the scroll, like a crane coming to rest
   // a quarter of the scroll above the water, coming to rest at the surface; the rest under it, at an even pace
-  const A = 0.25, xa = Math.min(s / A, 1), e = s < A ? sCross * xa * xa * (3 - 2 * xa) : sCross + (1 - sCross) * (s - A) / (1 - A);
+  const A = 0.4, xa = Math.min(s / A, 1), e = s < A ? sCross * xa * xa * (3 - 2 * xa) : sCross + (1 - sCross) * (s - A) / (1 - A);
   camera.position.copy(path.getPointAt(e)); camera.lookAt(look.getPointAt(e));
   camera.position.y += Math.sin(t * 0.4) * 0.03 * S;    // a hand-held breath
   if (camera.position.y < 0) {   // under the water the lens sways a little, as a diver's does
@@ -654,7 +740,7 @@ renderer.setAnimationLoop(() => {
   const k = (t % 4.5) / 4.5; ring.scale.setScalar((0.9 + k * 7.5) * S); ringMat.uniforms.uK.value = k;
 
   const under = camera.position.y < 0;
-  medium(under);
+  medium(under); altitude(camera.position.y);
   grade.uniforms.uWash.value = Math.max(0, 1 - Math.abs(camera.position.y) / (0.7 * S));
   if (under) { aimRays(); swim(t, dt); snowMat.uniforms.uCam.value.copy(camera.position); nearMat.uniforms.uCam.value.copy(camera.position); }
   CAUS.uCT.value = t; CAUS.uUnder.value = under ? 1 : 0;
@@ -662,8 +748,8 @@ renderer.setAnimationLoop(() => {
   water.material.uniforms.time.value = t * 0.35;
   starMat.uniforms.uT.value = flyMat.uniforms.uT.value = mistMat.uniforms.uT.value = t; grade.uniforms.uT.value = t % 10;
   // the copy follows the camera's place on the path: two lines above the water, two under it, the last at the bottom
-  copy[0].style.opacity = band(e, -1, 0.12, 0.06).toFixed(3);
-  copy[1].style.opacity = band(e, 0.16, sCross - 0.06).toFixed(3);
+  copy[0].style.opacity = band(e, -1, sLow * 0.45, 0.05).toFixed(3);
+  copy[1].style.opacity = band(e, sLow, sCross - 0.04, 0.04).toFixed(3);
   const u = k => sCross + (1 - sCross) * k;   // a place under the water, as a share of the way down
   copy[2].style.opacity = band(e, u(0.08), u(0.34)).toFixed(3);
   // the night goes wrong from here: oxygen falls, the app escalates layer by layer, the aerator comes on
