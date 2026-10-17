@@ -28,15 +28,16 @@
   #hint { position: fixed; bottom: 22px; left: 0; right: 0; text-align: center; font-size: 11px; letter-spacing: .28em; color: var(--dim); z-index: 2; }
   /* the phone: the one on the contact page (titanium band, black glass, the island), showing the app's alerts view.
      Everything inside is in cqw, so it keeps its proportions at any size. */
-  #phone { position: fixed; z-index: 2; right: clamp(16px, 7vw, 120px); top: 50%; width: clamp(210px, 20vw, 290px); margin-top: calc(clamp(210px, 20vw, 290px) * -1.03);
+  #phone { position: fixed; z-index: 2; right: clamp(16px, 7vw, 120px); top: 50%; width: clamp(160px, 14.5vw, 220px); margin-top: calc(clamp(160px, 14.5vw, 220px) * -1.03); perspective: 900px;
+           --pose: rotateY(-22deg) rotateX(9deg) rotateZ(-8deg);
            opacity: 0; pointer-events: none; container-type: inline-size; }
-  #phone .body { position: relative; aspect-ratio: 71.6 / 147.6; border-radius: 16.4cqw; transform: rotate(-2deg); animation: hold 9s ease-in-out infinite;
+  #phone .body { position: relative; aspect-ratio: 71.6 / 147.6; border-radius: 16.4cqw; transform: var(--pose); transform-style: preserve-3d; animation: hold 9s ease-in-out infinite;
            background: linear-gradient(152deg, #6f7b8a 0%, #3b4048 8%, #1f2227 20%, #282b30 48%, #16181b 74%, #3d434b 91%, #77818e 100%);
            box-shadow: inset 0 0 0 .28cqw rgba(200,225,255,.2), inset 0 0 1.4cqw rgba(0,0,0,.75), 0 0 0 .3cqw rgba(0,0,0,.6),
                        0 2.5cqw 5cqw rgba(0,0,0,.4), 0 16cqw 34cqw -6cqw rgba(0,0,0,.75), 0 0 22cqw rgba(45,212,191,.10); }
-  @keyframes hold { 0%, 100% { transform: translateY(0) rotate(-2deg); } 50% { transform: translateY(-1.6cqw) rotate(-1.3deg); } }
+  @keyframes hold { 0%, 100% { transform: translateY(0) var(--pose); } 50% { transform: translateY(-2cqw) var(--pose) rotateY(3deg) rotateZ(.8deg); } }
   #phone.buzz .body { animation: buzz .45s linear, hold 9s ease-in-out .45s infinite; }
-  @keyframes buzz { 0%, 100% { transform: rotate(-2deg); } 10%, 50%, 90% { transform: translateX(-1.1cqw) rotate(-2.4deg); } 30%, 70% { transform: translateX(1.1cqw) rotate(-1.6deg); } }
+  @keyframes buzz { 0%, 100% { transform: var(--pose); } 10%, 50%, 90% { transform: translateX(-1.1cqw) var(--pose) rotateZ(-.6deg); } 30%, 70% { transform: translateX(1.1cqw) var(--pose) rotateZ(.6deg); } }
   #phone .bt { position: absolute; left: -.8cqw; width: 1.2cqw; border-radius: .7cqw 0 0 .7cqw; background: linear-gradient(90deg, #5d6672, #2b2f35 55%, #1a1c20); }
   #phone .bt.act { top: 18%; height: 4.6%; } #phone .bt.vu { top: 26%; height: 9%; } #phone .bt.vd { top: 37%; height: 9%; }
   #phone .bt.pw { left: auto; right: -.8cqw; top: 30%; height: 14%; border-radius: 0 .7cqw .7cqw 0; background: linear-gradient(270deg, #5d6672, #2b2f35 55%, #1a1c20); }
@@ -45,7 +46,7 @@
            padding: 0 5cqw; background: radial-gradient(70% 40% at 8% 18%, rgba(6,182,212,.16), transparent 70%), radial-gradient(70% 40% at 95% 80%, rgba(34,197,94,.10), transparent 70%),
            linear-gradient(170deg, #031822 0%, #062435 50%, #03141c 100%); }
   #phone .screen::after { content: ""; position: absolute; inset: 0; z-index: 6; pointer-events: none;
-           background: linear-gradient(114deg, rgba(255,255,255,.13) 0%, rgba(255,255,255,.04) 24%, rgba(255,255,255,0) 38%); }
+           background: linear-gradient(114deg, rgba(255,255,255,.17) 0%, rgba(255,255,255,.05) 26%, rgba(255,255,255,0) 40%), linear-gradient(290deg, rgba(160,220,255,.06), transparent 30%); }
   #phone .island { position: absolute; z-index: 5; left: 50%; top: 2.2cqw; width: 28cqw; height: 8.4cqw; transform: translateX(-50%); border-radius: 99px;
            background: radial-gradient(circle at 80% 50%, #1e2c3c 0 1.1cqw, #0b1119 1.7cqw, #000 2.2cqw); }
   #phone .sb { display: flex; justify-content: space-between; align-items: center; height: 12.6cqw; padding: 0 2.4cqw 0 5.4cqw; font: 600 3.7cqw/1 -apple-system, "SF Pro Text", Inter, sans-serif; font-variant-numeric: tabular-nums; }
@@ -90,8 +91,8 @@
   #phone .note b { display: block; font-size: 2.5cqw; } #phone .note b em { font-style: normal; font-weight: 400; color: #94a3b8; margin-left: 1cqw; }
   #phone .note span { display: block; margin-top: .4cqw; font-size: 2.4cqw; color: #e2e8f0; }
   #phone .home { position: absolute; z-index: 5; left: 50%; bottom: 2cqw; width: 33cqw; height: 1.2cqw; transform: translateX(-50%); border-radius: 99px; background: rgba(255,255,255,.85); }
-  #phone .cap { margin-top: 5cqw; text-align: center; font-size: 4.6cqw; letter-spacing: .14em; text-transform: uppercase; color: rgba(190,215,235,.55); }
-  @media (max-width: 700px) { #c2 { top: 22vh; } .copy p { font-size: 15px; } #phone { top: 76px; margin-top: 0; right: 14px; width: 128px; } }
+  #phone .cap { margin-top: 9cqw; text-align: center; font-size: 4.6cqw; letter-spacing: .14em; text-transform: uppercase; color: rgba(190,215,235,.55); }
+  @media (max-width: 700px) { #c2 { top: 22vh; } .copy p { font-size: 15px; } #phone { top: 80px; margin-top: 0; right: 18px; width: 108px; } }
 </style>
 <script type="importmap">{ "imports": { "three": "./lib/three.module.js", "three/addons/": "./lib/addons/", "three/examples/jsm/": "./lib/jsm/" } }</script>
 </head>
@@ -580,9 +581,12 @@ function climax(c, on, t, dt) {
     surf.material.uniforms.uFogC.value.copy(fogUnder.color); surf.material.uniforms.uFogD.value = fogUnder.density; surf.material.uniforms.uDim.value = LOW;
     uwLight.intensity = 2.6 * (1 - 0.45 * LOW);
   }
-  const k = (t - pulseT) / 1.6;
-  pulse.visible = !!wasUnder && k >= 0 && k < 1;
-  if (pulse.visible) { pulse.scale.setScalar((2.6 + k * 10) * S); pulse.position.set(0, -2.6 * S, 0); pulseMat.uniforms.uK.value = k; }
+  // the alarm: each layer flashes the whole picture red; while it escalates a slow red beacon stays; layer 5 turns it calm
+  const flash = on ? Math.exp(-Math.max(t - pulseT, 0) * 2.4) : 0;
+  const beacon = on && n >= 1 && n < 5 ? (0.3 + 0.2 * (0.5 + 0.5 * Math.sin(t * 3.2))) * Math.min(1, (c - 0.12) / 0.03 + 1) : 0;
+  grade.uniforms.uAlarmC.value.set(n >= 5 ? 0x8b5cf6 : 0xef4444);
+  grade.uniforms.uAlarmK.value = Math.min(0.88, Math.max(flash * (n >= 5 ? 0.45 : 0.85), beacon));
+  pulse.visible = false;
 }
 
 let wasUnder = null;
@@ -603,14 +607,16 @@ composer.addPass(new RenderPass(scene, camera));
 const bloom = new UnrealBloomPass(new THREE.Vector2(256, 256), 0.85, 0.65, 0.8); composer.addPass(bloom);
 composer.addPass(new OutputPass());
 const grade = new ShaderPass({
-  uniforms: { tDiffuse: { value: null }, uT: { value: 0 }, uAsp: { value: 1 }, uWash: { value: 0 } },
+  uniforms: { tDiffuse: { value: null }, uT: { value: 0 }, uAsp: { value: 1 }, uWash: { value: 0 }, uAlarmC: { value: new THREE.Color(0xef4444) }, uAlarmK: { value: 0 } },
   vertexShader: `varying vec2 vUv; void main(){ vUv = uv; gl_Position = vec4(position.xy, 0.0, 1.0); }`,
-  fragmentShader: `uniform sampler2D tDiffuse; uniform float uT, uAsp, uWash; varying vec2 vUv;
+  fragmentShader: `uniform sampler2D tDiffuse; uniform float uT, uAsp, uWash, uAlarmK; uniform vec3 uAlarmC; varying vec2 vUv;
     float h(vec2 p){ return fract(sin(dot(p, vec2(12.9898, 78.233)) + uT) * 43758.5453); }
     void main(){ vec2 uv = vUv + uWash * 0.02 * vec2(sin(vUv.y * 38.0 + uT * 7.0), cos(vUv.x * 31.0 + uT * 6.0));
       vec3 c = texture2D(tDiffuse, uv).rgb; vec2 q = (vUv - 0.5) * vec2(uAsp, 1.0);
       c = mix(c, c * vec3(0.5, 0.72, 0.82) + vec3(0.0, 0.012, 0.02), uWash * 0.85);
       c *= mix(0.42, 1.0, smoothstep(1.0, 0.2, length(q))); c = pow(c, vec3(1.08));
+      float rim = smoothstep(0.15, 1.05, length(q));   // an alarm light floods the room, strongest at the edges
+      c = mix(c, dot(c, vec3(0.3, 0.55, 0.15)) * uAlarmC * 2.2 + uAlarmC * (0.1 + 0.36 * rim), uAlarmK);
       c += (h(vUv * 911.0) - 0.5) * 0.035;
       gl_FragColor = vec4(c, 1.0); }`,
 });
