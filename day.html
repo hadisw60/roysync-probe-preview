@@ -1,0 +1,777 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RoySync — Day</title>
+<link rel="icon" href="assets/favicon.png">
+<style>
+  @font-face { font-family: 'Inter'; font-weight: 400 600; font-display: swap; src: url(assets/fonts/inter.woff2) format('woff2'); }
+  @font-face { font-family: 'Sora'; font-weight: 500 700; font-display: swap; src: url(assets/fonts/sora.woff2) format('woff2'); }
+  :root { --fg: #eaf2fb; --dim: #9fb2c8; --accent: #9fd0f7; }
+  html, body { margin: 0; background: #8fb2cf; color: var(--fg); font-family: Inter, system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+  #gl { position: fixed; inset: 0; width: 100vw; height: 100vh; display: block; }
+  #track { height: 3000vh; }
+  header { position: fixed; top: 0; left: 0; right: 0; display: flex; align-items: center; justify-content: space-between; padding: 22px clamp(16px, 4vw, 48px); z-index: 3; }
+  .logo { display: flex; align-items: center; gap: 10px; color: var(--fg); text-decoration: none; font-family: Sora, sans-serif; font-weight: 600; font-size: 17px; }
+  .logo img { width: 34px; height: 34px; }
+  .btn { display: inline-block; padding: 10px 20px; border-radius: 999px; background: linear-gradient(180deg, #dceefe, #9fd0f7); color: #06223a; font-weight: 600; font-size: 13.5px; text-decoration: none; box-shadow: 0 8px 28px rgba(79,159,224,.35); }
+  .btn.ghost { background: rgba(6,18,32,.35); color: var(--fg); border: 1px solid rgba(190,225,255,.3); box-shadow: none; }
+  .copy { position: fixed; left: clamp(16px, 6vw, 96px); right: 16px; z-index: 2; pointer-events: none; opacity: 0; transition: none; }
+  .copy h1, .copy h2 { font-family: Sora, sans-serif; font-weight: 600; letter-spacing: -.03em; margin: 0; text-shadow: 0 2px 30px rgba(0,8,20,.7); }
+  .copy h1 { font-size: clamp(38px, 6vw, 84px); line-height: 1.02; }
+  .copy h2 { font-size: clamp(28px, 3.6vw, 52px); line-height: 1.08; }
+  .copy em { font-style: normal; color: var(--accent); }
+  .copy p { max-width: 460px; color: #cfdceb; font-size: 16px; line-height: 1.6; margin: 18px 0 0; text-shadow: 0 2px 16px rgba(0,8,20,.8); }
+  .copy .row { display: flex; gap: 12px; margin-top: 26px; pointer-events: auto; }
+  #c1 h1, #c2 h2 { color: #0c2742; text-shadow: 0 2px 26px rgba(255,255,255,.5); } #c1 em, #c2 em { color: #1d6aa8; }
+  #c1 { bottom: 18vh; } #c2 { top: 30vh; } #c3 { top: 24vh; } #c4 { bottom: 16vh; } #c5 { bottom: 14vh; }
+  #hint { position: fixed; bottom: 22px; left: 0; right: 0; text-align: center; font-size: 11px; letter-spacing: .28em; color: #2b4a66; z-index: 2; }
+  /* the phone: the one on the contact page (titanium band, black glass, the island), showing the app's alerts view.
+     Everything inside is in cqw, so it keeps its proportions at any size. */
+  #phone { position: fixed; z-index: 2; right: clamp(16px, 7vw, 120px); top: 50%; width: clamp(160px, 14.5vw, 220px); margin-top: calc(clamp(160px, 14.5vw, 220px) * -1.03); perspective: 900px;
+           --pose: rotateY(-22deg) rotateX(9deg) rotateZ(-8deg);
+           opacity: 0; pointer-events: none; container-type: inline-size; }
+  #phone .body { position: relative; aspect-ratio: 71.6 / 147.6; border-radius: 16.4cqw; transform: var(--pose); transform-style: preserve-3d; animation: hold 9s ease-in-out infinite;
+           background: linear-gradient(152deg, #6f7b8a 0%, #3b4048 8%, #1f2227 20%, #282b30 48%, #16181b 74%, #3d434b 91%, #77818e 100%);
+           box-shadow: inset 0 0 0 .28cqw rgba(200,225,255,.2), inset 0 0 1.4cqw rgba(0,0,0,.75), 0 0 0 .3cqw rgba(0,0,0,.6),
+                       0 2.5cqw 5cqw rgba(0,0,0,.4), 0 16cqw 34cqw -6cqw rgba(0,0,0,.75), 0 0 22cqw rgba(45,212,191,.10); }
+  @keyframes hold { 0%, 100% { transform: translateY(0) var(--pose); } 50% { transform: translateY(-2cqw) var(--pose) rotateY(3deg) rotateZ(.8deg); } }
+  #phone.buzz .body { animation: buzz .45s linear, hold 9s ease-in-out .45s infinite; }
+  @keyframes buzz { 0%, 100% { transform: var(--pose); } 10%, 50%, 90% { transform: translateX(-1.1cqw) var(--pose) rotateZ(-.6deg); } 30%, 70% { transform: translateX(1.1cqw) var(--pose) rotateZ(.6deg); } }
+  #phone .bt { position: absolute; left: -.8cqw; width: 1.2cqw; border-radius: .7cqw 0 0 .7cqw; background: linear-gradient(90deg, #5d6672, #2b2f35 55%, #1a1c20); }
+  #phone .bt.act { top: 18%; height: 4.6%; } #phone .bt.vu { top: 26%; height: 9%; } #phone .bt.vd { top: 37%; height: 9%; }
+  #phone .bt.pw { left: auto; right: -.8cqw; top: 30%; height: 14%; border-radius: 0 .7cqw .7cqw 0; background: linear-gradient(270deg, #5d6672, #2b2f35 55%, #1a1c20); }
+  #phone .glass { position: absolute; inset: 1.6cqw; border-radius: 14.8cqw; padding: 2.5cqw; background: #050505; box-shadow: inset 0 0 0 .2cqw rgba(255,255,255,.06); }
+  #phone .screen { position: relative; height: 100%; border-radius: 12.3cqw; overflow: hidden; isolation: isolate; color: #f0fdf9; font-family: Inter, system-ui, sans-serif; line-height: 1.25;
+           padding: 0 5cqw; background: radial-gradient(70% 40% at 8% 18%, rgba(6,182,212,.16), transparent 70%), radial-gradient(70% 40% at 95% 80%, rgba(34,197,94,.10), transparent 70%),
+           linear-gradient(170deg, #031822 0%, #062435 50%, #03141c 100%); }
+  #phone .screen::after { content: ""; position: absolute; inset: 0; z-index: 6; pointer-events: none;
+           background: linear-gradient(114deg, rgba(255,255,255,.17) 0%, rgba(255,255,255,.05) 26%, rgba(255,255,255,0) 40%), linear-gradient(290deg, rgba(160,220,255,.06), transparent 30%); }
+  #phone .island { position: absolute; z-index: 5; left: 50%; top: 2.2cqw; width: 28cqw; height: 8.4cqw; transform: translateX(-50%); border-radius: 99px;
+           background: radial-gradient(circle at 80% 50%, #1e2c3c 0 1.1cqw, #0b1119 1.7cqw, #000 2.2cqw); }
+  #phone .sb { display: flex; justify-content: space-between; align-items: center; height: 12.6cqw; padding: 0 2.4cqw 0 5.4cqw; font: 600 3.7cqw/1 -apple-system, "SF Pro Text", Inter, sans-serif; font-variant-numeric: tabular-nums; }
+  #phone .sb i { display: inline-block; width: 6cqw; height: 2.8cqw; border-radius: .9cqw; border: .3cqw solid rgba(255,255,255,.55); position: relative; }
+  #phone .sb i::after { content: ""; position: absolute; inset: .4cqw; right: 1.6cqw; border-radius: .4cqw; background: #fff; }
+  #phone .ah { display: flex; align-items: center; gap: 2cqw; margin-top: .6cqw; }
+  #phone .ah img { width: 7cqw; height: 7cqw; border-radius: 50%; box-shadow: 0 0 2.4cqw rgba(13,148,136,.45); }
+  #phone .ah b { font: 700 4.3cqw/1 Sora, Inter, sans-serif; letter-spacing: -.01em; }
+  #phone .ah .bell { margin-left: auto; position: relative; width: 4cqw; height: 4.4cqw; }
+  #phone .ah .bell svg { width: 100%; height: 100%; fill: #9fb3c4; }
+  #phone .ah .bell #ph-live { position: absolute; right: -.4cqw; top: -.4cqw; width: 1.7cqw; height: 1.7cqw; border-radius: 50%; background: #22c55e; box-shadow: 0 0 0 .5cqw #052232; }
+  #phone .tt { margin-top: 4.4cqw; } #phone .tt b { display: block; font: 700 5.4cqw/1.1 Sora, Inter, sans-serif; letter-spacing: -.02em; } #phone .tt b em { font-style: normal; color: #14a394; }
+  #phone .tt span { display: block; margin-top: 1cqw; font-size: 2.8cqw; color: #bae4d5; }
+  #phone .pc { margin-top: 3.6cqw; padding: 3cqw; border-radius: 3.6cqw; background: rgba(8,64,66,.38); border: .25cqw solid rgba(13,148,136,.22); }
+  #phone .pc .k { display: flex; justify-content: space-between; align-items: center; font-size: 2.7cqw; font-weight: 600; letter-spacing: .04em; }
+  #phone .ph-state { padding: .6cqw 1.4cqw; border-radius: 1.2cqw; font-size: 2.2cqw; font-weight: 600; letter-spacing: .01em; transition: background .3s, color .3s; }
+  #phone .pc .v { margin-top: 1.6cqw; font: 700 8.4cqw/1 Inter, sans-serif; letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+  #phone .pc .v small { margin-left: 1cqw; font-size: 2.8cqw; font-weight: 500; color: #bae4d5; letter-spacing: 0; }
+  #phone svg.ph-chart { display: block; width: 100%; height: 13cqw; margin-top: 2.4cqw; overflow: visible; }
+  #phone .lbl { margin: 3.6cqw 0 1.8cqw; font-size: 2.3cqw; font-weight: 600; letter-spacing: .2em; text-transform: uppercase; color: #14a394; }
+  #phone .ph-chain { list-style: none; margin: 0; padding: 0; display: grid; gap: 1.5cqw; }
+  #phone .ph-chain li { display: grid; grid-template-columns: 1fr auto; gap: 1.6cqw; align-items: center; padding: 1.9cqw 2.6cqw 1.9cqw 3cqw; border-radius: 2.6cqw; position: relative;
+           background: rgba(255,255,255,.025); border: .25cqw solid rgba(255,255,255,.05); font-size: 2.45cqw; color: #5f7287; transition: all .35s; }
+  #phone .ph-chain li::before { content: ""; position: absolute; left: 0; top: 22%; bottom: 22%; width: .7cqw; border-radius: 0 .7cqw .7cqw 0; background: #2a3646; transition: background .35s, box-shadow .35s; }
+  #phone .ph-chain li b { display: block; font-size: 2.1cqw; font-weight: 700; letter-spacing: .06em; color: #6f8297; }
+  #phone .ph-chain li em { font-style: normal; font-size: 2.1cqw; color: #5f7287; font-variant-numeric: tabular-nums; }
+  #phone .ph-chain li.on { color: #e6eef8; background: color-mix(in srgb, var(--c) 11%, transparent); border-color: color-mix(in srgb, var(--c) 40%, transparent); }
+  #phone .ph-chain li.on::before { background: var(--c); box-shadow: 0 0 2cqw var(--c); }
+  #phone .ph-chain li.on b, #phone .ph-chain li.on em { color: var(--c); }
+  #phone .ph-aer { display: flex; align-items: center; gap: 2.4cqw; margin-top: 2.6cqw; padding: 2.4cqw 3cqw; border-radius: 3.6cqw; background: rgba(8,64,66,.38); border: .25cqw solid rgba(13,148,136,.22); transition: all .35s; }
+  #phone .ph-aer svg { width: 6cqw; height: 6cqw; padding: 1.2cqw; border-radius: 1.8cqw; background: rgba(13,148,136,.2); fill: #2dd4bf; flex: none; }
+  #phone .ph-aer b { display: block; font-size: 2.8cqw; font-weight: 600; } #phone .ph-aer span { display: block; margin-top: .4cqw; font-size: 2.2cqw; color: #bae4d5; }
+  #phone .ph-aer u { margin-left: auto; position: relative; width: 8.6cqw; height: 5cqw; border-radius: 99px; background: #334155; transition: background .3s; flex: none; }
+  #phone .ph-aer u::after { content: ""; position: absolute; left: .6cqw; top: .6cqw; width: 3.8cqw; height: 3.8cqw; border-radius: 50%; background: #fff; transition: left .3s; }
+  #phone .ph-aer.on { border-color: rgba(139,92,246,.45); background: rgba(139,92,246,.14); } #phone .ph-aer.on u { background: #8b5cf6; } #phone .ph-aer.on u::after { left: 4.2cqw; }
+  /* the first alert slides in over the app, as a notification does */
+  #phone .note { position: absolute; z-index: 4; left: 3cqw; right: 3cqw; top: 13.6cqw; display: flex; gap: 2.2cqw; align-items: center; padding: 2.6cqw 3cqw; border-radius: 4.4cqw;
+           background: rgba(30,41,54,.9); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); box-shadow: 0 2cqw 6cqw rgba(0,0,0,.45);
+           transform: translateY(-140%); opacity: 0; transition: transform .45s cubic-bezier(.2,.9,.3,1.2), opacity .3s; }
+  #phone .note.in { transform: none; opacity: 1; }
+  #phone .note img { width: 7cqw; height: 7cqw; border-radius: 1.8cqw; flex: none; }
+  #phone .note b { display: block; font-size: 2.5cqw; } #phone .note b em { font-style: normal; font-weight: 400; color: #94a3b8; margin-left: 1cqw; }
+  #phone .note span { display: block; margin-top: .4cqw; font-size: 2.4cqw; color: #e2e8f0; }
+  #phone .home { position: absolute; z-index: 5; left: 50%; bottom: 2cqw; width: 33cqw; height: 1.2cqw; transform: translateX(-50%); border-radius: 99px; background: rgba(255,255,255,.85); }
+  #phone .cap { margin-top: 9cqw; text-align: center; font-size: 4.6cqw; letter-spacing: .14em; text-transform: uppercase; color: rgba(190,215,235,.55); }
+  @media (max-width: 700px) { #c2 { top: 22vh; } .copy p { font-size: 15px; } #phone { top: 80px; margin-top: 0; right: 18px; width: 108px; } }
+</style>
+<script type="importmap">{ "imports": { "three": "./lib/three.module.js", "three/addons/": "./lib/addons/", "three/examples/jsm/": "./lib/jsm/" } }</script>
+</head>
+<body>
+<canvas id="gl"></canvas>
+<header>
+  <a class="logo" href="index.html"><img src="assets/logo.png" alt=""> RoySync</a>
+  <a class="btn" href="index.html#contact">Contact us</a>
+</header>
+<div class="copy" id="c1"><h1>Sleep through<br>the night.</h1></div>
+<div class="copy" id="c2"><h2>We'll watch<br><em>the water.</em></h2></div>
+<div class="copy" id="c3"><h2>Eight sensors,<br><em>under the waterline.</em></h2><p>Oxygen, pH, temperature and more, measured right where your fish live.</p></div>
+<div class="copy" id="c4"><h2>Most fish are lost<br><em>before sunrise.</em></h2><p>Oxygen drops slowly all night. By the morning check, it's often too late.</p></div>
+<div class="copy" id="c5">
+  <h2>When oxygen drops,<br><em>it acts.</em></h2>
+  <p>It alerts you at once by SMS and email, then calls you, your backup and your manager in turn. Through your PLC, it switches the aerator on by itself.</p>
+  <div class="row"><a class="btn" href="index.html#contact">Contact us</a><a class="btn ghost" href="index.html">See how it works</a></div>
+</div>
+<div id="phone" aria-hidden="true">
+  <div class="body">
+    <i class="bt act"></i><i class="bt vu"></i><i class="bt vd"></i><i class="bt pw"></i>
+    <div class="glass"><div class="screen">
+      <div class="sb"><span id="ph-clock">02:05</span><i></i></div>
+      <div class="ah"><img src="assets/logo.png" alt=""><b>RoySync</b>
+        <span class="bell"><svg viewBox="0 0 24 24"><path d="M12 22.5a2.6 2.6 0 0 0 2.6-2.6H9.4a2.6 2.6 0 0 0 2.6 2.6zm7.2-6.2V11a7.2 7.2 0 0 0-5.6-7V3.3a1.6 1.6 0 0 0-3.2 0V4a7.2 7.2 0 0 0-5.6 7v5.3l-2 2v1h18.4v-1z"/></svg><i id="ph-live"></i></span></div>
+      <div class="tt"><b>Pool 1 <em>Alerts</em></b><span>Raceway · Live telemetry</span></div>
+      <div class="pc">
+        <div class="k">Dissolved oxygen <span class="ph-state" id="ph-state">Normal</span></div>
+        <div class="v"><span id="ph-do">6.4</span><small>mg/L</small></div>
+        <svg class="ph-chart" viewBox="0 0 260 62" preserveAspectRatio="none">
+          <path d="M0 15H260M0 30H260" stroke="rgba(13,148,136,.18)" stroke-width="1" vector-effect="non-scaling-stroke"/>
+          <line x1="0" x2="260" y1="46.5" y2="46.5" stroke="#ef4444" stroke-opacity=".6" stroke-dasharray="4 4" stroke-width="1" vector-effect="non-scaling-stroke"/>
+          <path id="ph-line" fill="none" stroke="#9fd0f7" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" vector-effect="non-scaling-stroke"/>
+          <circle id="ph-pt" r="4" fill="#e6f4ff"/>
+        </svg>
+      </div>
+      <div class="lbl">Escalation chain</div>
+      <ul class="ph-chain" id="ph-chain">
+        <li style="--c:#ef4444"><span><b>LAYER 1 · INSTANT</b>SMS + Email + Dashboard</span><em>T+0</em></li>
+        <li style="--c:#f97316"><span><b>LAYER 2 · CALL #1</b>Call operator</span><em>T+5 min</em></li>
+        <li style="--c:#fbbf24"><span><b>LAYER 3 · CALL #2</b>Call backup person</span><em>T+15 min</em></li>
+        <li style="--c:#f97316"><span><b>LAYER 4 · MANAGER</b>Senior manager + report</span><em>T+30 min</em></li>
+        <li style="--c:#8b5cf6"><span><b>LAYER 5 · AUTO PLC</b>Aerator on</span><em>DO &lt; 4.0</em></li>
+      </ul>
+      <div class="ph-aer" id="ph-aer">
+        <svg viewBox="0 0 24 24"><path d="M3 8.2h10.6a3.2 3.2 0 1 0-3.2-3.2h2.2a1 1 0 1 1 1 1H3zm0 4.1h15.2a3.2 3.2 0 1 1-3.2 3.2h2.2a1 1 0 1 0 1-1H3zm0 4.1h7.5v2.2H3z"/></svg>
+        <div><b>Main Aerator</b><span id="ph-aer-s">Off</span></div><u></u>
+      </div>
+      <div class="note" id="ph-note"><img src="assets/logo.png" alt=""><div><b>RoySync<em>now</em></b><span id="ph-note-t">Pool 1: DO falling</span></div></div>
+      <span class="island"></span><span class="home"></span>
+    </div></div>
+  </div>
+  <div class="cap">Your phone</div>
+</div>
+<div id="hint">SCROLL</div>
+<div id="track"></div>
+
+<script type="module">
+// A day on the pond (the night version's twin), art-directed rather than literal: moonlight from behind the float, mist, a dark treeline,
+// fireflies, and a soft ring on the water each time the float measures. The scroll is one crane move, from high over
+// the pond down to the waterline, where the float stands against the moon's path on the water.
+import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/GLTFLoader.js';
+import { toCreasedNormals } from 'three/addons/BufferGeometryUtils.js';
+import { Water } from 'three/examples/jsm/objects/Water.js';
+import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js';
+import { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass.js';
+import { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass.js';
+
+const canvas = document.getElementById('gl');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
+renderer.setPixelRatio(Math.min(devicePixelRatio || 1, 1.5));
+renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 0.82;
+canvas.addEventListener('webglcontextlost', () => { document.title = 'context lost'; });
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+
+const FOG = new THREE.Color().setRGB(0.50, 0.66, 0.88);   // the haze is the sky's own colour at the horizon
+const scene = new THREE.Scene();
+scene.fog = new THREE.FogExp2(FOG, 0.0028);
+const camera = new THREE.PerspectiveCamera(38, 1, 0.1, 9000);
+
+// the moon: low, straight ahead of the opening shot, behind the float
+const MOON = new THREE.Vector3(0.36, Math.sin(THREE.MathUtils.degToRad(16)), -Math.cos(THREE.MathUtils.degToRad(16))).normalize();   // the sun, just above the opening frame
+
+// ---- sky: deep blue to near black, a glow around the moon, stars that twinkle
+const skyMat = new THREE.ShaderMaterial({
+  side: THREE.BackSide, depthWrite: false, uniforms: { uMoon: { value: MOON } },
+  vertexShader: `varying vec3 vD; void main(){ vD = normalize(position); gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
+  fragmentShader: `uniform vec3 uMoon; varying vec3 vD;
+    void main(){
+      float h = max(vD.y, 0.0), m = max(dot(normalize(vD), uMoon), 0.0);
+      vec3 c = mix(vec3(0.50, 0.66, 0.88), vec3(0.04, 0.16, 0.52), pow(h, 0.35));
+      c += vec3(1.0, 0.86, 0.66) * pow(m, 8.0) * 0.35 + vec3(1.0, 0.95, 0.85) * pow(m, 200.0) * 1.5;
+      gl_FragColor = vec4(c, 1.0);
+    }`,
+});
+const sky = new THREE.Mesh(new THREE.SphereGeometry(900, 48, 24), skyMat);
+scene.add(sky);
+
+const starG = new THREE.BufferGeometry(), NS = 1600, sp = new Float32Array(NS * 3), ss = new Float32Array(NS);
+for (let i = 0; i < NS; i++) {
+  const u = Math.random() * 2 * Math.PI, v = Math.pow(Math.random(), 0.7) * 0.95 + 0.04;
+  sp.set([Math.cos(u) * Math.sqrt(1 - v * v) * 800, v * 800, Math.sin(u) * Math.sqrt(1 - v * v) * 800], i * 3);
+  ss[i] = Math.random();
+}
+starG.setAttribute('position', new THREE.BufferAttribute(sp, 3)); starG.setAttribute('aS', new THREE.BufferAttribute(ss, 1));
+const starMat = new THREE.ShaderMaterial({
+  transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, uniforms: { uT: { value: 0 } },
+  vertexShader: `attribute float aS; uniform float uT; varying float vA;
+    void main(){ vA = (0.35 + 0.65 * aS) * (0.75 + 0.25 * sin(uT * (1.0 + 2.0 * aS) + aS * 40.0));
+      gl_PointSize = 1.0 + 1.6 * aS * aS; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
+  fragmentShader: `varying float vA; void main(){ float d = length(gl_PointCoord - 0.5); gl_FragColor = vec4(vec3(0.8, 0.88, 1.0) * vA * smoothstep(0.5, 0.1, d), 1.0); }`,
+});
+// no stars by day
+
+function radial(stops) {
+  const c = document.createElement('canvas'); c.width = c.height = 256;
+  const g = c.getContext('2d'), gr = g.createRadialGradient(128, 128, 0, 128, 128, 128);
+  stops.forEach(([o, col]) => gr.addColorStop(o, col)); g.fillStyle = gr; g.fillRect(0, 0, 256, 256);
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t;
+}
+const moon = new THREE.Sprite(new THREE.SpriteMaterial({ map: radial([[0, '#ffffff'], [0.42, '#f4f7ff'], [0.5, 'rgba(220,230,255,0.0)']]), color: new THREE.Color(9.0, 8.4, 7.4), fog: false, depthWrite: false, toneMapped: true }));
+moon.position.copy(MOON).multiplyScalar(700); moon.scale.setScalar(30); scene.add(moon);
+const halo = new THREE.Sprite(new THREE.SpriteMaterial({ map: radial([[0, 'rgba(255,240,215,0.7)'], [0.2, 'rgba(255,225,190,0.2)'], [1, 'rgba(0,0,0,0)']]), fog: false, depthWrite: false, blending: THREE.AdditiveBlending }));
+halo.position.copy(moon.position); halo.scale.setScalar(320); scene.add(halo);
+
+// ---- a dark treeline all round the pond, softened by the mist
+{
+  const c = document.createElement('canvas'); c.width = 4096; c.height = 256; const g = c.getContext('2d');
+  g.fillStyle = '#fff'; let x = 0;   // the alpha map reads white as solid
+  while (x < 4096) {
+    const w = 10 + Math.random() * 28, h = (50 + Math.random() * 105) * (0.75 + 0.25 * Math.sin(x / 230));
+    if (Math.random() < 0.7) { g.beginPath(); g.moveTo(x - w * 0.3, 256); g.lineTo(x + w / 2, 256 - h); g.lineTo(x + w * 1.3, 256); g.fill(); }
+    else { g.beginPath(); g.ellipse(x + w / 2, 256 - h * 0.7, w * 0.9, h * 0.32, 0, 0, Math.PI * 2); g.fill(); }
+    x += w * 0.5;
+  }
+  g.fillRect(0, 214, 4096, 42);
+  const t = new THREE.CanvasTexture(c); t.wrapS = THREE.RepeatWrapping;
+  const trees = new THREE.Mesh(new THREE.CylinderGeometry(190, 190, 26, 160, 1, true),
+    new THREE.MeshBasicMaterial({ color: 0x22401f, alphaMap: t, transparent: true, alphaTest: 0.4, side: THREE.BackSide }));
+  trees.position.y = 10; scene.add(trees);
+}
+
+// ---- the water: real reflections (the moon's path, the float, the trees)
+const normals = new THREE.TextureLoader().load('assets/waternormals.jpg', t => { t.wrapS = t.wrapT = THREE.RepeatWrapping; });
+const water = new Water(new THREE.PlaneGeometry(3000, 3000), {
+  textureWidth: 768, textureHeight: 768, waterNormals: normals, sunDirection: MOON.clone(), sunColor: new THREE.Color(1.0, 0.95, 0.86),
+  waterColor: 0x0d3238, distortionScale: 1.6, fog: true,
+});
+water.rotation.x = -Math.PI / 2; water.material.uniforms.size.value = 7.0;
+scene.add(water);
+
+// ---- the light: moonlight from behind (a rim), a faint cold fill from the sky
+const moonLight = new THREE.DirectionalLight(0xfff0d8, 3.4); moonLight.position.copy(MOON).multiplyScalar(50); scene.add(moonLight);
+const front = new THREE.DirectionalLight(0xc4d8ff, 0.8); front.position.set(9, 6, 10); scene.add(front);
+scene.add(new THREE.HemisphereLight(0xa8c8f0, 0x40502c, 1.1));
+const pm = new THREE.PMREMGenerator(renderer);
+{ const env = new THREE.Scene(); env.add(sky.clone(), moon.clone(), halo.clone()); scene.environment = pm.fromScene(env, 0.02).texture; }
+
+// ---- mist lying on the water, drifting
+const mistMat = new THREE.ShaderMaterial({
+  transparent: true, depthWrite: false, uniforms: { uT: { value: 0 }, uFog: { value: FOG } },
+  vertexShader: `varying vec2 vU; varying float vD; varying float vG; void main(){ vec4 w = modelMatrix * vec4(position, 1.0); vU = w.xz; vG = 1.0 - abs(normalize(cameraPosition - w.xyz).y); vec4 mv = viewMatrix * w; vD = -mv.z; gl_Position = projectionMatrix * mv; }`,
+  fragmentShader: `uniform float uT; varying vec2 vU; varying float vD; varying float vG;
+    float h(vec2 p){ return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+    float n(vec2 p){ vec2 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f);
+      return mix(mix(h(i), h(i + vec2(1, 0)), f.x), mix(h(i + vec2(0, 1)), h(i + vec2(1, 1)), f.x), f.y); }
+    void main(){ vec2 p = vU * 0.05 + vec2(uT * 0.012, uT * 0.005);
+      float m = n(p) * 0.55 + n(p * 2.3 + 3.1) * 0.3 + n(p * 5.1 - uT * 0.02) * 0.15;
+      float a = smoothstep(0.4, 0.85, m) * 0.2 * pow(vG, 6.0) * smoothstep(2.0, 12.0, vD);
+      gl_FragColor = vec4(vec3(0.86, 0.9, 0.95), a * 0.7); }`,
+});
+[0.35, 1.1].forEach((y, i) => { const m = new THREE.Mesh(new THREE.PlaneGeometry(600, 600), mistMat); m.rotation.x = -Math.PI / 2; m.position.y = y; m.renderOrder = 2 + i; scene.add(m); });
+
+// ---- fireflies over the reeds
+const NF = 120, fp = new Float32Array(NF * 3), fs = new Float32Array(NF);
+for (let i = 0; i < NF; i++) { const a = Math.random() * Math.PI * 2, r = 5 + Math.random() * 30; fp.set([Math.cos(a) * r, 0.6 + Math.random() * 3.5, Math.sin(a) * r - 4], i * 3); fs[i] = Math.random(); }
+const flyG = new THREE.BufferGeometry(); flyG.setAttribute('position', new THREE.BufferAttribute(fp, 3)); flyG.setAttribute('aS', new THREE.BufferAttribute(fs, 1));
+const flyMat = new THREE.ShaderMaterial({
+  transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, uniforms: { uT: { value: 0 }, uPx: { value: 1 } },
+  vertexShader: `attribute float aS; uniform float uT, uPx; varying float vA;
+    void main(){ vec3 p = position + vec3(sin(uT * 0.3 + aS * 30.0), sin(uT * 0.5 + aS * 17.0) * 0.4, cos(uT * 0.27 + aS * 21.0)) * 0.8;
+      vA = pow(max(sin(uT * (0.6 + aS) + aS * 50.0), 0.0), 3.0);
+      vec4 mv = modelViewMatrix * vec4(p, 1.0); gl_PointSize = uPx * 38.0 / -mv.z; gl_Position = projectionMatrix * mv; }`,
+  fragmentShader: `varying float vA; void main(){ float d = length(gl_PointCoord - 0.5); gl_FragColor = vec4(vec3(1.0, 0.86, 0.45) * 4.0 * vA * smoothstep(0.5, 0.0, d), 1.0); }`,
+});
+// no fireflies by day
+
+// ---- the float, and the ring it sends out over the water each time it measures
+const probe = new THREE.Group(); scene.add(probe);
+let baseY = 0;
+const ringMat = new THREE.ShaderMaterial({
+  transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, uniforms: { uK: { value: 0 } },
+  vertexShader: `varying vec2 vU; void main(){ vU = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
+  fragmentShader: `uniform float uK; varying vec2 vU;
+    void main(){ float r = length(vU - 0.5) * 2.0, w = 0.035 + 0.05 * uK;
+      float a = exp(-pow((r - 0.92) / w, 2.0)) * (1.0 - uK) * (1.0 - uK) * 0.55 * step(r, 1.0);
+      gl_FragColor = vec4(vec3(0.45, 0.8, 1.0) * a, 1.0); }`,
+});
+const ring = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), ringMat); ring.rotation.x = -Math.PI / 2; ring.position.y = 0.03; scene.add(ring);
+
+const buf = await (await fetch('probe-baked.glb?v=65')).arrayBuffer();
+const gltf = await new GLTFLoader().parseAsync(buf, '');
+// the light the surface ripples throw on everything under it: a moving web over the float and the fish
+const CAUS = { uCT: { value: 0 }, uUnder: { value: 0 }, uCK: { value: 1 } };
+function addCaustics(mat, extra) {
+  mat.onBeforeCompile = sh => {
+    Object.assign(sh.uniforms, CAUS);
+    if (extra) extra(sh);
+    sh.vertexShader = 'varying vec3 vCW;\n' + sh.vertexShader.replace('#include <project_vertex>', `#include <project_vertex>
+      vec4 cw = vec4(transformed, 1.0);
+      #ifdef USE_INSTANCING
+        cw = instanceMatrix * cw;
+      #endif
+      vCW = (modelMatrix * cw).xyz;`);
+    sh.fragmentShader = 'varying vec3 vCW;\nuniform float uCT, uUnder, uCK;\n' + `
+      float caust(vec2 uv, float time){
+        vec2 p = mod(uv * 6.28318, 6.28318) - 250.0, i = p; float c = 1.0, inten = 0.005;
+        for (int n = 0; n < 4; n++) { float t = time * (1.0 - (3.5 / float(n + 1)));
+          i = p + vec2(cos(t - i.x) + sin(t + i.y), sin(t - i.y) + cos(t + i.x));
+          c += 1.0 / length(vec2(p.x / (sin(i.x + t) / inten), p.y / (cos(i.y + t) / inten))); }
+        c /= 4.0; c = 1.17 - pow(c, 1.4); return pow(abs(c), 8.0);
+      }
+` + sh.fragmentShader.replace('#include <opaque_fragment>', `
+      if (uUnder > 0.5 && vCW.y < 0.0) {
+        vec3 upV = normalize((viewMatrix * vec4(0.0, 1.0, 0.0, 0.0)).xyz);
+        float face = clamp(dot(normalize(normal), upV) * 0.7 + 0.45, 0.0, 1.0);
+        float k = caust(vCW.xz * 0.11 + vCW.y * 0.02, uCT * 0.45) * face * exp(vCW.y * 0.16);
+        outgoingLight += vec3(0.62, 0.86, 0.78) * k * 3.2 * uCK * diffuseColor.rgb;
+      }
+      #include <opaque_fragment>`);
+  };
+  return mat;
+}
+const white = c => addCaustics(new THREE.MeshPhysicalMaterial({ color: c, roughness: 0.5, clearcoat: 0.25, clearcoatRoughness: 0.45, side: THREE.DoubleSide, envMapIntensity: 1.7 }));
+let headMin = Infinity, headR = 0;
+gltf.scene.traverse(o => {
+  if (!o.isMesh || !o.name.startsWith('main')) return;
+  const g = o.geometry, q = g.userData.q;
+  if (q) {
+    const P = g.attributes.position, pos = new Float32Array(P.count * 3);
+    for (let i = 0; i < P.count; i++) { pos[i * 3] = q[0] + q[3] * P.getX(i); pos[i * 3 + 1] = q[1] + q[3] * P.getY(i); pos[i * 3 + 2] = q[2] + q[3] * P.getZ(i); }
+    g.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  }
+  g.deleteAttribute('normal'); g.deleteAttribute('_ao');
+  const head = o.name.endsWith('head'), m = new THREE.Mesh(toCreasedNormals(g, Math.PI / 3.5), white(head ? 0xf0f0ec : 0xe9ebe7));
+  m.geometry.computeBoundingBox();
+  if (head) { const bb = m.geometry.boundingBox; headMin = Math.min(headMin, bb.min.y); headR = Math.max(headR, -bb.min.x, bb.max.x, -bb.min.z, bb.max.z); }
+  probe.add(m);
+});
+const H = new THREE.Box3().setFromObject(probe).getSize(new THREE.Vector3()).y;
+baseY = -headMin + 0.02 * H;   // the head's rim just clear of the water, the spiral below it
+probe.position.y = baseY;
+
+// ---- one crane move, in units of the float's height
+const S = H / 6.4;
+const path = new THREE.CatmullRomCurve3([[0, 255, 170], [9, 178, 118], [6, 100, 82], [2, 34, 58], [0, 5.5, 42], [13, 4.0, 18], [8.5, 1.8, 10], [3.6, 0.75, 8.2], [3.0, -0.9, 7.2], [6.5, -3.2, 8.5], [-3.5, -5.8, 7.5], [-1.2, -8.0, 4.6]].map(v => new THREE.Vector3(...v).multiplyScalar(S)));
+const look = new THREE.CatmullRomCurve3([[0, 190, -320], [0, 80, -150], [0, 0, -40], [0, 2, -15], [0, 2.6, -12], [0, 1.2, -1], [0, 1.1, 0], [0, 1.15, -0.8], [0, -0.6, 0], [0, -2.4, 0], [0, -2.8, 0], [0, -1.6, -0.5]].map(v => new THREE.Vector3(...v).multiplyScalar(S)));
+
+// ================= under the water =================
+// Not a literal pond either: a dark, cold room of water. The surface from below is a lit window (Snell's: the sky only
+// within ~48 degrees of straight up) with the float's head black against it; a few shafts of moonlight; drifting specks;
+// fish passing as shapes in the murk. The crossing itself is a wash over the lens, not a drawn split.
+const FOG_UW = new THREE.Color(0x2d6a5f), FOG_UW_N = new THREE.Color(0x03141c);   // the pond by day, and at night
+const fogAbove = scene.fog, fogUnder = new THREE.FogExp2(FOG_UW, 0.062 / S);
+const MOON_R = new THREE.Vector3(0.3, Math.sin(THREE.MathUtils.degToRad(50)), -Math.cos(THREE.MathUtils.degToRad(50))).normalize();   // the moon from below, bent up into the window
+const surf = new THREE.Mesh(new THREE.PlaneGeometry(3000, 3000), new THREE.ShaderMaterial({
+  side: THREE.DoubleSide,
+  uniforms: { uT: { value: 0 }, uMoonR: { value: MOON_R }, uHead: { value: new THREE.Vector3(0, 0, headR) }, uFogC: { value: FOG_UW }, uFogD: { value: fogUnder.density } },
+  vertexShader: `varying vec3 vW; void main(){ vec4 w = modelMatrix * vec4(position, 1.0); vW = w.xyz; gl_Position = projectionMatrix * viewMatrix * w; }`,
+  fragmentShader: `uniform float uT, uFogD; uniform vec3 uMoonR, uHead, uFogC; varying vec3 vW;
+    float h(vec2 p){ return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+    float n(vec2 p){ vec2 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f);
+      return mix(mix(h(i), h(i + vec2(1, 0)), f.x), mix(h(i + vec2(0, 1)), h(i + vec2(1, 1)), f.x), f.y); }
+    void main(){
+      vec3 V = normalize(vW - cameraPosition);
+      vec2 p = vW.xz * 0.45;
+      float r = n(p + vec2(uT * 0.25, uT * 0.1)) * 0.6 + n(p * 2.6 - uT * 0.35) * 0.4;
+      float win = smoothstep(0.6, 0.72, V.y);
+      vec3 sky = vec3(0.55, 0.78, 0.82) * (0.6 + 0.8 * r) + vec3(3.0, 2.8, 2.4) * pow(max(dot(V, uMoonR), 0.0), 40.0) * (0.5 + r) * (1.0 - 0.8 * uNight);
+      vec3 c = mix(vec3(0.03, 0.11, 0.10) * (0.5 + r), sky, win);
+      c *= mix(0.04, 1.0, smoothstep(uHead.z * 0.95, uHead.z * 1.3, length(vW.xz - uHead.xy)));
+      float d = length(vW - cameraPosition);
+      c = mix(c, uFogC, 1.0 - exp(-uFogD * uFogD * d * d * 0.35));
+      gl_FragColor = vec4(c, 1.0);
+    }`,
+}));
+surf.rotation.x = Math.PI / 2; surf.position.y = 0.002; scene.add(surf);
+
+const RAYDIR = MOON_R.clone().negate(), RAYUP = MOON_R.clone();
+const rayMat = new THREE.ShaderMaterial({
+  transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide, uniforms: { uT: { value: 0 }, uK: { value: 1 } },
+  vertexShader: `varying vec2 vU; varying float vD; void main(){ vU = uv; vec4 mv = modelViewMatrix * vec4(position, 1.0); vD = -mv.z; gl_Position = projectionMatrix * mv; }`,
+  fragmentShader: `uniform float uT, uK; varying vec2 vU; varying float vD;
+    void main(){ float across = smoothstep(0.0, 0.5, vU.x) * smoothstep(1.0, 0.5, vU.x);
+      float along = smoothstep(1.0, 0.9, vU.y) * smoothstep(0.0, 0.7, vU.y);
+      float fl = 0.7 + 0.3 * sin(uT * 0.6 + vU.y * 5.0 + vD * 0.3);
+      gl_FragColor = vec4(vec3(0.8, 0.98, 0.9) * across * across * along * fl * 0.15 * uK * smoothstep(1.0, 6.0, vD), 1.0); }`,
+});
+const rays = [];
+for (let i = 0; i < 9; i++) {
+  const m = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), rayMat);
+  m.userData = { at: new THREE.Vector3((Math.random() - 0.5) * 24 * S, 0, (Math.random() - 0.65) * 24 * S), w: (0.8 + Math.random() * 2.4) * S, len: (14 + Math.random() * 10) * S };
+  scene.add(m); rays.push(m);
+}
+const _X = new THREE.Vector3(), _Z = new THREE.Vector3(), _c = new THREE.Vector3(), _m4 = new THREE.Matrix4();
+function aimRays() {   // each shaft keeps its slant and turns its face to the lens
+  for (const m of rays) {
+    _c.copy(m.userData.at).addScaledVector(RAYDIR, m.userData.len / 2); m.position.copy(_c);
+    _Z.copy(camera.position).sub(_c); _Z.addScaledVector(RAYUP, -_Z.dot(RAYUP)).normalize(); _X.crossVectors(RAYUP, _Z);
+    m.quaternion.setFromRotationMatrix(_m4.makeBasis(_X, RAYUP, _Z)); m.scale.set(m.userData.w, m.userData.len, 1);
+  }
+}
+
+const NSN = 2200, snP = new Float32Array(NSN * 3), snS = new Float32Array(NSN);
+for (let i = 0; i < NSN; i++) { snP.set([Math.random() - 0.5, Math.random() - 0.5, Math.random() - 0.5], i * 3); snS[i] = Math.random(); }
+const snowG = new THREE.BufferGeometry(); snowG.setAttribute('position', new THREE.BufferAttribute(snP, 3)); snowG.setAttribute('aS', new THREE.BufferAttribute(snS, 1));
+const snowMat = new THREE.ShaderMaterial({
+  transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
+  uniforms: { uT: { value: 0 }, uBox: { value: 30 * S }, uPx: { value: 1 }, uCam: { value: new THREE.Vector3() }, uK: { value: 0.004 / (S * S) } },
+  vertexShader: `attribute float aS; uniform float uT, uBox, uPx, uK; uniform vec3 uCam; varying float vA;
+    void main(){ vec3 p = position * uBox + vec3(sin(uT * 0.1 + aS * 20.0), -uT * 0.05 * (0.5 + aS), cos(uT * 0.13 + aS * 11.0)) * uBox * 0.02;
+      p = mod(p - uCam + uBox * 0.5, uBox) - uBox * 0.5 + uCam;   // a box of drifting specks that travels with the lens
+      p.y = min(p.y, -0.05);
+      vec4 mv = viewMatrix * vec4(p, 1.0); float d = max(-mv.z, 0.1);
+      vA = (0.3 + 0.7 * aS) * exp(-d * d * uK);
+      gl_PointSize = uPx * (2.0 + 5.0 * aS) * 6.0 / d; gl_Position = projectionMatrix * mv; }`,
+  fragmentShader: `varying float vA; void main(){ float d = length(gl_PointCoord - 0.5); gl_FragColor = vec4(vec3(0.6, 0.8, 0.85) * vA * smoothstep(0.5, 0.0, d) * 0.9, 1.0); }`,
+});
+const snow = new THREE.Points(snowG, snowMat); snow.frustumCulled = false; scene.add(snow);
+const nearMat = snowMat.clone();   // specks right at the lens: big, soft, out of focus
+nearMat.uniforms.uBox.value = 6 * S; nearMat.uniforms.uK.value = 0;
+nearMat.vertexShader = snowMat.vertexShader.replace('* 6.0 / d', '* 16.0 / d');
+nearMat.fragmentShader = `varying float vA; void main(){ float d = length(gl_PointCoord - 0.5); gl_FragColor = vec4(vec3(0.55, 0.75, 0.8) * vA * exp(-d * d * 18.0) * 0.22, 1.0); }`;
+const nearG = new THREE.BufferGeometry(), NNE = 70;
+nearG.setAttribute('position', new THREE.BufferAttribute(new Float32Array(NNE * 3).map(() => Math.random() - 0.5), 3));
+nearG.setAttribute('aS', new THREE.BufferAttribute(new Float32Array(NNE).map(() => Math.random()), 1));
+const near = new THREE.Points(nearG, nearMat); near.frustumCulled = false; scene.add(near);
+
+// fish: two loose schools circling the float at different depths, shapes more than portraits in the murk
+const fishU = { uT: { value: 0 } }, NFI = 30, fish = [];
+let fishMesh = null;
+new GLTFLoader().load('assets/fish.glb', g => {
+  let src = null; g.scene.traverse(o => { if (o.isMesh && !src) src = o; }); if (!src) return;
+  const k = 6.5 * S, geo = src.geometry.clone();
+  geo.rotateY(Math.PI); geo.translate(0, -0.1435, 0.0035); geo.scale(k * 0.85, k * 0.7, k);
+  const mat = new THREE.MeshStandardMaterial({ map: src.material.map, normalMap: src.material.normalMap, color: 0xc3d6dc, roughness: 0.42, metalness: 0.35, envMapIntensity: 1.5 });   // silver flanks that catch the light as they turn
+  addCaustics(mat, sh => {
+    Object.assign(sh.uniforms, fishU);
+    sh.vertexShader = 'attribute float aPh;\nuniform float uT;\n' + sh.vertexShader.replace('#include <begin_vertex>', `#include <begin_vertex>
+      float tail = smoothstep(${(0.12 * k).toFixed(4)}, ${(-0.42 * k).toFixed(4)}, transformed.z);
+      transformed.x += ${(0.06 * k).toFixed(4)} * tail * tail * sin(4.2 * transformed.z / ${k.toFixed(4)} - uT * 5.5 + aPh);`);
+  });
+  const ph = new Float32Array(NFI);
+  for (let i = 0; i < NFI; i++) {
+    const deep = i % 3 !== 0;   // a third close round the float, the rest far back
+    ph[i] = Math.random() * 6.28;
+    fish.push({ r0: (deep ? 17 : 3.4) * S + Math.random() * (deep ? 4 : 1.4) * S, y0: -(deep ? 3.4 : 1.8) * S - Math.random() * (deep ? 3.4 : 2.6) * S,
+      a: (deep ? 2.2 : 0) + Math.random() * (deep ? 1.6 : 2.2), w0: (deep ? -0.12 : 0.3) * (0.85 + Math.random() * 0.3), sz: 0.7 + Math.random() * 0.55,
+      fr: 0.05 + Math.random() * 0.08, dr: (deep ? 1.5 : 0.8) * S, dy: (deep ? 1.2 : 0.6) * S, p1: Math.random() * 6.28, p2: Math.random() * 6.28 });
+  }
+  geo.setAttribute('aPh', new THREE.InstancedBufferAttribute(ph, 1));
+  fishMesh = new THREE.InstancedMesh(geo, mat, NFI); fishMesh.frustumCulled = false; fishMesh.visible = !!wasUnder; scene.add(fishMesh);
+});
+const _o = new THREE.Object3D();
+const _v1 = new THREE.Vector3(), _v2 = new THREE.Vector3();
+function swim(t, dt) {
+  if (!fishMesh) return;
+  fishMesh.visible = true; fishU.uT.value = t;
+  const at = (f, a, tt, v) => {
+    const r = f.r0 + Math.sin(tt * f.fr + f.p1) * f.dr;
+    return v.set(Math.cos(a) * r, Math.min(f.y0 + Math.sin(tt * f.fr * 1.7 + f.p2) * f.dy + LOW * 1.8 * S, -0.6 * S), Math.sin(a) * r);
+  };
+  fish.forEach((f, i) => {
+    const dart = 1 + 1.6 * Math.max(0, Math.sin(t * 0.21 + f.p1 * 3.0) - 0.93) / 0.07;   // now and then one darts ahead
+    f.a += f.w0 * (1 + 0.3 * Math.sin(t * f.fr * 3.0 + f.p2)) * dart * (1 - 0.55 * LOW) * dt;
+    _o.position.copy(at(f, f.a, t, _v1));
+    _o.lookAt(at(f, f.a + Math.sign(f.w0) * 0.05, t + 0.15, _v2));
+    _o.scale.setScalar(f.sz); _o.updateMatrix();
+    fishMesh.setMatrixAt(i, _o.matrix);
+  });
+  fishMesh.instanceMatrix.needsUpdate = true;
+}
+
+const uwLight = new THREE.DirectionalLight(0xc8f2e4, 0); uwLight.position.copy(MOON_R).multiplyScalar(50); scene.add(uwLight);
+
+// ================= from the clouds =================
+// The page opens above a moonlit cloud deck and comes down through it: below, the pond in its dark land, the treeline
+// and a few lights of the farm on the shore. Puffs are soft billboards, brighter on the moon's side.
+// cloud puffs with a body: billowing noise inside a soft mask, lit from above, a few variants so the deck doesn't repeat
+const puffTexs = [0, 1, 2].map(v => {
+  const N = 256, c = document.createElement('canvas'); c.width = c.height = N; const g = c.getContext('2d'), img = g.createImageData(N, N);
+  const R = new Float32Array(64 * 64).map(() => Math.random());
+  const vn = (x, y) => { const xi = Math.floor(x), yi = Math.floor(y), xf = x - xi, yf = y - yi, u = xf * xf * (3 - 2 * xf), w = yf * yf * (3 - 2 * yf);
+    const h = (i, j) => R[((yi + j) & 63) * 64 + ((xi + i) & 63)];
+    return (h(0, 0) * (1 - u) + h(1, 0) * u) * (1 - w) + (h(0, 1) * (1 - u) + h(1, 1) * u) * w; };
+  for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) {
+    const nx = x / N, ny = y / N, r = Math.hypot((nx - 0.5) * 2, (ny - 0.55) * 2.6);
+    let f = 0, amp = 0.5, fr = 3 + v;
+    for (let o = 0; o < 5; o++) { f += vn(nx * fr + v * 7, ny * fr) * amp; amp *= 0.5; fr *= 2.03; }
+    const m = Math.min(Math.max((1 - r) / 0.65, 0), 1);
+    const a = Math.min(Math.max((f * 0.75 + m * 0.6 - 0.62) / 0.22, 0), 1) * m;
+    const lit = 0.55 + 0.45 * Math.min(Math.max(1 - ny * 1.15, 0), 1) + (f - 0.5) * 0.35;   // tops in the moonlight, bellies in shade
+    const k = (y * N + x) * 4, l = Math.min(Math.max(lit, 0), 1) * 255;
+    img.data[k] = l; img.data[k + 1] = l; img.data[k + 2] = l; img.data[k + 3] = a * 235;
+  }
+  g.putImageData(img, 0, 0);
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t;
+});
+const clouds = new THREE.Group(); scene.add(clouds);
+const deckC = [];
+for (let i = 0; i < 760; i++) {
+  const far = i >= 560;
+  const onPath = i < 26;   // a few right on the way down, so the lens goes through them
+  const a = Math.random() * Math.PI * 2, r = onPath ? Math.random() * 30 : far ? 950 + Math.random() * 2400 : 60 + Math.pow(Math.random(), 0.6) * 950;
+  const x = onPath ? 6 + (Math.random() - 0.5) * 40 : Math.cos(a) * r, z = onPath ? 88 + (Math.random() - 0.5) * 40 : Math.sin(a) * r - 40;
+  const y = onPath ? 118 + Math.random() * 26 : 108 + Math.random() * 44;
+  const moonSide = Math.max(0, -z / 900);   // the deck brightens toward the moon
+  const col = new THREE.Color(1.7 + 0.5 * moonSide, 1.68 + 0.4 * moonSide, 1.66 + 0.2 * moonSide); deckC.push(col);
+  const m = new THREE.SpriteMaterial({ map: puffTexs[i % 3], color: col.clone(),
+    transparent: true, depthWrite: false, fog: true, rotation: (Math.random() - 0.5) * 0.5, opacity: 0.95 });
+  const sp = new THREE.Sprite(m); sp.position.set(x * S, y * S, z * S); sp.scale.setScalar((onPath ? 50 : far ? 300 + Math.random() * 420 : 55 + Math.random() * 80) * S);
+  clouds.add(sp);
+}
+
+// the land round the pond: dark woods and fields, with the pond cut out of it so the water shows through
+const ground = (() => {
+  const N = 1024, W3 = 3000, px = N / W3, pr = 170 * px, c = document.createElement('canvas'); c.width = c.height = N;
+  const g = c.getContext('2d'); g.fillStyle = '#3a5226'; g.fillRect(0, 0, N, N);
+  for (let i = 0; i < 1400; i++) {   // fields: parcels of crops in a few greens and a dry tan, on a loose grid
+    g.save(); g.translate(Math.random() * N, Math.random() * N); g.rotate(0.35 + Math.floor(Math.random() * 2) * Math.PI / 2 + (Math.random() - 0.5) * 0.12);
+    g.fillStyle = ['#56733a', '#6b8442', '#7d8a4e', '#4a6a33', '#8f8a58', '#3f5a2a'][i % 6];
+    g.fillRect(0, 0, 5 + Math.random() * 20, 3 + Math.random() * 12); g.restore();
+  }
+  for (let k = 0; k < 90; k++) {   // woods: clumps of dark crowns
+    const cx = Math.random() * N, cy = Math.random() * N, R = 6 + Math.random() * 26;
+    for (let i = 0; i < R * 5; i++) { const a = Math.random() * 6.28, r = R * Math.sqrt(Math.random());
+      g.fillStyle = ['#1f3519', '#2a4420', '#18291a'][i % 3]; g.beginPath(); g.arc(cx + Math.cos(a) * r, cy + Math.sin(a) * r, 1.2 + Math.random() * 2.4, 0, 6.28); g.fill(); }
+  }
+  const blob = (k, r0, j) => { g.beginPath(); for (let i = 0; i <= 64; i++) { const a = i / 64 * 6.283, r = r0 * (1 + j * Math.sin(a * 3 + 1) + j * 0.6 * Math.sin(a * 7 + 2));
+    const x = N / 2 + Math.cos(a) * r, y = N / 2 + Math.sin(a) * r; i ? g.lineTo(x, y) : g.moveTo(x, y); } g.closePath(); g.fillStyle = k; g.fill(); };
+  blob('#48602c', pr * 1.1, 0.05);   // a band of reeds on the shore
+  const map = new THREE.CanvasTexture(c); map.colorSpace = THREE.SRGBColorSpace;
+  const a = document.createElement('canvas'); a.width = a.height = N; const ga = a.getContext('2d');
+  ga.fillStyle = '#fff'; ga.fillRect(0, 0, N, N);
+  const g0 = g; ga.beginPath(); for (let i = 0; i <= 64; i++) { const t = i / 64 * 6.283, r = pr * (1 + 0.05 * Math.sin(t * 3 + 1) + 0.03 * Math.sin(t * 7 + 2));
+    const x = N / 2 + Math.cos(t) * r, y = N / 2 + Math.sin(t) * r; i ? ga.lineTo(x, y) : ga.moveTo(x, y); } ga.closePath(); ga.fillStyle = '#000'; ga.fill();
+  const alphaMap = new THREE.CanvasTexture(a), BIG = 24000, rep = BIG / W3;
+  [map, alphaMap].forEach(t => { t.wrapS = t.wrapT = THREE.ClampToEdgeWrapping; t.repeat.set(rep, rep); t.offset.set(-(rep - 1) / 2, -(rep - 1) / 2); });
+  const m = new THREE.Mesh(new THREE.PlaneGeometry(BIG, BIG), new THREE.MeshBasicMaterial({ map, color: 0xd0d8c0, alphaMap, alphaTest: 0.5 }));
+  m.rotation.x = -Math.PI / 2; m.position.y = 0.08; m.scale.setScalar(S); scene.add(m); return m;
+})();
+
+// the farm's lights on the shore: a few warm windows and a yard lamp, mirrored in the water
+const farm = (() => {
+  const P = [[150, 3, 95], [158, 2.5, 103], [163, 4, 88], [142, 2, 112], [171, 6, 97], [-120, 2.5, 128], [-128, 2, 120]];
+  const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(new Float32Array(P.flat().map(v => v * S)), 3));
+  const m = new THREE.ShaderMaterial({ transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, uniforms: { uPx: { value: 1 } },
+    vertexShader: `uniform float uPx; void main(){ vec4 mv = modelViewMatrix * vec4(position, 1.0); gl_PointSize = max(uPx * 900.0 / -mv.z, 2.0); gl_Position = projectionMatrix * mv; }`,
+    fragmentShader: `void main(){ float d = length(gl_PointCoord - 0.5); gl_FragColor = vec4(vec3(1.0, 0.72, 0.38) * 3.0 * smoothstep(0.5, 0.0, d), 1.0); }` });
+  const pts = new THREE.Points(g, m); pts.frustumCulled = false; scene.add(pts); return pts;
+})();
+scene.remove(farm);   // by day the farm's windows are dark
+const treeline = scene.children.find(o => o.isMesh && o.geometry && o.geometry.type === 'CylinderGeometry');
+const FOG_LOW = fogAbove.density, HORIZ = new THREE.Color().setRGB(0.50, 0.66, 0.88);
+const starsPts = scene.children.find(o => o.isPoints && o.material === starMat);
+let belowDeck = null;
+function altitude(y) {   // high up the haze thins so the pond shows far below; the treeline band is for the low views only
+  const hk = Math.min(Math.max((y / S - 10) / 110, 0), 1);
+  fogAbove.density = FOG_LOW * (1 - 0.75 * hk); fogAbove.color.copy(FOG).lerp(HORIZ, hk);
+  if (treeline) treeline.visible = !wasUnder && y < 60 * S;
+  moon.position.copy(camera.position).addScaledVector(MOON, 700); halo.position.copy(moon.position);
+  sky.position.copy(camera.position); if (starsPts) starsPts.position.copy(camera.position);
+  const below = y < 125 * S;   // from under the deck the clouds are their dark undersides
+  if (below !== belowDeck) { belowDeck = below; clouds.children.forEach((sp, i) => sp.material.color.copy(deckC[i]).multiplyScalar(below ? 0.72 : 1)); }
+}
+
+const hemi = scene.children.find(o => o.isHemisphereLight);
+const aboveOnly = scene.children.filter(o => o === sky || o === moon || o === halo || o === water || o === ring || o === clouds || o === ground
+  || (o.isPoints && o !== snow) || o.material === mistMat || (o.isMesh && o.geometry && o.geometry.type === 'CylinderGeometry'));
+
+// ================= the night that goes wrong =================
+// Oxygen falls through the small hours. The app escalates layer by layer, as its Alerts page does: SMS, email and the
+// dashboard at once, then a call to the operator at 5 min, the backup at 15, the manager at 30. Below 4.0 mg/L the
+// fifth layer has the PLC switch the aerator on: a column of bubbles, the water clears, the fish settle back down.
+const doAt = c => c < 0.7 ? 6.4 - 2.55 * Math.pow(c / 0.7, 1.25) : 3.85 + 2.35 * (1 - Math.pow(1 - Math.min((c - 0.7) / 0.3, 1), 2));
+const FIRE = [0.12, 0.3, 0.45, 0.6];   // layers 1-4 by the clock; layer 5 once DO is under 4.0
+let C5 = 0.7; for (let c = 0; c < 0.7; c += 0.002) if (doAt(c) < 4.0) { C5 = c; break; }
+const CLOCK = [[0, -9], [0.12, 0], [0.3, 5], [0.45, 15], [0.6, 30], [C5, 36], [1, 58]];
+const minutesAt = c => {
+  let j = 1; while (j < CLOCK.length - 1 && c > CLOCK[j][0]) j++;
+  return CLOCK[j - 1][1] + (CLOCK[j][1] - CLOCK[j - 1][1]) * Math.min(Math.max((c - CLOCK[j - 1][0]) / (CLOCK[j][0] - CLOCK[j - 1][0]), 0), 1);
+};
+const STATES = [[0, 'Normal', '#22c55e'], [0.12, 'Warning · oxygen falling', '#fbbf24'], [0.6, 'Critical', '#ef4444'], [C5, 'Aerator on · recovering', '#a78bfa'], [0.96, 'Recovered', '#22c55e']];
+const $ = id => document.getElementById(id);
+const ph = $('phone'), phDo = $('ph-do'), phState = $('ph-state'), phClock = $('ph-clock'), phLine = $('ph-line'), phPt = $('ph-pt');
+const phAer = $('ph-aer'), phAerS = $('ph-aer-s'), phLive = $('ph-live'), phRows = [...document.querySelectorAll('#ph-chain li')];
+const yOf = d => 58 - (d - 3.0) * 11.5;   // DO 3..7 mg/L on the little chart; 4.0 sits on the red line
+const STOPS = [0, 0.12, 0.3, 0.45, 0.6, C5, 0.86, 1];
+function stairs(x) {   // hold on each step for most of its stretch of scroll, then move on to the next
+  let i = 0; while (i < STOPS.length - 2 && x >= STOPS[i + 1]) i++;
+  const a0 = STOPS[i], b0 = STOPS[i + 1], k = Math.min(Math.max((x - a0) / (b0 - a0), 0), 1), m = k < 0.5 ? 0 : (k - 0.5) / 0.5;
+  return a0 + (b0 - a0) * m * m * (3 - 2 * m);
+}
+const phNote = $('ph-note'), phNoteT = $('ph-note-t'), phone = $('phone');
+
+// a pulse of light from the float each time a layer fires, in that layer's colour
+const pulseMat = new THREE.ShaderMaterial({
+  transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, uniforms: { uK: { value: 1 }, uC: { value: new THREE.Color() } },
+  vertexShader: `varying vec3 vN, vV; void main(){ vec4 mv = modelViewMatrix * vec4(position, 1.0); vN = normalize(normalMatrix * normal); vV = normalize(-mv.xyz); gl_Position = projectionMatrix * mv; }`,
+  fragmentShader: `uniform float uK; uniform vec3 uC; varying vec3 vN, vV;
+    void main(){ float f = pow(1.0 - abs(dot(vN, vV)), 5.0); gl_FragColor = vec4(uC * f * (1.0 - uK) * (1.0 - uK) * 0.45, 1.0); }`,
+});
+const pulse = new THREE.Mesh(new THREE.SphereGeometry(1, 48, 24), pulseMat); pulse.visible = false; scene.add(pulse);
+const LCOL = ['#ef4444', '#f97316', '#fbbf24', '#f97316', '#8b5cf6'];
+let pulseT = -9, lastLayer = 0, LOW = 0, NIGHT = 0;
+
+// the aerator: a plume of bubbles from a diffuser off to the side, widening as it rises
+const NB = 1900, bP = new Float32Array(NB * 3), bS = new Float32Array(NB);
+for (let i = 0; i < NB; i++) { bP.set([Math.random() - 0.5, Math.random(), Math.random() - 0.5], i * 3); bS[i] = Math.random(); }
+const bubG = new THREE.BufferGeometry(); bubG.setAttribute('position', new THREE.BufferAttribute(bP, 3)); bubG.setAttribute('aS', new THREE.BufferAttribute(bS, 1));
+const bubMat = new THREE.ShaderMaterial({
+  transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
+  uniforms: { uT: { value: 0 }, uOn: { value: 0 }, uBurst: { value: 0 }, uPx: { value: 1 }, uBase: { value: new THREE.Vector3(3.4 * S, 0, -1.8 * S) }, uH: { value: 13 * S }, uR: { value: 1.3 * S } },
+  vertexShader: `attribute float aS; uniform float uT, uOn, uBurst, uPx, uH, uR; uniform vec3 uBase; varying float vA;
+    void main(){
+      float h = fract(position.y + uT * (0.10 + 0.12 * aS) * (1.0 + 1.5 * uBurst));   // 0 at the diffuser, 1 at the surface
+      float spread = uR * (0.25 + 1.6 * h) * (1.0 + uBurst);
+      vec3 p = uBase + vec3(position.x * spread + sin(uT * 3.0 + aS * 40.0) * 0.08 * uR, -uH * (1.0 - h), position.z * spread + cos(uT * 2.6 + aS * 30.0) * 0.08 * uR);
+      vA = step(aS, uOn) * smoothstep(0.0, 0.08, h) * smoothstep(1.0, 0.92, h);
+      vec4 mv = viewMatrix * vec4(p, 1.0); float d = max(-mv.z, 0.1);
+      gl_PointSize = uPx * (1.5 + 4.5 * aS * aS) * 14.0 / d; gl_Position = projectionMatrix * mv; }`,
+  fragmentShader: `varying float vA; void main(){ float r = length(gl_PointCoord - 0.5);
+      float ring = smoothstep(0.5, 0.38, r) * (0.35 + 0.65 * smoothstep(0.2, 0.42, r));   // a bubble: a bright rim round a clearer middle
+      gl_FragColor = vec4(vec3(0.75, 0.92, 1.0) * ring * vA * 1.5, 1.0); }`,
+});
+const bubbles = new THREE.Points(bubG, bubMat); bubbles.frustumCulled = false; bubbles.visible = false; scene.add(bubbles);
+
+// the water itself: murkier and dimmer as oxygen falls
+const MURK = new THREE.Color(0x0c1510), FOG_D = fogUnder.density;
+surf.material.uniforms.uDim = { value: 0 }; surf.material.uniforms.uNight = { value: 0 }; surf.material.uniforms.uFogC.value = FOG_UW.clone();   // its own colour, so FOG_UW stays the clear-water base
+surf.material.fragmentShader = surf.material.fragmentShader.replace('uniform float uT, uFogD;', 'uniform float uT, uFogD, uDim, uNight;')
+  .replace('float d = length(vW - cameraPosition);', 'c *= (1.0 - 0.55 * uDim) * (1.0 - 0.86 * uNight); float d = length(vW - cameraPosition);');
+surf.material.needsUpdate = true;
+
+function climax(c, on, t, dt) {
+  const d = doAt(c), n = FIRE.filter(f => c >= f).length + (c >= C5 ? 1 : 0);
+  ph.style.opacity = on ? Math.min(1, c / 0.04).toFixed(3) : '0';
+  if (on) {
+    phDo.textContent = d.toFixed(1);
+    const mm = 134 + Math.round(minutesAt(c));   // T+0 is 02:14
+    phClock.textContent = `${String(Math.floor(mm / 60)).padStart(2, '0')}:${String(mm % 60).padStart(2, '0')}`;
+    let path = ''; const N = 48;
+    for (let i = 0; i <= N; i++) { const cc = c * i / N; path += `${i ? 'L' : 'M'}${(cc * 260).toFixed(1)} ${yOf(doAt(cc)).toFixed(1)}`; }
+    phLine.setAttribute('d', path); phPt.setAttribute('cx', (c * 260).toFixed(1)); phPt.setAttribute('cy', yOf(d).toFixed(1));
+    const st = STATES.filter(x => c >= x[0]).pop();
+    phState.textContent = st[1]; phState.style.color = st[2]; phState.style.background = st[2] + '22';
+    phLive.style.background = st[2]; phLive.style.boxShadow = `0 0 8px ${st[2]}`; phLine.setAttribute('stroke', c >= C5 ? '#c4b5fd' : '#9fd0f7');
+    phRows.forEach((li, i) => li.classList.toggle('on', i < n));
+    phAer.classList.toggle('on', c >= C5); phAerS.textContent = c >= C5 ? 'On · PLC auto' : 'Off';
+    if (n > lastLayer) {
+      pulseT = t; pulseMat.uniforms.uC.value.set(LCOL[n - 1]).multiplyScalar(1.4);
+      phone.classList.remove('buzz'); void phone.offsetWidth; phone.classList.add('buzz');   // a real alert: the phone buzzes
+    }
+    phNote.classList.toggle('in', n >= 1 && n <= 2);
+    phNoteT.textContent = `Pool 1: DO ${Math.max(d, 4.0).toFixed(1)} mg/L and falling`;
+  }
+  lastLayer = on ? n : 0;
+  LOW = on ? Math.min(Math.max((6.4 - d) / 2.55, 0), 1) : 0;
+  const aer = on ? Math.min(Math.max((c - C5) / 0.04, 0), 1) : 0;
+  bubMat.uniforms.uT.value = t; bubMat.uniforms.uOn.value = aer;
+  bubMat.uniforms.uBurst.value = aer * Math.max(0, 1 - (c - C5) / 0.08);
+  bubbles.visible = !!wasUnder && aer > 0;
+  if (wasUnder) {
+    fogUnder.color.copy(FOG_UW).lerp(FOG_UW_N, NIGHT).lerp(MURK, LOW * 0.75); fogUnder.density = FOG_D * (1 + 0.7 * LOW);
+    surf.material.uniforms.uFogC.value.copy(fogUnder.color); surf.material.uniforms.uFogD.value = fogUnder.density; surf.material.uniforms.uDim.value = LOW; surf.material.uniforms.uNight.value = NIGHT;
+    uwLight.intensity = 3.6 * (1 - 0.72 * NIGHT) * (1 - 0.45 * LOW);
+    rayMat.uniforms.uK.value = 1 - 0.85 * NIGHT; CAUS.uCK.value = 1 - 0.75 * NIGHT;
+    hemi.intensity = 0.9 * (1 - 0.55 * NIGHT); front.intensity = 1.0 * (1 - 0.4 * NIGHT); renderer.toneMappingExposure = 1.0 - 0.08 * NIGHT;
+  }
+  // the alarm: each layer flashes the whole picture red; while it escalates a slow red beacon stays; layer 5 turns it calm
+  const flash = on ? Math.exp(-Math.max(t - pulseT, 0) * 2.4) : 0;
+  const beacon = on && n >= 1 && n < 5 ? (0.3 + 0.2 * (0.5 + 0.5 * Math.sin(t * 3.2))) * Math.min(1, (c - 0.12) / 0.03 + 1) : 0;
+  grade.uniforms.uAlarmC.value.set(n >= 5 ? 0x8b5cf6 : 0xef4444);
+  grade.uniforms.uAlarmK.value = Math.min(0.88, Math.max(flash * (n >= 5 ? 0.45 : 0.85), beacon));
+  pulse.visible = false;
+}
+
+let wasUnder = null;
+function medium(under) {
+  if (under === wasUnder) return; wasUnder = under;
+  aboveOnly.forEach(o => { o.visible = !under; });
+  [surf, snow, near, ...rays].forEach(o => { o.visible = under; });
+  if (fishMesh) fishMesh.visible = under;
+  scene.fog = under ? fogUnder : fogAbove;
+  scene.background = under ? fogUnder.color : null;
+  moonLight.intensity = under ? 0 : 3.4; front.intensity = under ? 1.0 : 0.8; front.color.set(under ? 0x8fd0c4 : 0xc4d8ff); uwLight.intensity = under ? 3.6 : 0;
+  hemi.color.set(under ? 0x4a9a8a : 0xa8c8f0); hemi.groundColor.set(under ? 0x0a1a14 : 0x40502c); hemi.intensity = under ? 0.9 : 1.1;
+  renderer.toneMappingExposure = under ? 1.0 : 0.82;
+}
+
+const composer = new EffectComposer(renderer);
+composer.addPass(new RenderPass(scene, camera));
+const bloom = new UnrealBloomPass(new THREE.Vector2(256, 256), 0.35, 0.6, 1.7); composer.addPass(bloom);
+composer.addPass(new OutputPass());
+const grade = new ShaderPass({
+  uniforms: { tDiffuse: { value: null }, uT: { value: 0 }, uAsp: { value: 1 }, uWash: { value: 0 }, uAlarmC: { value: new THREE.Color(0xef4444) }, uAlarmK: { value: 0 } },
+  vertexShader: `varying vec2 vUv; void main(){ vUv = uv; gl_Position = vec4(position.xy, 0.0, 1.0); }`,
+  fragmentShader: `uniform sampler2D tDiffuse; uniform float uT, uAsp, uWash, uAlarmK; uniform vec3 uAlarmC; varying vec2 vUv;
+    float h(vec2 p){ return fract(sin(dot(p, vec2(12.9898, 78.233)) + uT) * 43758.5453); }
+    void main(){ vec2 uv = vUv + uWash * 0.02 * vec2(sin(vUv.y * 38.0 + uT * 7.0), cos(vUv.x * 31.0 + uT * 6.0));
+      vec3 c = texture2D(tDiffuse, uv).rgb; vec2 q = (vUv - 0.5) * vec2(uAsp, 1.0);
+      c = mix(c, c * vec3(0.5, 0.72, 0.82) + vec3(0.0, 0.012, 0.02), uWash * 0.85);
+      c *= mix(0.7, 1.0, smoothstep(1.0, 0.2, length(q))); c = pow(c, vec3(1.08));
+      float rim = smoothstep(0.15, 1.05, length(q));   // an alarm light floods the room, strongest at the edges
+      c = mix(c, dot(c, vec3(0.3, 0.55, 0.15)) * uAlarmC * 2.2 + uAlarmC * (0.1 + 0.36 * rim), uAlarmK);
+      c += (h(vUv * 911.0) - 0.5) * 0.035;
+      gl_FragColor = vec4(c, 1.0); }`,
+});
+composer.addPass(grade);
+
+function layout() {
+  const w = innerWidth, h = innerHeight;
+  renderer.setSize(w, h, false); composer.setSize(w, h);
+  camera.aspect = w / h; camera.fov = w < h ? 58 : 38; camera.updateProjectionMatrix();
+  grade.uniforms.uAsp.value = w / h; flyMat.uniforms.uPx.value = snowMat.uniforms.uPx.value = nearMat.uniforms.uPx.value = bubMat.uniforms.uPx.value = farm.material.uniforms.uPx.value = h * renderer.getPixelRatio() / 900;
+}
+addEventListener('resize', layout); layout();
+
+const copy = [...document.querySelectorAll('.copy')], hint = document.getElementById('hint');
+let sCross = 0.5; for (let k = 0; k <= 400; k++) { if (path.getPointAt(k / 400).y < 0) { sCross = k / 400; break; } }
+let sLow = 0.2; for (let k = 0; k <= 400; k++) { if (path.getPointAt(k / 400).y < 7 * S) { sLow = k / 400; break; } }
+const band = (x, a, b, f = 0.05) => Math.min(Math.max((x - a) / f, 0), 1) * Math.min(Math.max((b - x) / f, 0), 1);
+const clock = new THREE.Clock();
+let s = 0, last = 0;
+renderer.setAnimationLoop(() => {
+  const t = clock.getElapsedTime(), dt = Math.min(t - last, 0.1); last = t;
+  const track = document.documentElement.scrollHeight - innerHeight, target = track > 0 ? scrollY / track : 0;
+  s += (target - s) * (1 - Math.exp(-dt * 3.5));        // the camera eases after the scroll, like a crane coming to rest
+  // a quarter of the scroll above the water, coming to rest at the surface; the rest under it, at an even pace
+  const A = 0.4, xa = Math.min(s / A, 1), e = s < A ? sCross * xa * xa * (3 - 2 * xa) : sCross + (1 - sCross) * (s - A) / (1 - A);
+  camera.position.copy(path.getPointAt(e)); camera.lookAt(look.getPointAt(e));
+  camera.position.y += Math.sin(t * 0.4) * 0.03 * S;    // a hand-held breath
+  if (camera.position.y < 0) {   // under the water the lens sways a little, as a diver's does
+    const sw = Math.min(1, -camera.position.y / S);
+    camera.position.x += Math.sin(t * 0.37) * 0.12 * S * sw; camera.position.y += Math.sin(t * 0.53 + 1.0) * 0.08 * S * sw;
+    camera.rotateZ(Math.sin(t * 0.23) * 0.014 * sw);
+  }
+
+  probe.position.y = baseY + Math.sin(t * 0.9) * 0.025 * H;
+  probe.rotation.z = Math.sin(t * 0.6) * 0.035; probe.rotation.x = Math.sin(t * 0.7 + 1.3) * 0.03; probe.rotation.y = t * 0.03;
+  const k = (t % 4.5) / 4.5; ring.scale.setScalar((0.9 + k * 7.5) * S); ringMat.uniforms.uK.value = k;
+
+  const under = camera.position.y < 0;
+  medium(under); altitude(camera.position.y);
+  grade.uniforms.uWash.value = Math.max(0, 1 - Math.abs(camera.position.y) / (0.7 * S));
+  if (under) { aimRays(); swim(t, dt); snowMat.uniforms.uCam.value.copy(camera.position); nearMat.uniforms.uCam.value.copy(camera.position); }
+  CAUS.uCT.value = t; CAUS.uUnder.value = under ? 1 : 0;
+  surf.material.uniforms.uT.value = rayMat.uniforms.uT.value = snowMat.uniforms.uT.value = nearMat.uniforms.uT.value = t;
+  water.material.uniforms.time.value = t * 0.35;
+  starMat.uniforms.uT.value = flyMat.uniforms.uT.value = mistMat.uniforms.uT.value = t; grade.uniforms.uT.value = t % 10;
+  // the copy follows the camera's place on the path: two lines above the water, two under it, the last at the bottom
+  copy[0].style.opacity = band(e, -1, sLow * 0.45, 0.05).toFixed(3);
+  copy[1].style.opacity = band(e, sLow, sCross - 0.04, 0.04).toFixed(3);
+  const u = k => sCross + (1 - sCross) * k;   // a place under the water, as a share of the way down
+  copy[2].style.opacity = band(e, u(0.08), u(0.34)).toFixed(3);
+  // the night goes wrong from here: oxygen falls, the app escalates layer by layer, the aerator comes on
+  const cl = stairs(Math.min(Math.max((e - u(0.36)) / (u(0.97) - u(0.36)), 0), 1));
+  copy[3].style.opacity = band(cl, -1, 0.3, 0.06).toFixed(3) * (e > u(0.38) ? 1 : 0);
+  copy[4].style.opacity = band(cl, 0.36, 2, 0.06).toFixed(3) * (e > u(0.4) ? 1 : 0);
+  copy[4].style.pointerEvents = cl > 0.36 ? 'auto' : 'none';
+  { const x = Math.min(Math.max((e - u(0.3)) / (u(0.385) - u(0.3)), 0), 1); NIGHT = x * x * (3 - 2 * x); }   // the day goes, the night comes
+  climax(cl, e > u(0.39), t, dt);
+  hint.style.opacity = (1 - Math.min(s / 0.05, 1)).toFixed(3);
+  composer.render();
+});
+</script>
+</body>
+</html>
