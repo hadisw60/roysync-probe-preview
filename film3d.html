@@ -352,14 +352,14 @@ probe.position.y = baseY;
 
 // ---- one crane move, in units of the float's height
 const S = H / 6.4;
-const path = new THREE.CatmullRomCurve3([[0, 200, 205], [8, 168, 132], [6, 100, 82], [2, 34, 58], [0, 5.5, 42], [13, 4.0, 18], [8.5, 1.8, 10], [3.6, 0.75, 8.2], [3.0, -0.9, 7.2], [6.5, -3.2, 8.5], [-3.5, -5.8, 7.5], [-1.2, -8.0, 4.6]].map(v => new THREE.Vector3(...v).multiplyScalar(S)));
-const look = new THREE.CatmullRomCurve3([[0, 55, -150], [0, 45, -190], [0, 28, -200], [0, 2, -15], [0, 2.6, -12], [0, 1.2, -1], [0, 1.1, 0], [0, 1.15, -0.8], [0, -0.6, 0], [0, -2.4, 0], [0, -2.8, 0], [3.0, -11, -4.0]].map(v => new THREE.Vector3(...v).multiplyScalar(S)));
+const path = new THREE.CatmullRomCurve3([[0, 200, 205], [8, 168, 132], [6, 100, 82], [2, 34, 58], [0, 5.5, 42], [13, 4.0, 18], [8.5, 1.8, 10], [3.6, 0.75, 8.2], [4.2, -1.1, 10.5], [8.0, -3.0, 10.0], [-4.5, -5.8, 9.5], [-1.2, -8.0, 4.6]].map(v => new THREE.Vector3(...v).multiplyScalar(S)));
+const look = new THREE.CatmullRomCurve3([[0, 55, -150], [0, 45, -190], [0, 28, -200], [0, 2, -15], [0, 2.6, -12], [0, 1.2, -1], [0, 1.1, 0], [0, 1.15, -0.8], [0, -1.6, 0], [0, -2.8, 0], [0, -2.8, 0], [3.0, -11, -4.0]].map(v => new THREE.Vector3(...v).multiplyScalar(S)));
 
 // ================= under the water =================
 // Not a literal pond either: a dark, cold room of water. The surface from below is a lit window (Snell's: the sky only
 // within ~48 degrees of straight up) with the float's head black against it; a few shafts of moonlight; drifting specks;
 // fish passing as shapes in the murk. The crossing itself is a wash over the lens, not a drawn split.
-const FOG_UW = new THREE.Color(0x2a6a66), FOG_UW_N = new THREE.Color(0x03141c);   // the pond by day, and at night
+const FOG_UW = new THREE.Color(0x5a8f80), FOG_UW_N = new THREE.Color(0x03141c);   // the pond by day, and at night
 const fogAbove = scene.fog, fogUnder = new THREE.FogExp2(FOG_UW, 0.062 / S);
 const MOON_R = new THREE.Vector3(0.03, Math.sin(THREE.MathUtils.degToRad(42)), -Math.cos(THREE.MathUtils.degToRad(42))).normalize();   // the moon from below, bent up into the window
 const surf = new THREE.Mesh(new THREE.PlaneGeometry(3000, 3000), new THREE.ShaderMaterial({
@@ -375,8 +375,8 @@ const surf = new THREE.Mesh(new THREE.PlaneGeometry(3000, 3000), new THREE.Shade
       vec2 p = vW.xz * 0.45;
       float r = n(p + vec2(uT * 0.25, uT * 0.1)) * 0.6 + n(p * 2.6 - uT * 0.35) * 0.4;
       float win = smoothstep(0.6, 0.72, V.y);
-      vec3 sky = vec3(0.7, 0.78, 0.7) * (0.6 + 0.8 * r) + vec3(3.2, 2.6, 1.8) * pow(max(dot(V, uMoonR), 0.0), 40.0) * (0.5 + r) * (1.0 - 0.8 * uNight);
-      vec3 c = mix(vec3(0.03, 0.11, 0.10) * (0.5 + r), sky, win);
+      vec3 sky = vec3(1.1, 1.15, 1.0) * (0.6 + 0.8 * r) + vec3(3.2, 2.6, 1.8) * pow(max(dot(V, uMoonR), 0.0), 40.0) * (0.5 + r) * (1.0 - 0.8 * uNight);
+      vec3 c = mix(vec3(0.16, 0.30, 0.27) * (0.55 + 0.8 * r), sky, win);
       c *= mix(0.04, 1.0, smoothstep(uHead.z * 0.95, uHead.z * 1.3, length(vW.xz - uHead.xy)));
       float d = length(vW - cameraPosition);
       c = mix(c, uFogC, 1.0 - exp(-uFogD * uFogD * d * d * 0.35));
@@ -393,7 +393,7 @@ const rayMat = new THREE.ShaderMaterial({
     void main(){ float across = smoothstep(0.0, 0.5, vU.x) * smoothstep(1.0, 0.5, vU.x);
       float along = smoothstep(1.0, 0.9, vU.y) * smoothstep(0.0, 0.7, vU.y);
       float fl = 0.7 + 0.3 * sin(uT * 0.6 + vU.y * 5.0 + vD * 0.3);
-      gl_FragColor = vec4(vec3(0.95, 0.95, 0.8) * across * across * along * fl * 0.15 * uK * smoothstep(1.0, 6.0, vD), 1.0); }`,
+      gl_FragColor = vec4(vec3(0.95, 0.95, 0.8) * across * across * along * fl * 0.24 * uK * smoothstep(1.0, 6.0, vD), 1.0); }`,
 });
 const rays = [];
 for (let i = 0; i < 9; i++) {
@@ -423,7 +423,7 @@ const snowMat = new THREE.ShaderMaterial({
       vec4 mv = viewMatrix * vec4(p, 1.0); float d = max(-mv.z, 0.1);
       vA = (0.3 + 0.7 * aS) * exp(-d * d * uK);
       gl_PointSize = uPx * (2.0 + 5.0 * aS) * 6.0 / d; gl_Position = projectionMatrix * mv; }`,
-  fragmentShader: `varying float vA; void main(){ float d = length(gl_PointCoord - 0.5); gl_FragColor = vec4(vec3(0.6, 0.8, 0.85) * vA * smoothstep(0.5, 0.0, d) * 0.9, 1.0); }`,
+  fragmentShader: `varying float vA; void main(){ float d = length(gl_PointCoord - 0.5); gl_FragColor = vec4(vec3(0.6, 0.8, 0.85) * vA * smoothstep(0.5, 0.0, d) * 0.4, 1.0); }`,
 });
 const snow = new THREE.Points(snowG, snowMat); snow.frustumCulled = false; scene.add(snow);
 const nearMat = snowMat.clone();   // specks right at the lens: big, soft, out of focus
@@ -442,7 +442,7 @@ new GLTFLoader().load('assets/fish.glb', g => {
   let src = null; g.scene.traverse(o => { if (o.isMesh && !src) src = o; }); if (!src) return;
   const k = 6.5 * S, geo = src.geometry.clone();
   geo.rotateY(Math.PI); geo.translate(0, -0.1435, 0.0035); geo.scale(k * 0.85, k * 0.7, k);
-  const mat = new THREE.MeshStandardMaterial({ map: src.material.map, normalMap: src.material.normalMap, color: 0xf0b060, emissive: 0x5a3010, roughness: 0.5, metalness: 0.2, envMapIntensity: 1.2 });   // golden carp, as in the film
+  const mat = new THREE.MeshStandardMaterial({ map: src.material.map, normalMap: src.material.normalMap, color: 0xf0b060, emissive: 0x8a5018, roughness: 0.5, metalness: 0.2, envMapIntensity: 1.2 });   // golden carp, as in the film
   addCaustics(mat, sh => {
     Object.assign(sh.uniforms, fishU);
     sh.vertexShader = 'attribute float aPh;\nuniform float uT;\n' + sh.vertexShader.replace('#include <begin_vertex>', `#include <begin_vertex>
@@ -453,8 +453,8 @@ new GLTFLoader().load('assets/fish.glb', g => {
   for (let i = 0; i < NFI; i++) {
     const deep = i % 3 !== 0;   // a third close round the float, the rest far back
     ph[i] = Math.random() * 6.28;
-    fish.push({ r0: (deep ? 13 : 3.4) * S + Math.random() * (deep ? 4 : 1.4) * S, y0: -(deep ? 3.4 : 1.8) * S - Math.random() * (deep ? 3.4 : 2.6) * S,
-      a: (deep ? 2.2 : 0) + Math.random() * (deep ? 1.6 : 2.2), w0: (deep ? -0.12 : 0.3) * (0.85 + Math.random() * 0.3), sz: 0.7 + Math.random() * 0.55,
+    fish.push({ r0: (deep ? 7 : 4.2) * S + Math.random() * (deep ? 3 : 1.8) * S, y0: -(deep ? 3.4 : 5.2) * S - Math.random() * (deep ? 3.4 : 2.4) * S,
+      a: Math.random() * 6.283, w0: (deep ? -0.12 : 0.3) * (0.85 + Math.random() * 0.3), sz: 0.7 + Math.random() * 0.55,
       fr: 0.05 + Math.random() * 0.08, dr: (deep ? 1.5 : 0.8) * S, dy: (deep ? 1.2 : 0.6) * S, p1: Math.random() * 6.28, p2: Math.random() * 6.28 });
   }
   geo.setAttribute('aPh', new THREE.InstancedBufferAttribute(ph, 1));
@@ -735,14 +735,16 @@ composer.addPass(new RenderPass(scene, camera));
 const bloom = new UnrealBloomPass(new THREE.Vector2(256, 256), 0.35, 0.6, 1.7); composer.addPass(bloom);
 composer.addPass(new OutputPass());
 const grade = new ShaderPass({
-  uniforms: { tDiffuse: { value: null }, uT: { value: 0 }, uAsp: { value: 1 }, uWash: { value: 0 }, uAlarmC: { value: new THREE.Color(0xef4444) }, uAlarmK: { value: 0 } },
+  uniforms: { tDiffuse: { value: null }, uT: { value: 0 }, uAsp: { value: 1 }, uWash: { value: 0 }, uUW: { value: 0 }, uAlarmC: { value: new THREE.Color(0xef4444) }, uAlarmK: { value: 0 } },
   vertexShader: `varying vec2 vUv; void main(){ vUv = uv; gl_Position = vec4(position.xy, 0.0, 1.0); }`,
-  fragmentShader: `uniform sampler2D tDiffuse; uniform float uT, uAsp, uWash, uAlarmK; uniform vec3 uAlarmC; varying vec2 vUv;
+  fragmentShader: `uniform sampler2D tDiffuse; uniform float uT, uAsp, uWash, uAlarmK, uUW; uniform vec3 uAlarmC; varying vec2 vUv;
     float h(vec2 p){ return fract(sin(dot(p, vec2(12.9898, 78.233)) + uT) * 43758.5453); }
     void main(){ vec2 uv = vUv + uWash * 0.02 * vec2(sin(vUv.y * 38.0 + uT * 7.0), cos(vUv.x * 31.0 + uT * 6.0));
       vec3 c = texture2D(tDiffuse, uv).rgb; vec2 q = (vUv - 0.5) * vec2(uAsp, 1.0);
       c = mix(c, c * vec3(0.5, 0.72, 0.82) + vec3(0.0, 0.012, 0.02), uWash * 0.85);
-      c *= mix(0.72, 1.0, smoothstep(1.0, 0.2, length(q))); c = mix(vec3(dot(c, vec3(0.299, 0.587, 0.114))), c, 1.4); c = clamp((c - 0.5) * 1.15 + 0.5, 0.0, 1.0); c = pow(c, vec3(1.05));
+      c *= mix(0.72, 1.0, smoothstep(1.0, 0.2, length(q))); c = mix(vec3(dot(c, vec3(0.299, 0.587, 0.114))), c, mix(1.4, 1.0, uUW));
+      c = mix(c, vec3(0.66, 0.80, 0.72), uUW * pow(smoothstep(0.42, 1.0, vUv.y), 1.6) * 0.5);   // under the water: light from above
+      c *= mix(1.0, 0.7, uUW * smoothstep(0.55, 0.0, vUv.y)); c = clamp((c - 0.5) * 1.15 + 0.5, 0.0, 1.0); c = pow(c, vec3(1.05));
       float rim = smoothstep(0.15, 1.05, length(q));   // an alarm light floods the room, strongest at the edges
       c = mix(c, dot(c, vec3(0.3, 0.55, 0.15)) * uAlarmC * 2.2 + uAlarmC * (0.1 + 0.36 * rim), uAlarmK);
       c += (h(vUv * 911.0) - 0.5) * 0.035;
@@ -785,7 +787,7 @@ renderer.setAnimationLoop(() => {
 
   const under = camera.position.y < 0;
   medium(under); altitude(camera.position.y);
-  grade.uniforms.uWash.value = Math.max(0, 1 - Math.abs(camera.position.y) / (0.7 * S));
+  grade.uniforms.uWash.value = Math.max(0, 1 - Math.abs(camera.position.y) / (0.7 * S)); grade.uniforms.uUW.value = under ? 1 : 0;
   if (under) { aimRays(); swim(t, dt); snowMat.uniforms.uCam.value.copy(camera.position); nearMat.uniforms.uCam.value.copy(camera.position); }
   CAUS.uCT.value = t; CAUS.uUnder.value = under ? 1 : 0;
   surf.material.uniforms.uT.value = rayMat.uniforms.uT.value = snowMat.uniforms.uT.value = nearMat.uniforms.uT.value = t;
@@ -795,7 +797,7 @@ renderer.setAnimationLoop(() => {
   copy[0].style.opacity = band(e, -1, sLow * 0.45, 0.05).toFixed(3);
   copy[1].style.opacity = band(e, sLow, sCross - 0.04, 0.04).toFixed(3);
   const u = k => sCross + (1 - sCross) * k;   // a place under the water, as a share of the way down
-  copy[2].style.opacity = band(e, u(0.08), u(0.34)).toFixed(3);
+  copy[2].style.opacity = band(e, u(0.08), u(0.34), (1 - sCross) * 0.05).toFixed(3);
   // the night goes wrong from here: oxygen falls, the app escalates layer by layer, the aerator comes on
   const cl = stairs(Math.min(Math.max((e - u(0.36)) / (u(0.97) - u(0.36)), 0), 1));
   copy[3].style.opacity = band(cl, -1, 0.3, 0.06).toFixed(3) * (e > u(0.38) ? 1 : 0);
