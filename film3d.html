@@ -243,14 +243,14 @@ halo.position.copy(moon.position); halo.scale.setScalar(320); scene.add(halo);
 const normals = new THREE.TextureLoader().load('assets/waternormals.jpg', t => { t.wrapS = t.wrapT = THREE.RepeatWrapping; });
 const water = new Water(new THREE.PlaneGeometry(30000, 30000), {
   textureWidth: 768, textureHeight: 768, waterNormals: normals, sunDirection: MOON.clone(), sunColor: new THREE.Color(1.5, 1.05, 0.6),
-  waterColor: 0x0a4a5a, distortionScale: 1.3, fog: true,
+  waterColor: 0x0a4a5a, distortionScale: 0.6, fog: true,
 });
 water.rotation.x = -Math.PI / 2; water.material.uniforms.size.value = 7.0;
 scene.add(water);
 
 // ---- the light: moonlight from behind (a rim), a faint cold fill from the sky
 const moonLight = new THREE.DirectionalLight(0xffc58a, 3.2); moonLight.position.copy(MOON).multiplyScalar(50); scene.add(moonLight);
-const front = new THREE.DirectionalLight(0xa8bde0, 0.75); front.position.set(9, 6, 10); scene.add(front);
+const front = new THREE.DirectionalLight(0xffe2c4, 1.8); front.position.set(9, 6, 10); scene.add(front);
 scene.add(new THREE.HemisphereLight(0xffd4aa, 0x1c3040, 0.9));
 const pm = new THREE.PMREMGenerator(renderer);
 { const env = new THREE.Scene(); env.add(sky.clone(), moon.clone(), halo.clone()); scene.environment = pm.fromScene(env, 0.02).texture; }
@@ -436,13 +436,13 @@ nearG.setAttribute('aS', new THREE.BufferAttribute(new Float32Array(NNE).map(() 
 const near = new THREE.Points(nearG, nearMat); near.frustumCulled = false; scene.add(near);
 
 // fish: two loose schools circling the float at different depths, shapes more than portraits in the murk
-const fishU = { uT: { value: 0 } }, NFI = 54, fish = [];
+const fishU = { uT: { value: 0 } }, NFI = 90, fish = [];
 let fishMesh = null;
 new GLTFLoader().load('assets/fish.glb', g => {
   let src = null; g.scene.traverse(o => { if (o.isMesh && !src) src = o; }); if (!src) return;
   const k = 6.5 * S, geo = src.geometry.clone();
   geo.rotateY(Math.PI); geo.translate(0, -0.1435, 0.0035); geo.scale(k * 0.85, k * 0.7, k);
-  const mat = new THREE.MeshStandardMaterial({ map: src.material.map, normalMap: src.material.normalMap, color: 0xe8a050, emissive: 0x3a1e06, roughness: 0.5, metalness: 0.2, envMapIntensity: 1.2 });   // golden carp, as in the film
+  const mat = new THREE.MeshStandardMaterial({ map: src.material.map, normalMap: src.material.normalMap, color: 0xf0b060, emissive: 0x5a3010, roughness: 0.5, metalness: 0.2, envMapIntensity: 1.2 });   // golden carp, as in the film
   addCaustics(mat, sh => {
     Object.assign(sh.uniforms, fishU);
     sh.vertexShader = 'attribute float aPh;\nuniform float uT;\n' + sh.vertexShader.replace('#include <begin_vertex>', `#include <begin_vertex>
@@ -453,7 +453,7 @@ new GLTFLoader().load('assets/fish.glb', g => {
   for (let i = 0; i < NFI; i++) {
     const deep = i % 3 !== 0;   // a third close round the float, the rest far back
     ph[i] = Math.random() * 6.28;
-    fish.push({ r0: (deep ? 17 : 3.4) * S + Math.random() * (deep ? 4 : 1.4) * S, y0: -(deep ? 3.4 : 1.8) * S - Math.random() * (deep ? 3.4 : 2.6) * S,
+    fish.push({ r0: (deep ? 13 : 3.4) * S + Math.random() * (deep ? 4 : 1.4) * S, y0: -(deep ? 3.4 : 1.8) * S - Math.random() * (deep ? 3.4 : 2.6) * S,
       a: (deep ? 2.2 : 0) + Math.random() * (deep ? 1.6 : 2.2), w0: (deep ? -0.12 : 0.3) * (0.85 + Math.random() * 0.3), sz: 0.7 + Math.random() * 0.55,
       fr: 0.05 + Math.random() * 0.08, dr: (deep ? 1.5 : 0.8) * S, dy: (deep ? 1.2 : 0.6) * S, p1: Math.random() * 6.28, p2: Math.random() * 6.28 });
   }
@@ -647,7 +647,7 @@ const LCOL = ['#ef4444', '#f97316', '#fbbf24', '#f97316', '#8b5cf6'];
 let pulseT = -9, lastLayer = 0, LOW = 0, NIGHT = 0;
 
 // the aerator: a plume of bubbles from a diffuser off to the side, widening as it rises
-const NB = 1900, bP = new Float32Array(NB * 3), bS = new Float32Array(NB);
+const NB = 3200, bP = new Float32Array(NB * 3), bS = new Float32Array(NB);
 for (let i = 0; i < NB; i++) { bP.set([Math.random() - 0.5, Math.random(), Math.random() - 0.5], i * 3); bS[i] = Math.random(); }
 const bubG = new THREE.BufferGeometry(); bubG.setAttribute('position', new THREE.BufferAttribute(bP, 3)); bubG.setAttribute('aS', new THREE.BufferAttribute(bS, 1));
 const bubMat = new THREE.ShaderMaterial({
@@ -656,8 +656,8 @@ const bubMat = new THREE.ShaderMaterial({
   vertexShader: `attribute float aS; uniform float uT, uOn, uBurst, uPx, uH, uR; uniform vec3 uBase; varying float vA;
     void main(){
       float h = fract(position.y + uT * (0.10 + 0.12 * aS) * (1.0 + 1.5 * uBurst));   // 0 at the diffuser, 1 at the surface
-      float spread = uR * (0.25 + 1.6 * h) * (1.0 + uBurst);
-      vec3 p = uBase + vec3(position.x * spread + sin(uT * 3.0 + aS * 40.0) * 0.08 * uR, -uH * (1.0 - h), position.z * spread + cos(uT * 2.6 + aS * 30.0) * 0.08 * uR);
+      float spread = uR * (0.15 + 0.55 * h) * (1.0 + 0.5 * uBurst);
+      vec3 p = uBase + vec3((floor(fract(aS * 7.0) * 4.0) - 1.5) * uR * 2.6, 0.0, (fract(aS * 13.0) - 0.5) * uR * 2.0) + vec3(position.x * spread + sin(uT * 3.0 + aS * 40.0) * 0.08 * uR, -uH * (1.0 - h), position.z * spread + cos(uT * 2.6 + aS * 30.0) * 0.08 * uR);
       vA = step(aS, uOn) * smoothstep(0.0, 0.08, h) * smoothstep(1.0, 0.92, h);
       vec4 mv = viewMatrix * vec4(p, 1.0); float d = max(-mv.z, 0.1);
       gl_PointSize = uPx * (1.5 + 4.5 * aS * aS) * 14.0 / d; gl_Position = projectionMatrix * mv; }`,
@@ -725,7 +725,7 @@ function medium(under) {
   if (fishMesh) fishMesh.visible = under;
   scene.fog = under ? fogUnder : fogAbove;
   scene.background = under ? fogUnder.color : null;
-  moonLight.intensity = under ? 0 : 3.2; front.intensity = under ? 1.0 : 0.8; front.color.set(under ? 0x8fd0c4 : 0xa8bde0); uwLight.intensity = under ? 3.6 : 0;
+  moonLight.intensity = under ? 0 : 3.2; front.intensity = under ? 1.0 : 1.8; front.color.set(under ? 0x8fd0c4 : 0xffe2c4); uwLight.intensity = under ? 3.6 : 0;
   hemi.color.set(under ? 0x4a9a8a : 0xffd4aa); hemi.groundColor.set(under ? 0x0a1a14 : 0x1c3040); hemi.intensity = under ? 0.9 : 1.1;
   renderer.toneMappingExposure = under ? 1.0 : 0.82;
 }
@@ -769,7 +769,8 @@ renderer.setAnimationLoop(() => {
   const track = document.documentElement.scrollHeight - innerHeight, target = track > 0 ? scrollY / track : 0;
   s += (target - s) * (1 - Math.exp(-dt * 3.5));        // the camera eases after the scroll, like a crane coming to rest
   // a quarter of the scroll above the water, coming to rest at the surface; the rest under it, at an even pace
-  const A = 0.4, xa = Math.min(s / A, 1), e = s < A ? sCross * xa * xa * (3 - 2 * xa) : sCross + (1 - sCross) * (s - A) / (1 - A);
+  const A1 = 0.12, A = 0.34, ss = x => { x = Math.min(Math.max(x, 0), 1); return x * x * (3 - 2 * x); };
+  const e = s < A1 ? sLow * ss(s / A1) : s < A ? sLow + (sCross - sLow) * ss((s - A1) / (A - A1)) : sCross + (1 - sCross) * (s - A) / (1 - A);
   camera.position.copy(path.getPointAt(e)); camera.lookAt(look.getPointAt(e));
   camera.position.y += Math.sin(t * 0.4) * 0.03 * S;    // a hand-held breath
   if (camera.position.y < 0) {   // under the water the lens sways a little, as a diver's does
