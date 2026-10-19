@@ -35,7 +35,7 @@
      of the first story section, so scrolling always feels like sinking — never like "waiting for the scene" */
   /* the last beat ("Works on any farm") rides over the trust and contact sections, so the dive only needs
      enough runway for beats one through four — a shorter scroller brings the story panels right after them */
-  #scroller { position: relative; height: 1240vh; }   /* 640vh for the 3D dive + 600vh of filmed descent, see diveP() */
+  #scroller { position: relative; height: 1440vh; }   /* 640vh for the 3D dive + 800vh for the filmed clips, see diveP() */
   /* the story keeps flowing underwater: the 3D sea stays behind it, deepening with scroll */
   #stage { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; overflow: hidden; z-index: 0; }
   #story, footer { position: relative; z-index: 2; }
@@ -120,6 +120,7 @@
   section { position: relative; padding: 120px 6vw; }
   /* one continuous water veil over the 3D scene: it deepens smoothly with scroll, no per-section seams */
   /* real reef footage: the dive ends by dissolving the 3D reef into it */
+  .uwv.uwb { mix-blend-mode: screen; z-index: 4; }   /* the bubbles over the cross-fades: only their light shows */
   .uwv { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 3; opacity: 0; pointer-events: none; will-change: transform, opacity; transform-origin: 50% 45%; background: #04122a; }
   #veil { position: absolute; inset: 0; z-index: 4; pointer-events: none; opacity: 0;
     background: radial-gradient(120% 80% at 50% 0%, rgba(10,30,52,.5), rgba(3,10,20,.92) 70%), #030a14; }
@@ -480,9 +481,12 @@
       <p>Solar powered, nothing to wire. It reports over satellite, Wi-Fi or LTE.</p>
     </div>
     <div class="copy" id="solid-copy"></div>
-    <video class="uwv" muted loop playsinline preload="none" poster="media/dive-1-bubbles.jpg?v=70" data-poster="media/dive-1-bubbles.jpg?v=70" data-src="media/dive-1-bubbles.mp4?v=70" aria-hidden="true"></video>
-    <video class="uwv" muted loop playsinline preload="none" poster="media/dive-2-trout.jpg?v=70" data-poster="media/dive-2-trout.jpg?v=70" data-src="media/dive-2-trout.mp4?v=70" aria-hidden="true"></video>
-    <video class="uwv" muted loop playsinline preload="none" poster="media/dive-3-sunrays.jpg?v=70" data-poster="media/dive-3-sunrays.jpg?v=70" data-src="media/dive-3-sunrays.mp4?v=70" aria-hidden="true"></video>
+    <video class="uwv" muted loop playsinline preload="none" poster="media/uw-1.jpg?v=3" data-poster="media/uw-1.jpg?v=3" data-src="media/uw-1-1080.mp4?v=3" data-src-s="media/uw-1-720.mp4?v=3" aria-hidden="true"></video>
+    <video class="uwv" muted loop playsinline preload="none" poster="media/uw-2.jpg?v=3" data-poster="media/uw-2.jpg?v=3" data-src="media/uw-2-1080.mp4?v=3" data-src-s="media/uw-2-720.mp4?v=3" aria-hidden="true"></video>
+    <video class="uwv" muted loop playsinline preload="none" poster="media/uw-3.jpg?v=3" data-poster="media/uw-3.jpg?v=3" data-src="media/uw-3-1080.mp4?v=3" data-src-s="media/uw-3-720.mp4?v=3" aria-hidden="true"></video>
+    <video class="uwv" muted loop playsinline preload="none" poster="media/uw-4.jpg?v=3" data-poster="media/uw-4.jpg?v=3" data-src="media/uw-4-1080.mp4?v=3" data-src-s="media/uw-4-720.mp4?v=3" aria-hidden="true"></video>
+    <video class="uwv" muted loop playsinline preload="none" poster="media/uw-5.jpg?v=3" data-poster="media/uw-5.jpg?v=3" data-src="media/uw-5-1080.mp4?v=3" data-src-s="media/uw-5-720.mp4?v=3" aria-hidden="true"></video>
+    <video class="uwv uwb" muted loop playsinline preload="none" data-src="media/uw-bubbles.mp4?v=3" aria-hidden="true"></video>
     <div id="veil" aria-hidden="true"></div>
     <canvas id="uwsnow" aria-hidden="true"></canvas>
     <div id="orbit-hint" class="orbit-hint" aria-hidden="true">
@@ -566,7 +570,7 @@
   // dive progress p (0..1) from pixels scrolled into #scroller. The 3D part (p 0..KNEE) keeps the length it had
   // when the scroller was 640vh; everything after KNEE is the filmed descent and gets the extra 600vh, so the
   // clips sink past one after another instead of flashing by in the last few percent of the scroll.
-  const DIVE_BASE = 540, DIVE_DEEP = 600, DIVE_KNEE = 0.86;   // vh of 3D dive, vh of filmed descent, p where film starts
+  const DIVE_BASE = 540, DIVE_DEEP = 800, DIVE_KNEE = 0.86;   // vh of 3D dive, vh of filmed descent, p where film starts
   function diveSpans() {
     const span = Math.max(1, document.getElementById('scroller').offsetHeight - innerHeight);
     return [span, span * DIVE_BASE / (DIVE_BASE + DIVE_DEEP)];
@@ -1063,7 +1067,7 @@ const SUN_I = 2.8, UW_I = 2.6;
 const sun = new THREE.DirectionalLight(sunCol, SUN_I);       // low, warm late-afternoon sun
 sun.target.position.set(0, -1.6, 0);
 sun.castShadow = true;
-sun.shadow.mapSize.set(2048, 2048);
+sun.shadow.mapSize.set(1024, 1024);   // the float's shadow is small on screen: a quarter of the texels is plenty
 sun.shadow.bias = -0.0004;
 sun.shadow.normalBias = 0.02;
 sun.shadow.radius = 3;
@@ -1073,7 +1077,7 @@ scene.add(sun, sun.target);
 const sunUW = new THREE.DirectionalLight(sunCol, UW_I);
 sunUW.target.position.set(0, -1.6, 0);
 sunUW.castShadow = true;
-sunUW.shadow.mapSize.set(2048, 2048);
+sunUW.shadow.mapSize.set(1024, 1024);
 sunUW.shadow.bias = -0.0004;
 sunUW.shadow.normalBias = 0.02;
 sunUW.shadow.radius = 2;
@@ -2564,7 +2568,7 @@ addEventListener('scroll', () => {
 
 const header = document.getElementById('site-header');
 const scroller = document.getElementById('scroller');
-const beats = [...document.querySelectorAll('#stage .beat')], uwVids = [...document.querySelectorAll('#stage .uwv')], _uw = { y: scrollY, t: performance.now(), sp: 0, chain: false }, contactEl = document.getElementById('contact'), veilEl = document.getElementById('veil'), heroCopy = document.getElementById('hero-copy'), solidCopy = document.getElementById('solid-copy'), hint = document.getElementById('hint');
+const beats = [...document.querySelectorAll('#stage .beat')], uwVids = [...document.querySelectorAll('#stage .uwv:not(.uwb)')], uwB = document.querySelector('#stage .uwb'), _uw = { y: scrollY, t: performance.now(), sp: 0, chain: false }, contactEl = document.getElementById('contact'), veilEl = document.getElementById('veil'), heroCopy = document.getElementById('hero-copy'), solidCopy = document.getElementById('solid-copy'), hint = document.getElementById('hint');
 const smooth = (a, b, x) => { const t = Math.min(Math.max((x - a) / (b - a), 0), 1); return t * t * (3 - 2 * t); };
 const lerp = THREE.MathUtils.lerp;
 // where the water's edge crosses the lens right now, in px from the top of the stage: the same line the split shader
@@ -2633,7 +2637,8 @@ const UW_RM = matchMedia('(prefers-reduced-motion: reduce)').matches;
 function uwLoad(v) {   // the whole clip, in small pieces (assets/whole-video.js); its poster shows until it is in
   if (v._load) return v._load;
   if (v.dataset.poster) v.poster = v.dataset.poster;
-  return v._load = loadWholeVideo(v, v.dataset.src);
+  const small = v.dataset.srcS && Math.max(innerWidth, innerHeight) * (window.devicePixelRatio || 1) <= 1400;
+  return v._load = loadWholeVideo(v, small ? v.dataset.srcS : v.dataset.src);
 }
 function uwChain() {   // one clip at a time, in order, so the first is ready early instead of all arriving late together
   if (_uw.chain) return; _uw.chain = true;
@@ -2666,7 +2671,9 @@ const plateLoad = () => {   // both plates whole, in small pieces (assets/whole-
 
 // Progressive preloading scheduler: starts light, defers heavy assets until probe is ready
 // one clip at a time, in the order they are seen: the plates first, then the dive clips
-const scheduleMediaPreload = () => { plateLoad().then(uwChain); };
+// the two water plates are no longer loaded: under the 3D water they never showed (it draws over them), yet they cost
+// ~4 MB and a video decode and texture upload every frame. Only the film is fetched, once the float is up
+const scheduleMediaPreload = () => { uwChain(); };
 addEventListener('probe-ready', scheduleMediaPreload, { once: true });
 setTimeout(scheduleMediaPreload, 4500);   // never hold footage back even if probe is slow
 
@@ -2712,7 +2719,9 @@ function tick(static_ = false) {
   // one clock for everything the sea moves (waves, ripples, glitter, caustics, foam, the float's bob), slowed for a calm sea
   const seaT = t * SEA_SPEED, seaDt = dt * SEA_SPEED;
   if (!UW_RM) stepSets(seaT);   // reduced motion: no sets, the sea holds still
-  if (!static_) govern(t, rawDt);
+  // setAnimationLoop passes its timestamp as static_, so rawDt is 0 there and the governor never ran: it gets its own clock
+  if (static_ !== true) govern(t, t - (tick._gt ?? t));
+  tick._gt = t;
 
   const span = Math.max(1, scroller.offsetHeight - innerHeight);   // dive length: from the top of the page to the first story section
   const pTarget = diveP(-scroller.getBoundingClientRect().top);
@@ -2811,7 +2820,7 @@ function tick(static_ = false) {
   finish.uniforms.uExposure.value = lerp(0.52, 0.76, smooth(0.2, -3.0, camY));
   fishU.uFishT.value = t;
   if (fishMesh && p > 0.06) {
-    updateFish(t, dt, 4.2, -3.6, -6.5);
+    updateFish(t, Math.min(buoy.dt || 0, 0.1), 4.2, -3.6, -6.5);   // the loop's own dt is always 0 (see rideWaves): the sea's clock
   }
   const settle = smooth(0.28, 0.50, p);
   MU.uLhz.value.lerpVectors(LHZ0, LHZ_DEEP, settle).lerp(LHZ_REEF, reefV);
@@ -2868,47 +2877,54 @@ function tick(static_ = false) {
   heroCopy.style.transform = leave > 0 ? `translateY(${(-18 * leave).toFixed(1)}px)` : '';
   heroCopy.classList.toggle('faded', leave > 0.5);
 
-  // The filmed descent: bubbles as the float drops out of view (the first film of the dive), then the fish, then
-  // sun rays reaching the sea bed — most of it in the long stretch diveP gives p 0.86..1. Each clip dissolves into
-  // the next and sinks past the camera while it is on screen, so scrolling reads as going down.
-  // [fade in from, fully in at] — a clip stays until the next one has fully covered it
-  const UW = [[0.75, 0.79], [0.875, 0.89], [0.935, 0.95]], ND = UW.length, FISH = 1;
+  // The filmed descent: the user's own clips (1, 2, 3, end, 4), each pulled to one shared colour and made a seamless
+  // loop. The scroll picks the clip, never its speed: each plays at its own natural pace and loops while the visitor
+  // rests, and the next one dissolves in over it, with clip 0's bubbles rising across the dissolve. The first takes over
+  // from the 3D where the old clips did (p 0.75); the rest share the long stretch evenly. The last stays behind
+  // Capabilities and contact.
+  const ND = uwVids.length, FISH = ND - 1, UW_IN = [0, 0.2, 0.4, 0.6, 0.8], UW_FADE = 0.05;
   const kEnd = (innerHeight - contactEl.getBoundingClientRect().top) / innerHeight;
-  const post = smooth(0, 0.6, (curScrollY - span) / innerHeight);   // the first story section sliding in over the film
-  const ops = uwVids.map((v, i) => smooth(UW[i][0], UW[i][1], p));
+  const fY0 = diveY(0.79), fY1 = scroller.offsetHeight - innerHeight;
+  const fPos = Math.min(Math.max((diveY(p) - fY0) / Math.max(fY1 - fY0, 1), 0), 1);   // 0..1 through the filmed stretch
+  const ops = uwVids.map((v, i) => i === 0 ? smooth(0.75, 0.79, p) : smooth(UW_IN[i], UW_IN[i] + UW_FADE, fPos));
   for (let i = 0; i < ops.length - 1; i++) if (ops.slice(i + 1).some(o => o >= 0.999)) ops[i] = 0;
-  for (let i = 0; i < ND; i++) ops[i] *= 1 - post;
-  ops[FISH] = Math.max(ops[FISH], smooth(0.05, 0.75, kEnd));        // the fish come back behind the contact section
+  ops[FISH] = Math.max(ops[FISH], smooth(0.05, 0.75, kEnd));        // the last clip stays behind the contact section
   const depth = smooth(0.86, 1, p);                                 // 0 just under the surface .. 1 at the bottom
   const uwNow = performance.now(), uwDt = Math.min(Math.max((uwNow - _uw.t) / 1000, 0.001), 0.1), uwDy = curScrollY - _uw.y;
   _uw.t = uwNow; _uw.y = curScrollY;
-  _uw.sp += (Math.min(Math.abs(uwDy) / innerHeight / uwDt, 3) - _uw.sp) * Math.min(uwDt * 4, 1);
-  const uwRate = THREE.MathUtils.clamp(0.68 + _uw.sp * 0.42, 0.45, 1.45);
   const snowAlpha = UW_RM ? 0 : 0.75 * smooth(0.22, 0.38, p);
   drawUwSnow(uwDy, snowAlpha);
   let vidTop = 0;
   uwVids.forEach((v, i) => {
-    // Rich, crisp underwater video playback
     const o = ops[i];
     v.style.opacity = o.toFixed(3);
-    // sinking: from the moment the clip starts to fade in until the next one has covered it, the picture drifts
-    // up and closes in a little — the camera going down. The overscale keeps the edges covered at every aspect.
-    const k = Math.min(Math.max((p - UW[i][0]) / ((i + 1 < ND ? UW[i + 1][1] : 1) - UW[i][0]), 0), 1);
-    v.style.transform = UW_RM ? 'scale(1.03)' : `translate3d(0, ${(6 - 12 * k).toFixed(2)}%, 0) scale(${(1.14 + 0.06 * k).toFixed(4)})`;
-    v.style.filter = UW_RM ? 'none' : `brightness(${(1.04 - 0.22 * depth).toFixed(3)})`;   // a little less light the deeper you go
-    if (!v._load && (p > UW[i][0] - 0.15 || (i === FISH && kEnd > -2.0))) uwLoad(v);   // scrolled ahead of the chain
-    if (o > 0.001) {
+    v.style.transform = 'scale(1.02)';
+    v.style.filter = UW_RM ? 'none' : `brightness(${(1.04 - 0.18 * depth).toFixed(3)})`;   // a little less light the deeper you go
+    if (!v._load && (p > 0.6 || kEnd > -2.0)) uwLoad(v);   // scrolled ahead of the chain
+    if (o > 0.001 && !UW_RM) {
+      if (v.playbackRate !== 1) v.playbackRate = 1;
       if (v.paused) v.play().catch(() => {});
-      if (Math.abs(v.playbackRate - uwRate) > 0.04) v.playbackRate = uwRate;
     } else if (!v.paused) v.pause();
     vidTop = Math.max(vidTop, o);
   });
+  if (uwB) {   // bubbles rise across each dissolve, brightest in its middle
+    let b = 0;
+    for (let i = 1; i < ND; i++) b = Math.max(b, smooth(UW_IN[i] - 0.03, UW_IN[i] + UW_FADE / 2, fPos) * (1 - smooth(UW_IN[i] + UW_FADE / 2, UW_IN[i] + UW_FADE + 0.04, fPos)));
+    b *= 0.8 * (1 - smooth(0.05, 0.75, kEnd));
+    uwB.style.opacity = b.toFixed(3);
+    if (b > 0.001 && !UW_RM) { if (!uwB._load) uwLoad(uwB); if (uwB.paused) uwB.play().catch(() => {}); }
+    else if (!uwB.paused) uwB.pause();
+  }
   veilEl.style.opacity = (Math.max(0.28 * smooth(0.18, 0.28, p), 0.5 * smooth(0.0, 0.8, (curScrollY - span) / innerHeight)) * (1 - vidTop * 0.9) * (1 - 0.35 * smooth(0.05, 0.75, kEnd))).toFixed(3);
   beats.forEach(el => { const a = +el.dataset.in, b = +el.dataset.out; el.style.opacity = (smooth(a, a + 0.03, p) * (1 - smooth(b - 0.03, b, p)) * (1 - smooth(0, 0.3, (curScrollY - span) / innerHeight))).toFixed(3); });
   solidCopy.classList.toggle('faded', q > 0.1);
   hint.style.opacity = 1 - smooth(0.0, 0.07, p);
   diveEl.style.opacity = (1 - smooth(0.975, 0.995, p)) * (1 - smooth(0.0, 0.08, q));
   diveDot.style.top = `${(0.06 + Math.min(p + q * 0.94, 1) * 0.88) * 100}%`;
+  if (vidTop >= 0.999) {   // the film covers the whole stage: none of the 3D shows, so none of it is worked out this frame
+    if (curScrollY > span + innerHeight * 2) beats.forEach(el => { if (el.style.opacity !== '0') el.style.opacity = '0'; });
+    return;
+  }
 
   // True physical 3D underwater optics: NEVER turn off 3D water surface, particles, or volumetric rays!
   const plateOn = view.mode !== 0 && plateVid.readyState >= 2;
@@ -2935,7 +2951,7 @@ function tick(static_ = false) {
     under.visible = particles.visible = descK < 0.999;   // only the float stays drawn in front of the footage
     compU.uVol.value = 1 - descK;
     if (descVid.paused && !descVid.ended) descVid.play().catch(() => {});
-    if (Math.abs(descVid.playbackRate - uwRate) > 0.04) descVid.playbackRate = uwRate;
+    if (descVid.playbackRate !== 1) descVid.playbackRate = 1;
   } else {
     finish.uniforms.tPlate.value = plateTexA;
     if (!descVid.paused) descVid.pause();
