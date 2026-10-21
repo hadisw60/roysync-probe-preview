@@ -2756,10 +2756,10 @@ function tick(static_ = false) {
   const fitW = wide ? 1 : Math.min(2.2, 0.9 / camera.aspect * TAN16 / halfT);
 
   // Camera distance: smooth ease-in to frame the sensors at close range
-  const dist = lerp(lerp(14.8, 12.0, dive), wide ? 11.2 : 12.2, uw) * fitW * (1 - deep * 0.16) * (1 + 0.15 * rise);
+  const dist = lerp(lerp(14.8, 12.0, dive), wide ? 11.2 : 12.2, uw) * fitW * (1 - deep * 0.16) * (1 + 0.2 * rise);
 
   // Camera height: smooth realistic descent with buoyant ocean coupling (+1.9 -> 0.0 -> -1.8 -> -2.5 -> -5.2)
-  const baseCamY = lerp(lerp(lerp(1.9, -1.8, dive), -2.5, uw), REEF_Y + 7.2, deep) + 3.6 * rise;
+  const baseCamY = lerp(lerp(lerp(1.9, -1.8, dive), -2.5, uw), REEF_Y + 7.2, deep) + 4.7 * rise;
   
   // Real hydrodynamic surface coupling:
   // As the camera approaches the waterline, it physically couples to the water wave height,
