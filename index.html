@@ -429,6 +429,45 @@
     .orbit-hint { bottom: 52px; font-size: 10px; padding: 6px 12px 6px 9px; }
     .orbit-hint svg { width: 13px; height: 13px; }
   }
+  /* ---- the header, upgraded: full width over the hero, then it gathers into a floating glass capsule ---- */
+  header { transition: background .5s, padding .5s, backdrop-filter .5s, top .5s cubic-bezier(.2,.8,.2,1), left .5s cubic-bezier(.2,.8,.2,1),
+           right .5s cubic-bezier(.2,.8,.2,1), border-radius .5s, box-shadow .5s, border-color .5s; border: 1px solid transparent; }
+  header.scrolled { top: 12px; left: max(16px, calc(50vw - 520px)); right: max(16px, calc(50vw - 520px)); border-radius: 999px;
+                    padding: 10px 10px 10px 18px; background: linear-gradient(180deg, rgba(14,32,54,.62), rgba(5,14,26,.58));
+                    backdrop-filter: blur(18px) saturate(1.4); -webkit-backdrop-filter: blur(18px) saturate(1.4);
+                    border-color: rgba(170,215,255,.16);
+                    box-shadow: 0 18px 50px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.08), 0 0 0 1px rgba(79,159,224,.06); }
+  header.scrolled .logo img { width: 32px; height: 32px; transition: width .4s, height .4s; }
+  .logo img { transition: width .4s, height .4s; }
+  .logo i { position: relative; overflow: hidden; }
+  .logo i::after { content: ""; position: absolute; inset: 0; transform: translateX(-120%);
+                   background: linear-gradient(100deg, transparent 30%, rgba(255,255,255,.55) 50%, transparent 70%); animation: tagshine 6s ease-in-out 2s infinite; }
+  @keyframes tagshine { 0%, 80% { transform: translateX(-120%); } 95%, 100% { transform: translateX(120%); } }
+  .navlinks { position: relative; gap: 4px; }
+  .navlinks a { position: relative; z-index: 1; padding: 8px 14px; border-radius: 999px; }
+  .nav-lens { position: absolute; top: 0; left: 0; height: 100%; width: 0; border-radius: 999px; opacity: 0; pointer-events: none;
+              background: linear-gradient(180deg, rgba(159,208,247,.16), rgba(159,208,247,.06)); border: 1px solid rgba(159,208,247,.22);
+              box-shadow: inset 0 1px 0 rgba(255,255,255,.12), 0 4px 18px rgba(79,159,224,.18);
+              transition: transform .45s cubic-bezier(.2,.9,.25,1.15), width .45s cubic-bezier(.2,.9,.25,1.15), opacity .3s; }
+  .navlinks a.on { color: #fff; }
+  .nav-progress { position: absolute; left: 22px; right: 22px; bottom: -1px; height: 2px; border-radius: 2px; opacity: 0; pointer-events: none;
+                  background: linear-gradient(90deg, rgba(159,208,247,0), #9fd0f7 40%, #e3f3ff); transform-origin: left; transform: scaleX(0);
+                  box-shadow: 0 0 10px rgba(159,208,247,.8); transition: opacity .4s; }
+  header.scrolled .nav-progress { opacity: .9; }
+  .btn.cta { position: relative; overflow: hidden; }
+  .btn.cta::after { content: ""; position: absolute; top: 0; bottom: 0; width: 60%; left: -80%; transform: skewX(-20deg);
+                    background: linear-gradient(90deg, transparent, rgba(255,255,255,.75), transparent); transition: left .7s ease; }
+  .btn.cta:hover::after { left: 130%; }
+  @media (max-width: 640px) {
+    header.scrolled { left: 10px; right: 10px; top: 10px; padding: 8px 8px 8px 12px; }
+    .navlinks a { padding: 7px 9px; }
+  }
+  @media (prefers-reduced-motion: reduce) { .logo i::after { animation: none; } header, .nav-lens { transition: none; } }
+  /* the Contact button: a ripple spreads from wherever the pointer touches it, like a drop on the pond */
+  header .btn.cta > span { position: relative; z-index: 2; }
+  header .btn.cta .rip { position: absolute; z-index: 1; width: 10px; height: 10px; margin: -5px 0 0 -5px; border-radius: 50%;
+                         pointer-events: none; border: 2px solid rgba(255,255,255,.9); animation: ctarip .9s ease-out forwards; }
+  @keyframes ctarip { to { transform: scale(18); opacity: 0; border-width: .5px; } }
 </style>
 <script type="importmap">
 { "imports": { "three": "./lib/three.module.js", "three/addons/": "./lib/addons/", "three/examples/jsm/": "./lib/jsm/" } }
@@ -443,10 +482,13 @@
     <b>RoySync</b><i>Gen2</i>
   </a>
   <div class="navlinks">
+    <span class="nav-lens" aria-hidden="true"></span>
     <a href="#solution" data-dive="0.3">Solution</a>
+    <a href="#trust" data-sec="trust">Capabilities</a>
   </div>
-  <a class="btn cta" href="contact.html">Contact us</a>
+  <a class="btn cta" href="contact.html"><span>Contact us</span></a>
   </nav>
+  <i class="nav-progress" aria-hidden="true"></i>
 </header>
 
 <a class="skip" href="#trust">Skip to content</a>
@@ -2961,6 +3003,49 @@ if (REDUCED) {
 } else {
   renderer.setAnimationLoop(tick);
 }
+
+// the header: a glass lens under the hovered or current link, and a glow line that fills with the page
+(() => {
+  const nav = document.querySelector('.navlinks'), lens = nav.querySelector('.nav-lens'), bar = document.querySelector('.nav-progress');
+  const links = [...nav.querySelectorAll('a')];
+  let hover = null;
+  const place = a => {
+    if (!a) { lens.style.opacity = '0'; return; }
+    lens.style.opacity = '1'; lens.style.width = a.offsetWidth + 'px'; lens.style.transform = `translateX(${a.offsetLeft}px)`;
+  };
+  const current = () => {
+    const y = scrollY, h = innerHeight, sol = document.getElementById('scroller'), tr = document.getElementById('trust');
+    if (tr && tr.getBoundingClientRect().top < h * 0.5) return links[1];
+    if (sol && y > h * 0.6) return links[0];
+    return null;
+  };
+  links.forEach(a => { a.addEventListener('mouseenter', () => { hover = a; place(a); }); });
+  nav.addEventListener('mouseleave', () => { hover = null; place(current()); });
+  const update = () => {
+    const cur = current();
+    links.forEach(a => a.classList.toggle('on', a === cur));
+    if (!hover) place(cur);
+    const max = document.documentElement.scrollHeight - innerHeight;
+    bar.style.transform = `scaleX(${max > 0 ? Math.min(scrollY / max, 1) : 0})`;
+  };
+  addEventListener('scroll', update, { passive: true }); addEventListener('resize', update); setTimeout(update, 600);
+})();
+
+
+// the Contact button: a ripple where the pointer enters or moves (a few a second at most), and on a tap
+(() => {
+  const b = document.querySelector('header .btn.cta');
+  if (!b || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  let last = 0;
+  const ripple = e => {
+    const now = performance.now(); if (now - last < 160) return; last = now;
+    const r = b.getBoundingClientRect(), i = document.createElement('i');
+    i.className = 'rip'; i.style.left = (e.clientX - r.left) + 'px'; i.style.top = (e.clientY - r.top) + 'px';
+    b.appendChild(i); setTimeout(() => i.remove(), 950);
+  };
+  b.addEventListener('pointerenter', ripple); b.addEventListener('pointermove', ripple);
+  b.addEventListener('pointerdown', e => { last = 0; ripple(e); });
+})();
 </script>
 </body>
 </html>
