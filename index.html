@@ -372,19 +372,38 @@
   .step { background: rgba(15, 16, 32, .4); }
   header.scrolled { background: rgba(5, 14, 26, .55); }
 
-  /* after the dive the page is plain: the scene scrolls away and the story follows on the deep-water colour, from
-     "When oxygen drops" on, with no device, no glass, no plates, no glows (2026-10-25) */
-  #story { background: var(--bg); }
+  /* after the dive the page is light and plain: the scene scrolls away and the story follows on a pale ice blue (a
+     cool light colour of the navy's own family: the cream tried first sat badly beside it), from "When oxygen drops"
+     on, with no device, no glass, no glows; the navy footer closes it (2026-10-25) */
+  #story { --ink: #0d1b2a; --ink-2: #4f5f70; --blue: #1f6fb8; color: var(--ink);
+           --paper: #dde7f1; --card: #edf3f8; --rule: #c8d6e4; --rule-2: #a9bccf; background: var(--paper); }
   #story > section::before { display: none; }
   #action { padding: 150px 6vw 30px; }
   #action .wrap { max-width: 1060px; }
   .say { max-width: 560px; margin: 0 0 26vh; }
   .say:last-child { margin-bottom: 0; }
   @media (max-width: 760px) { .say { margin: 0 auto 18vh; text-align: center; } .say h2::before { margin-left: auto; margin-right: auto; } }
-  #story h2.title, #story p.lead, #story h3, #trust .wrap h2.title, #contact h2.title, #contact p.lead { text-shadow: none; }
-  .cap { background: rgba(255, 255, 255, .025); border-color: var(--line); box-shadow: none; }
+  #story h2.title, #story p.lead, #story h3, #trust .wrap h2.title, #contact h2.title, #contact p.lead, .say h2, .say p { text-shadow: none; }
+  #story h2.title, #story h3, .say h2 { color: var(--ink); }
+  .say p, #contact p.lead { color: var(--ink-2); }
+  .say h2 em, #contact h2 em { color: var(--blue); }
+  .say h2::before { box-shadow: none; }
+  .cap { background: var(--card); border: 1px solid var(--rule); box-shadow: none; }
   .cap::after { display: none; }
-  .cap svg { background: none; border-color: var(--line); }
+  .cap:hover { border-color: var(--rule-2); }
+  .cap h3 { color: var(--ink); }
+  .cap p { color: var(--ink-2); }
+  .cap svg { color: var(--blue); background: rgba(31, 111, 184, .08); border-color: transparent; }
+  #contact .btn:not(.ghost) { animation: none; background: var(--ink); color: #fff; box-shadow: none; }
+  #contact .btn:not(.ghost):hover { box-shadow: 0 10px 24px rgba(13, 27, 42, .18); }
+  #story .btn.ghost { background: transparent; border-color: var(--rule-2); color: var(--ink); }
+  #story .btn.ghost:hover { border-color: var(--ink); }
+  /* the chapter rail and the header capsule, over the light page */
+  #depth-rail { background: linear-gradient(180deg, rgba(13, 27, 42, .12), rgba(13, 27, 42, .04)); }
+  #depth-rail u { background: rgba(13, 27, 42, .3); }
+  #depth-rail i { background: var(--accent); box-shadow: none; }
+  #depth-rail span { color: #8a98a8; }
+  header.scrolled.on-light { background: rgba(9, 22, 38, .9); }
 
   /* footer, after bluesonde's: brand and email first, then the pages, then the company's registered details (UK law asks for them) */
   footer { padding: 72px 6vw 30px; border-top: 1px solid var(--line); color: #9fb4c8; font-size: 14px; line-height: 1.6;
@@ -2818,6 +2837,7 @@ function tick(static_ = false) {
   const q = qCurrent;
   const curScrollY = scrollCurrentY;
   header.classList.toggle('scrolled', curScrollY > 40);
+  header.classList.toggle('on-light', storyEl.getBoundingClientRect().top < 70);   // the light page is under it
   // story sections ride over the fixed scene: keep the frame loop alive while they scroll, even after the
   // dive is off-screen — the water drifting behind the panels is what makes them feel submerged
   // (it reads span and curScrollY, so it has to come after both: above them it threw on every frame)
