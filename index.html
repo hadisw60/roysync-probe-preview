@@ -37,9 +37,10 @@
      story section (about seven screens), then the fixed sea keeps flowing behind the panels all the way down.
      The "story" half of the scroll drives q — a slow deepen + pull-in that makes the panels feel like they are
      sinking past the float, not sliding over a paused film. */
-  #scroller { position: relative; height: 700vh; }   /* the whole length is the 3D dive (no filmed part since 2026-10-21), see diveP() */
+  #scroller { position: relative; height: 364vh; }   /* the 3D dive, up to DIVE_END at the old 700vh pace (600vh a unit of p), see diveP() */
   /* the story keeps flowing underwater: the 3D sea stays behind it, deepening with scroll */
-  #stage { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; overflow: hidden; z-index: 0; }
+  /* sticky, not fixed: it holds through the dive, then scrolls away with the page and the plain page follows it */
+  #stage { position: sticky; top: 0; left: 0; width: 100vw; height: 100vh; overflow: hidden; z-index: 0; }
   #story, footer { position: relative; z-index: 2; }
   #story h2.title, #story p.lead, #story h3 { text-shadow: 0 2px 16px rgba(0,0,0,.55); }
   #stage canvas { display: block; width: 100%; height: 100%; }
@@ -93,10 +94,10 @@
   #hero-copy .cta-row { display: flex; gap: 12px; flex-wrap: wrap; }
   #solid-copy { display: none; }
   .beat { left: 6vw; bottom: 14vh; max-width: 520px; opacity: 0; pointer-events: none; }
-  .beat h2 { font-size: clamp(24px, 2.7vw, 38px); font-weight: 600; letter-spacing: -.025em; line-height: 1.12; margin: 0 0 12px; text-shadow: 0 2px 18px rgba(0,0,0,.6); }
-  .beat h2::before { content: ""; display: block; width: 34px; height: 3px; border-radius: 3px; margin: 0 0 16px; background: linear-gradient(90deg, var(--accent), var(--accent-2)); box-shadow: 0 0 12px var(--glow); }
-  .beat h2 em, #contact h2 em { font-style: normal; color: #8fd0ff; }
-  .beat p { color: #d8e6f3; font-size: 16px; line-height: 1.55; margin: 0; text-shadow: 0 2px 14px rgba(0,0,0,.6); }
+  .beat h2, .say h2 { font-size: clamp(24px, 2.7vw, 38px); font-weight: 600; letter-spacing: -.025em; line-height: 1.12; margin: 0 0 12px; text-shadow: 0 2px 18px rgba(0,0,0,.6); }
+  .beat h2::before, .say h2::before { content: ""; display: block; width: 34px; height: 3px; border-radius: 3px; margin: 0 0 16px; background: linear-gradient(90deg, var(--accent), var(--accent-2)); box-shadow: 0 0 12px var(--glow); }
+  .beat h2 em, .say h2 em, #contact h2 em { font-style: normal; color: #8fd0ff; }
+  .beat p, .say p { color: #d8e6f3; font-size: 16px; line-height: 1.55; margin: 0; text-shadow: 0 2px 14px rgba(0,0,0,.6); }
   @media (max-width: 760px) { .beat { left: 16px; right: 16px; bottom: 9vh; text-align: center; } }
   #solid-copy h2 { font-size: clamp(28px, 4vw, 50px); font-weight: 500; letter-spacing: -.03em; margin: 0 0 12px; }
   #solid-copy p { color: var(--muted); font-size: 16px; line-height: 1.55; margin: 0; }
@@ -371,6 +372,20 @@
   .step { background: rgba(15, 16, 32, .4); }
   header.scrolled { background: rgba(5, 14, 26, .55); }
 
+  /* after the dive the page is plain: the scene scrolls away and the story follows on the deep-water colour, from
+     "When oxygen drops" on, with no device, no glass, no plates, no glows (2026-10-25) */
+  #story { background: var(--bg); }
+  #story > section::before { display: none; }
+  #action { padding: 150px 6vw 30px; }
+  #action .wrap { max-width: 1060px; }
+  .say { max-width: 560px; margin: 0 0 26vh; }
+  .say:last-child { margin-bottom: 0; }
+  @media (max-width: 760px) { .say { margin: 0 auto 18vh; text-align: center; } .say h2::before { margin-left: auto; margin-right: auto; } }
+  #story h2.title, #story p.lead, #story h3, #trust .wrap h2.title, #contact h2.title, #contact p.lead { text-shadow: none; }
+  .cap { background: rgba(255, 255, 255, .025); border-color: var(--line); box-shadow: none; }
+  .cap::after { display: none; }
+  .cap svg { background: none; border-color: var(--line); }
+
   /* footer, after bluesonde's: brand and email first, then the pages, then the company's registered details (UK law asks for them) */
   footer { padding: 72px 6vw 30px; border-top: 1px solid var(--line); color: #9fb4c8; font-size: 14px; line-height: 1.6;
            background: linear-gradient(180deg, rgba(4,12,22,.9), #03080f 65%); }
@@ -521,14 +536,6 @@
       <h2>Most fish are lost <em>before sunrise</em></h2>
       <p>Oxygen drops slowly all night. By the morning check, it's often too late.</p>
     </div>
-    <div class="copy beat" data-in="0.45" data-out="0.56">
-      <h2>When oxygen drops, <em>it acts</em></h2>
-      <p>It turns the aerator on first, then sends you a message. You don't have to be awake.</p>
-    </div>
-    <div class="copy beat" data-in="0.63" data-out="0.74">
-      <h2>Works on <em>any farm</em></h2>
-      <p>Solar powered, nothing to wire. It reports over satellite, Wi-Fi or LTE.</p>
-    </div>
     <div class="copy" id="solid-copy"></div>
     <div id="veil" aria-hidden="true"></div>
     <canvas id="uwsnow" aria-hidden="true"></canvas>
@@ -548,6 +555,19 @@
 </div>
 
 <div id="story">
+
+<section id="action">
+  <div class="wrap">
+    <div class="say reveal">
+      <h2>When oxygen drops, <em>it acts</em></h2>
+      <p>It turns the aerator on first, then sends you a message. You don't have to be awake.</p>
+    </div>
+    <div class="say reveal">
+      <h2>Works on <em>any farm</em></h2>
+      <p>Solar powered, nothing to wire. It reports over satellite, Wi-Fi or LTE.</p>
+    </div>
+  </div>
+</section>
 
 <section id="trust">
   <div class="wrap">
@@ -610,20 +630,21 @@
 </footer>
 
 <script>
-  // dive progress p (0..1) from pixels scrolled into #scroller. The knee machinery stayed in place for the
-  // filmed descent until 2026-10-21; with DIVE_DEEP at 0 it already reduced to a plain linear map, so now the
-  // mapping is simply linear across the whole 700vh dive — the story sections continue the descent through q.
+  // dive progress p from pixels scrolled into #scroller, linear. The dive is cut at DIVE_END, just after "Most fish
+  // are lost before sunrise": there the scene scrolls away with the page and the plain page follows (2026-10-25).
+  // The timings in p are those of the old 0..1 dive, and the scroller is cut to match, so the pace is unchanged.
+  const DIVE_END = 0.44;
   function diveSpans() {
     const span = Math.max(1, document.getElementById('scroller').offsetHeight - innerHeight);
     return [span];
   }
   function diveP(y) {
     const [span] = diveSpans();
-    return Math.min(Math.max(y / span, 0), 1);
+    return Math.min(Math.max(y / span, 0), 1) * DIVE_END;
   }
   function diveY(p) {
     const [span] = diveSpans();
-    return p * span;
+    return Math.min(p / DIVE_END, 1) * span;
   }
   // fade elements in as they enter the viewport, lightly staggered within each group
   document.querySelectorAll('.params .param, .features .feature, .steps .step, ul.points li').forEach((el, i) => {
@@ -2922,7 +2943,7 @@ function tick(static_ = false) {
     stage.style.cursor = probeInView ? 'grab' : 'default';
   }
   if (orbitHintEl) {
-    const showHint = !userHasInteracted && p >= 0.12 && p <= 0.52;
+    const showHint = !userHasInteracted && p >= 0.12 && p <= 0.41;   // gone before the dive ends (DIVE_END)
     orbitHintEl.classList.toggle('visible', showHint);
   }
 
@@ -3007,6 +3028,7 @@ function tick(static_ = false) {
   bakeCaustics();
 
   if (!static_ && !document.hidden) {
+    if (storyEl.getBoundingClientRect().top <= 0) return;   // the scene has scrolled away: nothing to draw
     const stageGone = scroller.getBoundingClientRect().bottom <= 0;
     if (stageGone && Math.abs(q - lastQ) < 0.0004 && !storyScrolling && !isOrbitDragging && Math.abs(orbitVelYaw) < 0.0001 && Math.abs(orbitVelPitch) < 0.0001) return;
     lastQ = q;
@@ -3020,6 +3042,7 @@ function tick(static_ = false) {
   composer.render();
 }
 let lastQ = -1;
+const storyEl = document.getElementById('story');
 const diveEl = document.getElementById('dive'), diveDot = diveEl.querySelector('i');
 const REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
 if (REDUCED) {
