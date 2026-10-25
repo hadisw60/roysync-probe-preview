@@ -33,9 +33,11 @@
   a { color: inherit; text-decoration: none; }
   /* the dive is no longer a fixed-length hero: it lasts exactly from the top of the page to the start
      of the first story section, so scrolling always feels like sinking — never like "waiting for the scene" */
-  /* the last beat ("Works on any farm") rides over the trust and contact sections, so the dive only needs
-     enough runway for beats one through four — a shorter scroller brings the story panels right after them */
-  #scroller { position: relative; height: 1240vh; }   /* the whole length is the 3D dive (no filmed part since 2026-10-21), see diveP() */
+  /* the story reads as one continuous descent: the dive itself runs from the top of the page to the first
+     story section (about seven screens), then the fixed sea keeps flowing behind the panels all the way down.
+     The "story" half of the scroll drives q — a slow deepen + pull-in that makes the panels feel like they are
+     sinking past the float, not sliding over a paused film. */
+  #scroller { position: relative; height: 700vh; }   /* the whole length is the 3D dive (no filmed part since 2026-10-21), see diveP() */
   /* the story keeps flowing underwater: the 3D sea stays behind it, deepening with scroll */
   #stage { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; overflow: hidden; z-index: 0; }
   #story, footer { position: relative; z-index: 2; }
@@ -319,6 +321,12 @@
   .step h3 { font-size: 20px; font-weight: 500; margin: 0 0 10px; }
   .step p { color: var(--muted); font-size: 15px; line-height: 1.6; margin: 0; }
 
+  /* every story panel gets its own soft plate of darker water, fading in as it rises into view (tint-in):
+     the live sea keeps moving at the edges, but the words never sit on bare water */
+  #trust::before { content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none; opacity: 0; transition: opacity 1.2s ease;
+    background: radial-gradient(85% 75% at 50% 50%, rgba(3,6,16,.74), rgba(3,6,16,.36) 78%, transparent); }
+  #trust.tint-in::before { opacity: 1; }
+
   /* contact us: a deep-water enquiry desk — the sea floor stays visible behind a darkened glass panel */
   #contact { text-align: center; padding: 140px 6vw 170px; min-height: 100vh; display: flex; align-items: center; justify-content: center; background: transparent; }
   #contact::before { content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none; opacity: 0; transition: opacity 1.2s ease;
@@ -483,7 +491,7 @@
   </a>
   <div class="navlinks">
     <span class="nav-lens" aria-hidden="true"></span>
-    <a href="#solution" data-dive="0.3">Solution</a>
+    <a href="#top" data-dive="0.28">The dive</a>
     <a href="#trust" data-sec="trust">Capabilities</a>
   </div>
   <a class="btn cta" href="contact.html"><span>Contact us</span></a>
@@ -502,22 +510,22 @@
       <p>A small float sits in your tank with eight sensors. If the oxygen drops, it turns the aerator on and sends you a message.</p>
       <div class="cta-row">
         <a class="btn" href="contact.html">Contact us</a>
-        <a class="btn ghost" href="#solution" data-dive="0.3">See how it works</a>
+        <a class="btn ghost" href="#trust" data-sec="trust">See how it works</a>
       </div>
     </div>
-    <div class="copy beat" data-in="0.22" data-out="0.36">
+    <div class="copy beat" data-in="0.15" data-out="0.26">
       <h2>Eight sensors, <em>under the waterline</em></h2>
       <p>Oxygen, pH, temperature and more, measured right where your fish live.</p>
     </div>
-    <div class="copy beat" data-in="0.42" data-out="0.56">
+    <div class="copy beat" data-in="0.30" data-out="0.41">
       <h2>Most fish are lost <em>before sunrise</em></h2>
       <p>Oxygen drops slowly all night. By the morning check, it's often too late.</p>
     </div>
-    <div class="copy beat" data-in="0.62" data-out="0.78">
+    <div class="copy beat" data-in="0.45" data-out="0.56">
       <h2>When oxygen drops, <em>it acts</em></h2>
       <p>It turns the aerator on first, then sends you a message. You don't have to be awake.</p>
     </div>
-    <div class="copy beat" data-in="0.86" data-out="1.01">
+    <div class="copy beat" data-in="0.63" data-out="0.74">
       <h2>Works on <em>any farm</em></h2>
       <p>Solar powered, nothing to wire. It reports over satellite, Wi-Fi or LTE.</p>
     </div>
@@ -579,7 +587,7 @@
     <nav class="ft-col" aria-label="Footer">
       <h4>Pages</h4>
       <a href="#top">Home</a>
-      <a href="#solution" data-dive="0.3">Solution</a>
+      <a href="#trust" data-sec="trust">Capabilities</a>
       <a href="contact.html">Contact us</a>
     </nav>
     <div class="ft-col">
@@ -602,21 +610,20 @@
 </footer>
 
 <script>
-  // dive progress p (0..1) from pixels scrolled into #scroller. The 3D part (p 0..KNEE) keeps the length it had
-  // when the scroller was 640vh; everything after KNEE is the filmed descent and gets the extra 600vh, so the
-  // clips sink past one after another instead of flashing by in the last few percent of the scroll.
-  const DIVE_BASE = 540, DIVE_DEEP = 0, DIVE_KNEE = 0.86;   // vh of 3D dive, vh of filmed descent, p where film starts
+  // dive progress p (0..1) from pixels scrolled into #scroller. The knee machinery stayed in place for the
+  // filmed descent until 2026-10-21; with DIVE_DEEP at 0 it already reduced to a plain linear map, so now the
+  // mapping is simply linear across the whole 700vh dive — the story sections continue the descent through q.
   function diveSpans() {
     const span = Math.max(1, document.getElementById('scroller').offsetHeight - innerHeight);
-    return [span, span * DIVE_BASE / (DIVE_BASE + DIVE_DEEP)];
+    return [span];
   }
   function diveP(y) {
-    const [span, base] = diveSpans(), a = DIVE_KNEE * base;
-    return y <= a ? Math.max(y / base, 0) : Math.min(DIVE_KNEE + (1 - DIVE_KNEE) * (y - a) / (span - a), 1);
+    const [span] = diveSpans();
+    return Math.min(Math.max(y / span, 0), 1);
   }
   function diveY(p) {
-    const [span, base] = diveSpans(), a = DIVE_KNEE * base;
-    return p <= DIVE_KNEE ? p * base : a + (p - DIVE_KNEE) / (1 - DIVE_KNEE) * (span - a);
+    const [span] = diveSpans();
+    return p * span;
   }
   // fade elements in as they enter the viewport, lightly staggered within each group
   document.querySelectorAll('.params .param, .features .feature, .steps .step, ul.points li').forEach((el, i) => {
@@ -2749,6 +2756,9 @@ function tick(static_ = false) {
   // one clock for everything the sea moves (waves, ripples, glitter, caustics, foam, the float's bob), slowed for a calm sea
   const seaT = t * SEA_SPEED, seaDt = dt * SEA_SPEED;
   if (!UW_RM) stepSets(seaT);   // reduced motion: no sets, the sea holds still
+  // story sections ride over the fixed scene: keep the frame loop alive while they scroll, even after the
+  // dive is off-screen — the water drifting behind the panels is what makes them feel submerged
+  const storyScrolling = curScrollY > span && Math.abs(scrollTargetY - curScrollY) > 0.5;
   // setAnimationLoop passes its timestamp as static_, so rawDt is 0 there and the governor never ran: it gets its own clock
   if (static_ !== true) govern(t, t - (tick._gt ?? t));
   tick._gt = t;
@@ -2788,7 +2798,12 @@ function tick(static_ = false) {
   // as the scroll starts (Hamed, 2026-10-21)
   const rise = 1 - smooth(0.0, 0.12, p);
   const uw = smooth(0.24, 0.46, p);                       // fully settled under the waterline
-  const deep = 0;   // the camera stays with the float to the end of the dive: there is no film after it now to sink into
+  // the story panels keep sinking: q (0..1 through the sections) continues the descent at a slow, calm rate —
+  // a gentle pull away from the float plus extra depth tint, so the fixed sea never reads as a paused backdrop
+  const deep = Math.min(q, 1) * 0.55;
+  // the float drifts slowly away as the story scrolls on: it sinks out of frame behind the panels, and by the
+  // contact section the scene is open water — depth, shafts, snow — which is where the closing CTA reads best
+  const recede = smooth(0.28, 0.92, q);
   const sunlit = smooth(0.30, 0.52, p) * (1 - smooth(0.68, 0.84, p));
   const reefV = 0;
 
@@ -2797,11 +2812,13 @@ function tick(static_ = false) {
   const halfT = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2));
   const fitW = wide ? 1 : Math.min(2.2, 0.9 / camera.aspect * TAN16 / halfT);
 
-  // Camera distance: smooth ease-in to frame the sensors at close range
-  const dist = lerp(lerp(14.8, 12.0, dive), wide ? 11.2 : 12.2, uw) * fitW * (1 - deep * 0.16) * (1 + 0.2 * rise);
-
-  // Camera height: smooth realistic descent with buoyant ocean coupling (+1.9 -> 0.0 -> -1.8 -> -2.5 -> -5.2)
-  const baseCamY = lerp(lerp(lerp(1.9, -1.8, dive), -2.5, uw), REEF_Y + 7.2, deep) + 4.7 * rise;
+  // Camera distance: smooth ease-in to frame the sensors at close range; during the story phase the lens backs
+  // away slowly, so the float shrinks into the blue behind the panels instead of staring at you from under them
+  const dist = lerp(lerp(14.8, 12.0, dive), wide ? 11.2 : 12.2, uw) * fitW * (1 - deep * 0.16) * (1 + 0.2 * rise) * (1 + recede * 1.5);
+  // camera height: smooth realistic descent with buoyant ocean coupling (+1.9 -> 0.0 -> -1.8 -> -2.5), then the
+  // story sections sink on past it at a slow rate (-3.6 by the end of the page) — one continuous dive, no seam
+  const storyY = -3.6;   // still well above the seabed (REEF_Y is -24): the lens stays in the lit water column
+  const baseCamY = lerp(lerp(lerp(1.9, -1.8, dive), -2.5, uw), storyY, Math.min(q, 1)) + 4.7 * rise * (1 - Math.min(q, 1));
   
   // Real hydrodynamic surface coupling:
   // As the camera approaches the waterline, it physically couples to the water wave height,
@@ -2872,7 +2889,7 @@ function tick(static_ = false) {
   rot = lerp(rot, targetTurn, isOrbitDragging ? 0.28 : 0.06);
   probe.rotation.y = rot;
   rideWaves(seaT);
-  probe.position.set(buoy.sx, buoy.y, buoy.sz);
+  probe.position.set(buoy.sx, buoy.y - recede * 4.6, buoy.sz);   // the float drifts down out of frame as the story passes over it
   // what the surface refracts is clipped just above the water at the float, with room for the slope across the hull
   CLIP_UNDER[0].constant = 0.03 + Math.max(0, waveHeight(0, 0, seaT)) + 0.4;
   probe.rotation.z = buoy.rz;
@@ -2916,7 +2933,8 @@ function tick(static_ = false) {
   _uw.t = performance.now(); _uw.y = curScrollY;
   drawUwSnow(uwDy, UW_RM ? 0 : 0.75 * smooth(0.22, 0.38, p));
   const vidTop = 0;
-  veilEl.style.opacity = (Math.max(0.28 * smooth(0.18, 0.28, p), 0.5 * smooth(0.0, 0.8, (curScrollY - span) / innerHeight)) * (1 - vidTop * 0.9) * (1 - 0.35 * smooth(0.05, 0.75, kEnd))).toFixed(3);
+  // the veil deepens with the story scroll too: q carries the descent past the dive, so the panels keep sinking into darker water
+  veilEl.style.opacity = (Math.max(0.28 * smooth(0.18, 0.28, p), 0.5 * Math.min(q, 1), 0.5 * smooth(0.0, 0.8, (curScrollY - span) / innerHeight)) * (1 - vidTop * 0.9) * (1 - 0.35 * smooth(0.05, 0.75, kEnd))).toFixed(3);
   beats.forEach(el => { const a = +el.dataset.in, b = +el.dataset.out; el.style.opacity = (smooth(a, a + 0.03, p) * (1 - smooth(b - 0.03, b, p)) * (1 - smooth(0, 0.3, (curScrollY - span) / innerHeight))).toFixed(3); });
   solidCopy.classList.toggle('faded', q > 0.1);
   hint.style.opacity = 1 - smooth(0.0, 0.07, p);
@@ -2970,9 +2988,10 @@ function tick(static_ = false) {
 
   if (!static_ && !document.hidden) {
     const stageGone = scroller.getBoundingClientRect().bottom <= 0;
-    if (stageGone && Math.abs(q - lastQ) < 0.0004 && !isOrbitDragging && Math.abs(orbitVelYaw) < 0.0001 && Math.abs(orbitVelPitch) < 0.0001) return;
+    if (stageGone && Math.abs(q - lastQ) < 0.0004 && !storyScrolling && !isOrbitDragging && Math.abs(orbitVelYaw) < 0.0001 && Math.abs(orbitVelPitch) < 0.0001) return;
     lastQ = q;
-    if (q > 0 && ((volU.uFrame.value & 1) === 0)) return;
+    // the descent continues while the story scrolls: no frame throttling in that phase any more
+    if (q > 0 && !storyScrolling && ((volU.uFrame.value & 1) === 0)) return;
   }
   if (vidTop >= 0.999) {
     if (curScrollY > span + innerHeight * 2) beats.forEach(el => { if (el.style.opacity !== '0') el.style.opacity = '0'; });
