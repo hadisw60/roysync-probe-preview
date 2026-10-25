@@ -751,6 +751,11 @@ const LOW_GPU = /Intel|UHD|Iris|Mali|Adreno|PowerVR|Apple GPU|SwiftShader|llvmpi
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(32, 1, 0.05, 6000);
 const L_AIR = 1, L_WET = 2, L_UNDER = 3;   // layers: above-water only · beneath the surface · eye-under-water only
+// how deep the float sits: the water stands on its lower collar ring (local y 0.08–0.20), so from under the water the
+// collar's underside is a dark ring round the neck at the surface, joined to the hull (as in film3d.html on the
+// preview/dive-film branch). Riding with
+// the model's origin at the waterline left the collar just clear of the water, and from below the float ended in a cut
+const FLOAT_SINK = 0.16;
 const DOME_R = 3.5;                        // virtual dome port: sets how long the split-level crossing lasts
 const MSAA = LOW_GPU ? 2 : 4;
 
@@ -1551,7 +1556,7 @@ function patchProbe(sh) {
       // height above the water standing at this point of the hull (a passing set moves it well off y = 0)
       float yW = vWPos.y < -4.0 ? vWPos.y : vWPos.y - waterAt(vWPos.xz, uTime);   // (deep down, e.g. the fish, y will do)
       if (uApparent < 1.0 && yW > 0.03) discard;                 // what the surface refracts: only what is under it
-      float wet = 1.0 - smoothstep(0.04, 0.22, vLPos.y);          // the band the bobbing keeps wet, and all below it
+      float wet = 1.0 - smoothstep(${(0.04 + FLOAT_SINK).toFixed(2)}, ${(0.22 + FLOAT_SINK).toFixed(2)}, vLPos.y);   // the band the bobbing keeps wet, and all below it
       float grain = vnoise(vLPos.xz * 23.0 + vLPos.y * 7.0) * 0.6 + vnoise(vLPos.xy * 61.0 + 3.7) * 0.4;
       diffuseColor.rgb *= mix(1.0, 0.8, wet * step(0.0, yW)) * (0.985 + 0.03 * grain);`)
     .replace('#include <roughnessmap_fragment>', `#include <roughnessmap_fragment>
@@ -1730,7 +1735,8 @@ function updateFish(t, dt, cx, cy, cz) {
     const headingY = V[i3 + 1] * 0.3;
     const headingZ = sp > 0.01 ? V[i3 + 2] : leadVz;
 
-    _fo.lookAt(_fv.set(P[i3] + headingX, P[i3] + headingY, P[i3] + headingZ));
+    // (each axis from its own coordinate: aiming every axis off P[i3], the x, stood the fish on their heads or tails)
+    _fo.lookAt(_fv.set(P[i3] + headingX, P[i3 + 1] + headingY, P[i3 + 2] + headingZ));
 
     // Natural banking (subtle body roll into curves)
     const bank = THREE.MathUtils.clamp((V[i3] * leadVz - V[i3 + 2] * leadVx) * 0.35, -0.28, 0.28);
@@ -1915,7 +1921,9 @@ const onProbeLoaded = gltf => {
     mesh.castShadow = mesh.receiveShadow = true;
     (grp === 'main' ? probeMain : probeProxy).add(mesh);
   });
-  const rWater = ex.rWater || 0;
+  // the meniscus goes round the hull where the water stands on it: the collar's rim at FLOAT_SINK (the model's own
+  // rWater is the neck's, at its origin)
+  const rWater = FLOAT_SINK > 0.08 ? 1.27 : ex.rWater || 0;
   if (rWater > 0) { foam = makeFoam(rWater); foam.userData.r0 = rWater; scene.add(foam); }
   loadingEl.style.transform = 'scaleX(1)'; loadingEl.style.opacity = 0;
   dispatchEvent(new Event('probe-ready'));   // the footage starts loading only now, so it never competes with the probe
@@ -2014,6 +2022,7 @@ const volU = {
   uMaxDist: { value: 300 }, uFrame: { value: 0 },
   uTime: MU.uTime, uRayScale: MU.uRayScale, uRayGain: { value: 0.5 }, uRayMean: { value: 0.2 }, uRayFade: { value: 0.1 },
   uLhz: MU.uLhz, uTurb: { value: 1.6 },
+  uShadowK: { value: 1.0 },   // the float's shadow in the water: 1 takes out all the direct sun's in-scatter
 };
 const volumeMat = new THREE.ShaderMaterial({
   uniforms: volU,
@@ -2022,7 +2031,7 @@ const volumeMat = new THREE.ShaderMaterial({
     uniform sampler2D tDepth, tShadow, uCaustTex;
     uniform mat4 uShadowMat, uProjInv, uCamWorld;
     uniform vec3 uEye, uSigma, uLt, uSunUW, uLhz;
-    uniform float uDome, uShaftScale, uMaxDist, uFrame, uTime, uRayGain, uRayMean, uRayFade, uTurb;
+    uniform float uDome, uShaftScale, uMaxDist, uFrame, uTime, uRayGain, uRayMean, uRayFade, uTurb, uShadowK;
     varying vec2 vUv;
     #include <packing>
     ${NOISE}${RAYS}
@@ -2059,8 +2068,12 @@ const volumeMat = new THREE.ShaderMaterial({
           float c = textureLod(uCaustTex, e, max(1.0 + log2(1.0 + dep * 0.15), log2(max(sweep * ds, 1.0)))).r;
           // sheets of focused light and the gaps between them, around the mean; the probe's shadow is a dark shaft;
           // and the broad shafts the swell focuses, fading as the light goes deeper
-          // (right under the surface the light has not been focused yet: a ray grazing the underside sees no sheets)
-          acc += exp(-uSigma * ((s - s0) + dep / max(-uLt.y, 0.2))) * ((c * lit(p) - 1.0) * ds) * smoothstep(0.0, 1.5, dep);
+          // (right under the surface the light has not been focused yet: a ray grazing the underside sees no sheets,
+          // but the shadow is there from the surface down: the dome out in the air takes the sun before it reaches
+          // the water, so its shadow falls through the water under it, joined to the hull's)
+          float l = lit(p);
+          acc += exp(-uSigma * ((s - s0) + dep / max(-uLt.y, 0.2))) * ds
+               * ((c - 1.0) * l * smoothstep(0.0, 1.5, dep) + (l - 1.0) * uShadowK);
         }
         // a pond's suspended matter is never even: soft clouds of it, a metre or so across, drift through the near
         // water; where a ray crosses more of it the haze is a little brighter, where less a little clearer
@@ -2756,9 +2769,6 @@ function tick(static_ = false) {
   // one clock for everything the sea moves (waves, ripples, glitter, caustics, foam, the float's bob), slowed for a calm sea
   const seaT = t * SEA_SPEED, seaDt = dt * SEA_SPEED;
   if (!UW_RM) stepSets(seaT);   // reduced motion: no sets, the sea holds still
-  // story sections ride over the fixed scene: keep the frame loop alive while they scroll, even after the
-  // dive is off-screen — the water drifting behind the panels is what makes them feel submerged
-  const storyScrolling = curScrollY > span && Math.abs(scrollTargetY - curScrollY) > 0.5;
   // setAnimationLoop passes its timestamp as static_, so rawDt is 0 there and the governor never ran: it gets its own clock
   if (static_ !== true) govern(t, t - (tick._gt ?? t));
   tick._gt = t;
@@ -2787,6 +2797,10 @@ function tick(static_ = false) {
   const q = qCurrent;
   const curScrollY = scrollCurrentY;
   header.classList.toggle('scrolled', curScrollY > 40);
+  // story sections ride over the fixed scene: keep the frame loop alive while they scroll, even after the
+  // dive is off-screen — the water drifting behind the panels is what makes them feel submerged
+  // (it reads span and curScrollY, so it has to come after both: above them it threw on every frame)
+  const storyScrolling = curScrollY > span && Math.abs(scrollTargetY - curScrollY) > 0.5;
 
   // camera: descend from above the surface to below it, pulling in on the blades.
   // 1. Surface float: p = 0 .. 0.10
@@ -2834,7 +2848,13 @@ function tick(static_ = false) {
 
   // Camera pitch: tilts smoothly to frame probe sensors and look up toward Snell's window
   const tgtAir = lerp(-0.1, -0.6, dive) + 2.3 * rise;   // from up there it looks a little over the float, so the horizon stays in frame
-  const pitch = lerp(lerp(Math.atan2(tgtAir - baseCamY, dist), THREE.MathUtils.degToRad(wide ? 18 : 22), lens), -0.16, reefV);
+  const pitchFree = lerp(lerp(Math.atan2(tgtAir - baseCamY, dist), THREE.MathUtils.degToRad(wide ? 18 : 22), lens), -0.16, reefV);
+  // under water the whole float stays in frame, down to the tip of its spiral: the lens tilts up toward Snell's window
+  // only as far as it can without the tip dropping out under the bottom edge (frame() moves that edge on phones)
+  const edgeB = Math.atan(halfT * (wide ? 1 - 0.2 * (1 - dive) : 1.32));
+  const tipY = buoy.y - FLOAT_SINK - recede * 4.6 + BOTTOM - 0.6;
+  const keepTip = smooth(0.16, 0.25, p);   // in place by the time the lens is under (the waterline is crossed at p ≈ 0.22)
+  const pitch = lerp(pitchFree, Math.min(pitchFree, Math.atan2(tipY - camY, dist) + edgeB), keepTip);
   frame(dive);
   camera.position.set(0, camY, dist);
   camera.lookAt(0, camY + dist * Math.tan(pitch), 0);
@@ -2889,7 +2909,7 @@ function tick(static_ = false) {
   rot = lerp(rot, targetTurn, isOrbitDragging ? 0.28 : 0.06);
   probe.rotation.y = rot;
   rideWaves(seaT);
-  probe.position.set(buoy.sx, buoy.y - recede * 4.6, buoy.sz);   // the float drifts down out of frame as the story passes over it
+  probe.position.set(buoy.sx, buoy.y - FLOAT_SINK - recede * 4.6, buoy.sz);   // the float drifts down out of frame as the story passes over it
   // what the surface refracts is clipped just above the water at the float, with room for the slope across the hull
   CLIP_UNDER[0].constant = 0.03 + Math.max(0, waveHeight(0, 0, seaT)) + 0.4;
   probe.rotation.z = buoy.rz;
