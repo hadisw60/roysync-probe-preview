@@ -2090,49 +2090,83 @@ MATS.head.onBeforeCompile = MATS.paye.onBeforeCompile = patchProbe;
 // ---------------- fish cruising in the open water of the dive ----------------
 const fishU = { uFishT: { value: 0 } };
 const fishMat = new THREE.MeshStandardMaterial({
-  color: 0x88b0cb,
-  roughness: 0.52,
-  metalness: 0.12,
+  color: 0xe6eef4,
+  emissive: 0x93aec2,   // the water's own light on the flanks (through the skin's map), so a fish reads silver, not a silhouette
+  roughness: 0.38,
+  metalness: 0.3,
   side: THREE.FrontSide
-});   // biological scales with natural silver-blue oceanic countershading
+});   // farmed salmon: silver flanks that catch the light from above
 fishMat.onBeforeCompile = sh => {
   patchProbe(sh);
+  // live scales keep their sheen under water (the hull's plastic loses ~92% of it there): without it the fish looked matte, dead
+  sh.fragmentShader = sh.fragmentShader.replace('float wet = mix(1.0, 0.08, uwF);', 'float wet = mix(1.0, 0.6, uwF);');
   Object.assign(sh.uniforms, fishU);
   sh.vertexShader = 'attribute float aPhase;\nattribute float aSpeed;\nuniform float uFishT;\n' + sh.vertexShader
     .replace('#include <begin_vertex>', `#include <begin_vertex>
       // Biomimetic Carangiform swim dynamics:
       // Rigid cranial/pectoral zone (transformed.z > 0.10) for steady realistic heading;
       // Fluid sinusoidal flex increasing naturally toward caudal tailfin
+      // (the body is 0.87 long, nose at z = +0.43: about one wavelength runs down it, ~1.7 tail beats a second for the
+      // fish's cruising pace, and the tail swings ~5% of the length each way; the head recoils a little against it)
       float tailFactor = smoothstep(0.12, -0.42, transformed.z);
       float flex = tailFactor * tailFactor;
-      float wave = sin(4.2 * transformed.z - uFishT * (2.8 * aSpeed) + aPhase);
-      transformed.x += 0.019 * flex * wave;
+      float beat = uFishT * (10.5 * aSpeed) + aPhase;
+      float wave = sin(6.5 * transformed.z - beat);
+      transformed.x += 0.045 * flex * wave;
+      transformed.x += 0.008 * (1.0 - tailFactor) * sin(beat + 2.6);
       // Subtle natural vertical fin flutter
-      transformed.y += 0.003 * tailFactor * cos(4.2 * transformed.z - uFishT * (2.8 * aSpeed) + aPhase);`)
+      transformed.y += 0.003 * tailFactor * cos(6.5 * transformed.z - beat);`)
     .replace('vec4 wApp = modelMatrix * vec4(transformed, 1.0);', 'vec4 wApp = modelMatrix * instanceMatrix * vec4(transformed, 1.0);');
 };
-const N_FISH = 22;
+// The fish (the user's AquaRoy film, 2026-10-26): salmon-sized, about half the spiral's length. The first N_RING mill round
+// the float the way farmed salmon circle a cage; the rest roam the water freely, out of the frame and back, now far from
+// the float, now passing close by it.
+const N_FISH = 16, N_RING = 9;
 let fishMesh = null;
 const school = {
-  pos: new Float32Array(N_FISH * 3),
-  vel: new Float32Array(N_FISH * 3),
-  off: new Float32Array(N_FISH * 3),
+  r: new Float32Array(N_FISH),     // distance from the float's axis
+  y: new Float32Array(N_FISH),     // depth below the float's origin
+  th: new Float32Array(N_FISH),    // where on the ring it starts
+  w: new Float32Array(N_FISH),     // angular speed (rad per second of the sea's clock)
   size: new Float32Array(N_FISH),
-  ready: false
+  roam: new Float32Array(N_FISH * 16)   // a roamer's path: amplitudes, rates and phases of a few slow, unrelated swings
 };
 const fPhase = new Float32Array(N_FISH);
 const fSpeed = new Float32Array(N_FISH);
 for (let i = 0; i < N_FISH; i++) {
-  // Spindle/ellipsoid natural schooling formation
-  const u = Math.random(), v = Math.random(), th = Math.random() * Math.PI * 2;
-  const rad = Math.sqrt(u) * 1.5;
-  const sx = Math.cos(th) * rad;
-  const sy = (v - 0.5) * 1.0;
-  const sz = (Math.random() - 0.5) * 4.2;
-  school.off.set([sx, sy, sz], i * 3);
-  school.size[i] = 1.05 + 0.32 * Math.random();
+  const rnd = (a, b) => a + (b - a) * Math.random();
+  // x, its rates and phases; z (centred behind the float, never nearer the camera, ~12 out, than z = 5); y
+  school.roam.set([rnd(8, 13), rnd(2.5, 4.5), rnd(0.1, 0.16), rnd(0.23, 0.33), rnd(0, 6.3), rnd(0, 6.3),
+                   rnd(-6, -4), rnd(5, 6), rnd(1.5, 3), rnd(0.08, 0.14), rnd(0.27, 0.37), rnd(0, 6.3), rnd(0, 6.3),
+                   rnd(0.6, 1.2), rnd(0.07, 0.12), rnd(0, 6.3)], i * 16);
+  // a tight ring: the camera stands ~12 out, so a wide one would sweep fish right up to the lens, many times their size
+  const r = 3.5 + 2.4 * Math.random();
+  school.r[i] = r;
+  school.y[i] = -1.2 - 4.0 * Math.random();
+  school.th[i] = (i / N_FISH) * Math.PI * 2 + 0.3 * Math.random();   // spread round the ring, not bunched
+  fSpeed[i] = 0.85 + 0.3 * Math.random();          // its pace: how fast it goes round and how fast its tail beats
+  // ~1.6..2.2 units a second: about half a body length (a fish is ~4 long here); at a tenth of that they drifted like dead fish
+  school.w[i] = 1.9 * fSpeed[i] / r;
+  school.size[i] = 4.2 + 1.4 * Math.random();
   fPhase[i] = Math.random() * Math.PI * 2;
-  fSpeed[i] = 0.88 + 0.24 * Math.random();
+}
+// where fish i is at time t: its ring, wandering in and out and up and down at slow, unrelated rates, and its pace
+// surging and easing by a fifth over a minute or so (so they overtake one another)
+function fishAt(i, t, out) {
+  const ph = fPhase[i], w = school.w[i];
+  if (i >= N_RING) {
+    // a roamer: two slow swings on each axis (~1..2.5 units a second, easing where it turns), kept off the float itself
+    const R = school.roam, k = i * 16, tt = t * fSpeed[i];
+    let x = R[k] * Math.sin(R[k + 2] * tt + R[k + 4]) + R[k + 1] * Math.sin(R[k + 3] * tt + R[k + 5]);
+    let z = R[k + 6] + R[k + 7] * Math.sin(R[k + 9] * tt + R[k + 11]) + R[k + 8] * Math.sin(R[k + 10] * tt + R[k + 12]);
+    const d = Math.hypot(x, z), d2 = d + Math.max(0, 4 - d) ** 2 / 4;   // nearer the axis than 4: eased outward
+    if (d > 1e-3) { x *= d2 / d; z *= d2 / d; } else x = 4;
+    return out.set(x, school.y[i] + R[k + 13] * Math.sin(R[k + 14] * t + R[k + 15]), z);
+  }
+  const th = school.th[i] + w * (t + (0.2 / 0.11) * Math.sin(0.11 * t + ph));
+  const r = school.r[i] + 0.6 * Math.sin(0.09 * t + ph) + 0.25 * Math.sin(0.23 * t + 2.3 * ph);
+  out.set(r * Math.cos(th), school.y[i] + 0.35 * Math.sin(0.12 * t + 1.7 * ph) + 0.12 * Math.sin(0.31 * t + ph), r * Math.sin(th));
+  return out;
 }
 new GLTFLoader().load('assets/fish.glb', gltf => {
   let src = null;
@@ -2141,10 +2175,11 @@ new GLTFLoader().load('assets/fish.glb', gltf => {
   const g = src.geometry.clone();
   g.rotateY(Math.PI);
   g.translate(0, -0.1435, 0.0035);
-  g.scale(1.35 * 0.85, 1.35 * 0.7, 1.35);
+  g.scale(1.35 * 0.8, 1.35 * 0.58, 1.35);   // slimmer than the model: a salmon's long low body
   const m = src.material;
   Object.assign(fishMat, {
     map: m.map,
+    emissiveMap: m.map,
     normalMap: m.normalMap,
     aoMap: m.aoMap,
     roughnessMap: m.roughnessMap,
@@ -2160,69 +2195,21 @@ new GLTFLoader().load('assets/fish.glb', gltf => {
   fishMesh.layers.set(L_UNDER);
   scene.add(fishMesh);
 });
-const _fo = new THREE.Object3D(), _fv = new THREE.Vector3();
-function updateFish(t, dt, cx, cy, cz) {
-  // Cohesive schooling: the entire school glides organically through the oceanic sunlight
-  const slowT = t * 0.16;
-  const leadX = cx + Math.sin(slowT) * 4.4 + Math.cos(slowT * 0.41) * 1.6;
-  const leadY = cy + Math.sin(slowT * 0.65) * 0.75;
-  const leadZ = cz + Math.cos(slowT) * 3.8 + Math.sin(slowT * 0.31) * 1.4;
-
-  const leadVx = (Math.cos(slowT) * 4.4 * 0.16 - Math.sin(slowT * 0.41) * 1.6 * 0.41 * 0.16);
-  const leadVy = Math.cos(slowT * 0.65) * 0.75 * 0.65 * 0.16;
-  const leadVz = (-Math.sin(slowT) * 3.8 * 0.16 + Math.cos(slowT * 0.31) * 1.4 * 0.31 * 0.16);
-
-  const P = school.pos, V = school.vel, O = school.off;
-  const followRate = 1.0 - Math.exp(-Math.min(dt, 0.05) * 3.4);
-
+const _fo = new THREE.Object3D(), _fv = new THREE.Vector3(), _fn = new THREE.Vector3();
+function updateFish(t, cx, cy, cz) {
+  // each fish swims its own wandering ring round the float's axis (cx, cz) and faces where it is actually going (a step
+  // ahead on its own path), so the ones in front cross the screen one way and the ones behind the other
   for (let i = 0; i < N_FISH; i++) {
-    const i3 = i * 3;
-    const ph = fPhase[i];
-    // Gentle natural drift and breathing space within the school
-    const driftX = O[i3] + Math.sin(t * 0.45 + ph) * 0.20;
-    const driftY = O[i3 + 1] + Math.sin(t * 0.35 + ph * 1.4) * 0.10;
-    const driftZ = O[i3 + 2] + Math.cos(t * 0.45 + ph * 1.8) * 0.24;
-
-    const tgtX = leadX + driftX;
-    const tgtY = leadY + driftY;
-    const tgtZ = leadZ + driftZ;
-
-    if (!school.ready) {
-      P[i3] = tgtX; P[i3 + 1] = tgtY; P[i3 + 2] = tgtZ;
-      V[i3] = leadVx; V[i3 + 1] = leadVy; V[i3 + 2] = leadVz;
-    } else {
-      const desiredVx = leadVx + (tgtX - P[i3]) * 1.5;
-      const desiredVy = leadVy + (tgtY - P[i3 + 1]) * 1.3;
-      const desiredVz = leadVz + (tgtZ - P[i3 + 2]) * 1.5;
-
-      V[i3] += (desiredVx - V[i3]) * followRate;
-      V[i3 + 1] += (desiredVy - V[i3 + 1]) * followRate;
-      V[i3 + 2] += (desiredVz - V[i3 + 2]) * followRate;
-
-      P[i3] += V[i3] * dt;
-      P[i3 + 1] += V[i3 + 1] * dt;
-      P[i3 + 2] += V[i3 + 2] * dt;
-    }
-
-    _fo.position.set(P[i3], P[i3 + 1], P[i3 + 2]);
-    const sp = Math.hypot(V[i3], V[i3 + 2]);
-    const headingX = sp > 0.01 ? V[i3] : leadVx;
-    const headingY = V[i3 + 1] * 0.3;
-    const headingZ = sp > 0.01 ? V[i3 + 2] : leadVz;
-
-    // (each axis from its own coordinate: aiming every axis off P[i3], the x, stood the fish on their heads or tails)
-    _fo.lookAt(_fv.set(P[i3] + headingX, P[i3 + 1] + headingY, P[i3 + 2] + headingZ));
-
-    // Natural banking (subtle body roll into curves)
-    const bank = THREE.MathUtils.clamp((V[i3] * leadVz - V[i3 + 2] * leadVx) * 0.35, -0.28, 0.28);
-    _fo.rotateZ(-bank);
-
+    fishAt(i, t, _fv); fishAt(i, t + 0.1, _fn);
+    _fo.position.set(cx + _fv.x, cy + _fv.y, cz + _fv.z);
+    _fo.lookAt(cx + _fn.x, cy + _fv.y + (_fn.y - _fv.y) * 0.5, cz + _fn.z);
+    // leaning a touch into the turn, rocking slightly with each tail beat
+    _fo.rotateZ(-0.08 + 0.025 * Math.sin(t * 10.5 * fSpeed[i] + fPhase[i]));
     _fo.scale.setScalar(school.size[i]);
     _fo.updateMatrix();
-    if (fishMesh) fishMesh.setMatrixAt(i, _fo.matrix);
+    fishMesh.setMatrixAt(i, _fo.matrix);
   }
-  school.ready = true;
-  if (fishMesh) fishMesh.instanceMatrix.needsUpdate = true;
+  fishMesh.instanceMatrix.needsUpdate = true;
 }
 
 // the deep part of the dive is real underwater footage (see #stage .uwv); the 3D scene hands over to it
@@ -3371,7 +3358,7 @@ function tick(static_ = false) {
   finish.uniforms.uExposure.value = lerp(0.52, 0.76, smooth(0.2, -3.0, camY));
   fishU.uFishT.value = t;
   if (fishMesh && p > 0.06) {
-    updateFish(t, Math.min(buoy.dt || 0, 0.1), 4.2, -3.6, -6.5);   // the loop's own dt is always 0 (see rideWaves): the sea's clock
+    updateFish(t, buoy.sx, buoy.y - FLOAT_SINK - recede * 4.6, buoy.sz);   // round the float, wherever it has drifted to
   }
   const settle = smooth(0.28, 0.50, p);
   MU.uLhz.value.lerpVectors(LHZ0, LHZ_DEEP, settle).lerp(LHZ_REEF, reefV);
