@@ -10,20 +10,20 @@
 <meta property="og:type" content="website">
 <meta property="og:image" content="assets/logo.png">
 <link rel="icon" type="image/png" href="assets/favicon.png">
-<link rel="preload" href="assets/fonts/sora.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="assets/fonts/jost.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="assets/fonts/inter.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="probe-baked.glb?v=65" as="fetch" crossorigin>
 <link rel="preload" href="assets/waternormals.jpg" as="image">
 <script src="assets/whole-video.js?v=71"></script>
 <style>
   @font-face { font-family: 'Inter'; font-style: normal; font-weight: 400 600; font-display: swap; src: url(assets/fonts/inter.woff2) format('woff2'); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
-  @font-face { font-family: 'Sora'; font-style: normal; font-weight: 500 700; font-display: swap; src: url(assets/fonts/sora.woff2) format('woff2'); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+  @font-face { font-family: 'Jost'; font-style: normal; font-weight: 300 700; font-display: swap; src: url(assets/fonts/jost.woff2) format('woff2'); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
   :root {
     /* palette from the logo: deep navy, white, and the steel-to-ice blue of its ring */
     --bg: #050c16; --bg-2: #0a1524; --panel: rgba(255,255,255,.04); --line: rgba(170,210,255,.12);
     --fg: #f2f7fc; --muted: #a7bccf; --faint: #6f879e;
     --accent: #4f9fe0; --accent-2: #9fd0f7; --accent-deep: #1f4e79; --glow: rgba(79,159,224,.35);
-    --head: Sora, Inter, system-ui, sans-serif;
+    --head: Jost, Inter, system-ui, sans-serif;
     --ok: #34d399; --warn: #fbbf24;
   }
   * { box-sizing: border-box; }
@@ -87,17 +87,17 @@
   #hero-copy { left: 6vw; bottom: 13vh; max-width: 680px; transition: none; }   /* keyed to the waterline each frame: no lag */
   .eyebrow { display: inline-flex; align-items: center; gap: 8px; font-size: 12px; letter-spacing: .18em; text-transform: uppercase; color: var(--accent-2); margin-bottom: 20px; }
   .eyebrow::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--accent-2); box-shadow: 0 0 12px var(--accent-2); }
-  #hero-copy h1 { font-size: clamp(30px, 3.6vw, 52px); font-weight: 600; line-height: 1.08; letter-spacing: -.035em; margin: 0 0 20px; }
+  #hero-copy h1 { font-size: clamp(30px, 3.6vw, 52px); font-weight: 600; line-height: 1.08; letter-spacing: -.015em; margin: 0 0 20px; }
   #hero-copy h1 em { font-style: normal; background: linear-gradient(90deg, #6fb8f2, #a8dbff 55%, #e6f5ff); -webkit-background-clip: text; background-clip: text; color: transparent;
                      text-shadow: none; filter: drop-shadow(0 2px 14px rgba(0,0,0,.45)); }
   #hero-copy p { color: var(--muted); font-size: 17px; line-height: 1.55; margin: 0 0 26px; max-width: 520px; }
   #hero-copy .cta-row { display: flex; gap: 12px; flex-wrap: wrap; }
   #solid-copy { display: none; }
   .beat { left: 6vw; bottom: 14vh; max-width: 520px; opacity: 0; pointer-events: none; }
-  .beat h2, .say h2 { font-size: clamp(24px, 2.7vw, 38px); font-weight: 600; letter-spacing: -.025em; line-height: 1.12; margin: 0 0 12px; text-shadow: 0 2px 18px rgba(0,0,0,.6); }
-  .beat h2::before, .say h2::before { content: ""; display: block; width: 34px; height: 3px; border-radius: 3px; margin: 0 0 16px; background: linear-gradient(90deg, var(--accent), var(--accent-2)); box-shadow: 0 0 12px var(--glow); }
-  .beat h2 em, .say h2 em, #contact h2 em { font-style: normal; color: #8fd0ff; }
-  .beat p, .say p { color: #d8e6f3; font-size: 16px; line-height: 1.55; margin: 0; text-shadow: 0 2px 14px rgba(0,0,0,.6); }
+  .beat h2 { font-size: clamp(24px, 2.7vw, 38px); font-weight: 600; letter-spacing: -.01em; line-height: 1.12; margin: 0 0 12px; text-shadow: 0 2px 18px rgba(0,0,0,.6); }
+  .beat h2::before { content: ""; display: block; width: 34px; height: 3px; border-radius: 3px; margin: 0 0 16px; background: linear-gradient(90deg, var(--accent), var(--accent-2)); box-shadow: 0 0 12px var(--glow); }
+  .beat h2 em, #contact h2 em { font-style: normal; color: #8fd0ff; }
+  .beat p { color: #d8e6f3; font-size: 16px; line-height: 1.55; margin: 0; text-shadow: 0 2px 14px rgba(0,0,0,.6); }
   @media (max-width: 760px) { .beat { left: 16px; right: 16px; bottom: 9vh; text-align: center; } }
   #solid-copy h2 { font-size: clamp(28px, 4vw, 50px); font-weight: 500; letter-spacing: -.03em; margin: 0 0 12px; }
   #solid-copy p { color: var(--muted); font-size: 16px; line-height: 1.55; margin: 0; }
@@ -155,7 +155,7 @@
   @media (max-width: 900px) { .caps { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
   @media (max-width: 560px) { #trust { padding: 96px 16px 64px; } .caps { gap: 10px; } .cap { padding: 18px 16px; border-radius: 16px; }
     .cap svg { width: 22px; height: 22px; padding: 9px; margin-bottom: 12px; border-radius: 12px; } .cap h3 { font-size: 15px; } .cap p { font-size: 13px; } }
-  #trust h2.title, #contact h2.title { font-size: clamp(26px, 3vw, 42px); font-weight: 600; letter-spacing: -.03em; line-height: 1.1; margin: 0 0 12px; }
+  #trust h2.title, #contact h2.title { font-size: clamp(26px, 3vw, 42px); font-weight: 600; letter-spacing: -.01em; line-height: 1.1; margin: 0 0 12px; }
   #contact { text-align: center; }
   #contact h2.title, #contact p.lead { margin-left: auto; margin-right: auto; }
   #contact p.lead { font-size: 16px; color: #dfe6f2; margin-bottom: 28px; }
@@ -378,22 +378,209 @@
   #story { --ink: #0d1b2a; --ink-2: #4f5f70; --blue: #1f6fb8; color: var(--ink);
            --paper: #dde7f1; --card: #edf3f8; --rule: #c8d6e4; --rule-2: #a9bccf; background: var(--paper); }
   #story > section::before { display: none; }
-  #action { padding: 150px 6vw 30px; }
-  #action .wrap { max-width: 1060px; }
-  .say { max-width: 560px; margin: 0 0 26vh; }
-  .say:last-child { margin-bottom: 0; }
-  @media (max-width: 760px) { .say { margin: 0 auto 18vh; text-align: center; } .say h2::before { margin-left: auto; margin-right: auto; } }
-  #story h2.title, #story p.lead, #story h3, #trust .wrap h2.title, #contact h2.title, #contact p.lead, .say h2, .say p { text-shadow: none; }
-  #story h2.title, #story h3, .say h2 { color: var(--ink); }
-  .say p, #contact p.lead { color: var(--ink-2); }
-  .say h2 em, #contact h2 em { color: var(--blue); }
-  .say h2::before { box-shadow: none; }
-  .cap { background: var(--card); border: 1px solid var(--rule); box-shadow: none; }
+  /* the light page breathes: one idea a screen, big type, one line under it and wide empty space round it (the
+     sites in the field put everything on one crowded page; this is the opposite) */
+  #story section.one { min-height: 100vh; display: flex; align-items: center; padding: 16vh 6vw; box-sizing: border-box; }
+  #story section.one .wrap { width: 100%; max-width: 1060px; }
+  .big { font-size: clamp(34px, 5.2vw, 68px); font-weight: 600; letter-spacing: -.015em; line-height: 1.05; margin: 0 0 24px; max-width: 13ch; text-wrap: balance; color: var(--ink); }
+  .big em { font-style: normal; color: var(--blue); }
+  .sub { font-size: clamp(16px, 1.45vw, 20px); line-height: 1.6; color: var(--ink-2); margin: 0; max-width: 32em; }
+  /* how it reaches you: one step at a time, held on screen while the scroll moves through them */
+  #alerts { position: relative; height: 320vh; }
+  #alerts .pin { position: sticky; top: 0; height: 100vh; display: flex; align-items: center; padding: 0 6vw; box-sizing: border-box; }
+  #alerts .wrap { width: 100%; max-width: 1060px; }
+  .kick { margin: 0 0 30px; font-size: 12px; font-weight: 600; letter-spacing: .22em; text-transform: uppercase; color: var(--blue); }
+  .ladder { position: relative; list-style: none; margin: 0; padding: 0; height: clamp(170px, 20vw, 250px); }
+  .ladder li { position: absolute; inset: 0; opacity: 0; transform: translateY(22px); transition: opacity .55s ease, transform .55s ease; }
+  .ladder li.on { opacity: 1; transform: none; }
+  .ladder b { display: block; font-family: var(--head); font-size: clamp(44px, 7vw, 92px); font-weight: 600; letter-spacing: -.02em; line-height: 1; color: var(--ink); }
+  .ladder span { display: block; margin-top: 18px; font-size: clamp(18px, 1.8vw, 26px); line-height: 1.4; color: var(--ink-2); max-width: 26em; }
+  .ladder li:last-child b { color: var(--blue); }
+  .ticks { display: flex; gap: 8px; margin-top: 34px; }
+  .ticks i { width: 28px; height: 3px; border-radius: 3px; background: var(--rule); transition: background .4s; }
+  .ticks i.on { background: var(--blue); }
+  /* the app on a phone beside its line */
+  .split2 { display: grid; grid-template-columns: 1fr auto; gap: 8vw; align-items: center; }
+  @media (max-width: 760px) { .split2 { grid-template-columns: 1fr; gap: 56px; } .split2 .proof { justify-self: center; } }
+  #story h2.title, #story p.lead, #story h3, #trust .wrap h2.title, #contact h2.title, #contact p.lead { text-shadow: none; }
+  #story h2.title, #story h3 { color: var(--ink); }
+  #contact p.lead { color: var(--ink-2); }
+  #contact h2 em { color: var(--blue); }
+  /* capabilities without boxes: six quiet items with room between them */
+  #trust { padding: 18vh 6vw; }
+  #trust .wrap h2.title { margin-bottom: 9vh; font-size: clamp(30px, 3.6vw, 48px); }
+  /* the float itself in the middle, the capabilities either side of it */
+  #trust .kick, #trust .big { text-align: center; margin-left: auto; margin-right: auto; }
+  .float-grid { display: grid; grid-template-columns: 1fr minmax(200px, 280px) 1fr; gap: 6vw; align-items: center; margin-top: 6vh; text-align: left; }
+  .float-grid .caps { display: flex; flex-direction: column; gap: 56px; }
+  .caps-l { text-align: right; } .caps-l .cap svg { margin-left: auto; }
+  .float-shot { position: relative; margin: 0; }
+  .float-shot img { display: block; width: 100%; height: auto; animation: floaty 7s ease-in-out infinite; will-change: transform; }
+  .float-shot::after { content: ""; position: absolute; left: 22%; right: 22%; bottom: -5%; height: 5%; border-radius: 50%;
+                       background: radial-gradient(closest-side, rgba(13, 27, 42, .2), transparent); }
+  @keyframes floaty { 50% { transform: translateY(-10px); } }
+  @media (max-width: 900px) {
+    .float-grid { grid-template-columns: 1fr 1fr; gap: 40px 22px; }
+    .float-shot { grid-column: 1 / -1; grid-row: 1; justify-self: center; width: min(220px, 56vw); }
+    .float-grid .caps { gap: 36px; } .caps-l { text-align: left; } .caps-l .cap svg { margin-left: 0; } }
+  @media (prefers-reduced-motion: reduce) { .float-shot img { animation: none; } }
+  .cap { background: none; border: 0; box-shadow: none; padding: 0; border-radius: 0; }
   .cap::after { display: none; }
-  .cap:hover { border-color: var(--rule-2); }
-  .cap h3 { color: var(--ink); }
-  .cap p { color: var(--ink-2); }
+  .cap h3 { color: var(--ink); font-size: 19px; }
+  .cap p { color: var(--ink-2); font-size: 15px; }
   .cap svg { color: var(--blue); background: rgba(31, 111, 184, .08); border-color: transparent; }
+  #contact h2.title { font-size: clamp(34px, 5vw, 64px); letter-spacing: -.015em; text-wrap: balance; }
+  /* bands: a full-width film or picture under a dark wash, between the light screens, with wavy water edges */
+  #story section.band { position: relative; overflow: hidden; color: #fff; isolation: isolate; }
+  #story .band-media { position: absolute; inset: 0; z-index: -2; width: 100%; height: 100%; object-fit: cover; }
+  #story section.band::after { content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none;
+    background: linear-gradient(90deg, rgba(4, 13, 24, .8) 0%, rgba(4, 13, 24, .5) 55%, rgba(4, 13, 24, .25) 100%); }
+  #story section.band .big { color: #fff; } #story section.band .big em { color: #9fd0f7; }
+  #story section.band .sub { color: rgba(232, 241, 250, .88); }
+  #story .wave { position: absolute; left: 0; width: 100%; height: clamp(18px, 2.6vw, 40px); fill: var(--paper); pointer-events: none; }
+  #story .wave.top { top: -1px; } #story .wave.bot { bottom: -1px; transform: scaleY(-1); }
+  /* the contact band: one line, and the buttons beside it */
+  #contact.band { min-height: 64vh; padding: 14vh 6vw; text-align: left; justify-content: flex-start; }
+  #contact.band .band-media { object-position: 50% 20%; }
+  #contact.band .wrap { max-width: 1160px; width: 100%; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; gap: 32px 48px; flex-wrap: wrap; }
+  #contact.band h2.title { color: #fff; margin: 0 0 14px; } #contact.band h2 em { color: #9fd0f7; }
+  #contact.band p.lead { color: rgba(232, 241, 250, .85); margin: 0; max-width: 34em; }
+  #contact.band .cta-row { justify-content: flex-start; }
+  #contact.band .btn:not(.ghost) { background: linear-gradient(135deg, #e3f3ff 0%, #9fd0f7 48%, #5fa9e6 100%); color: #06182b; }
+  #contact.band .btn.ghost { color: #fff; border-color: rgba(255, 255, 255, .5); }
+  #contact.band .btn.ghost:hover { border-color: #fff; }
+  @media (max-width: 560px) { #trust { padding: 14vh 20px; } .caps { gap: 40px 22px; } .cap { padding: 0; } }
+  @media (prefers-reduced-motion: reduce) { .ladder li { transition: none; } }
+  /* the RoySync dashboard on a phone, in the app's own look (front_end Dashboard.jsx), as on the contact page of
+     preview/contact-dashboard. Everything inside is in cqw, so the phone keeps its proportions at any width. */
+  #story .proof { width: clamp(190px, min(22vw, 38vh), 290px); margin: 0; container-type: inline-size; }   /* (38vh: it stays inside short screens) */
+  @media (max-width: 760px) { #story .proof { width: 230px; } }
+  #story .proof .phone { position: relative; aspect-ratio: 71.6 / 147.6; border-radius: 16.4cqw; transform: rotate(-1.5deg);
+                       animation: hold 9s ease-in-out infinite; will-change: transform;   /* its own layer: the hover only moves it */
+                       background: linear-gradient(152deg, #a2978b 0%, #5a544e 7%, #2a2826 18%, #322f2c 46%, #1c1b1a 72%, #4f4a45 90%, #9b9084 100%);
+                       box-shadow: inset 0 0 0 .28cqw rgba(255,240,225,.22), inset 0 0 1.4cqw rgba(0,0,0,.75),
+                                   0 0 0 .3cqw rgba(0,0,0,.6), 0 2.5cqw 5cqw rgba(13,27,42,.25), 0 16cqw 34cqw -6cqw rgba(13,27,42,.45); }
+  @keyframes hold { 0%, 100% { transform: translateY(0) rotate(-1.5deg); } 50% { transform: translateY(-1.6cqw) rotate(-.9deg); } }
+  #story .proof .key { position: absolute; left: -.8cqw; width: 1.2cqw; border-radius: .7cqw 0 0 .7cqw;
+                     background: linear-gradient(90deg, #6f675f, #33302d 55%, #1f1d1b); }
+  #story .proof .key.act { top: 18%; height: 4.6%; } #story .proof .key.vu { top: 26%; height: 9%; } #story .proof .key.vd { top: 37%; height: 9%; }
+  #story .proof .key.pw { left: auto; right: -.8cqw; top: 30%; height: 14%; border-radius: 0 .7cqw .7cqw 0; background: linear-gradient(270deg, #6f675f, #33302d 55%, #1f1d1b); }
+  #story .proof .glass { position: absolute; inset: 1.6cqw; border-radius: 14.8cqw; padding: 2.5cqw; background: #050505;
+                       box-shadow: inset 0 0 0 .2cqw rgba(255,255,255,.06); }
+  #story .proof .screen { position: relative; height: 100%; border-radius: 12.3cqw; overflow: hidden; background: #000; isolation: isolate; }
+  #story .proof .island { position: absolute; z-index: 3; left: 50%; top: 2.2cqw; width: 28cqw; height: 8.4cqw; transform: translateX(-50%); border-radius: 99px;
+                        background: radial-gradient(circle at 80% 50%, #1e2c3c 0 1.1cqw, #0b1119 1.7cqw, #000 2.2cqw); }
+  #story .proof .screen::after { content: ""; position: absolute; inset: 0; z-index: 4; pointer-events: none;
+                               background: linear-gradient(114deg, rgba(255,255,255,.16) 0%, rgba(255,255,255,.05) 24%, rgba(255,255,255,0) 38%); }
+  #story .proof .app { color: #f0fdf9; font-family: Inter, system-ui, sans-serif; line-height: 1.25; padding: 0 5cqw;
+                     background: radial-gradient(70% 40% at 8% 18%, rgba(6,182,212,.16), transparent 70%),
+                                 radial-gradient(70% 40% at 95% 80%, rgba(34,197,94,.12), transparent 70%),
+                                 linear-gradient(170deg, #031822 0%, #062435 50%, #03141c 100%); }
+  #story .proof .sb { display: flex; justify-content: space-between; align-items: center; height: 12.6cqw; padding: 0 2.4cqw 0 5.4cqw;
+                    font: 600 3.7cqw/1 -apple-system, "SF Pro Text", Inter, system-ui, sans-serif; letter-spacing: .01em; }
+  #story .proof .sb svg { height: 2.9cqw; width: auto; margin-left: 1.1cqw; fill: #fff; }
+  #story .proof .ah { display: flex; align-items: center; gap: 2cqw; margin-top: .6cqw; }
+  #story .proof .ah img { width: 7cqw; height: 7cqw; border-radius: 50%; box-shadow: 0 0 2.4cqw rgba(13,148,136,.45); }
+  #story .proof .ah b { font: 700 4.3cqw/1 Jost, Inter, sans-serif; letter-spacing: -.01em; }
+  #story .proof .ah .bell { margin-left: auto; position: relative; display: flex; }
+  #story .proof .ah .bell svg { width: 4cqw; height: 4.4cqw; fill: #9fb3c4; }
+  #story .proof .ah .bell i { position: absolute; right: -.4cqw; top: -.4cqw; width: 1.7cqw; height: 1.7cqw; border-radius: 50%; background: #ef4444;
+                            box-shadow: 0 0 0 .5cqw #052232; }
+  #story .proof .tt { margin-top: 5cqw; }
+  #story .proof .tt b { display: block; font: 700 5.6cqw/1.1 Jost, Inter, sans-serif; letter-spacing: -.02em; }
+  #story .proof .tt b em { font-style: normal; color: #14a394; }
+  #story .proof .tt span { display: block; margin-top: 1.2cqw; font-size: 3cqw; color: #bae4d5; }
+  #story .proof .lbl { display: flex; align-items: center; justify-content: space-between; margin: 5cqw 0 2.4cqw; font-size: 2.4cqw; font-weight: 600;
+                     letter-spacing: .2em; text-transform: uppercase; color: #14a394; }
+  #story .proof .lbl i { font-style: normal; letter-spacing: .1em; color: #22c55e; }
+  #story .proof .lbl i::before { content: ""; display: inline-block; width: 1.4cqw; height: 1.4cqw; margin-right: 1cqw; border-radius: 50%; background: #22c55e;
+                               vertical-align: .15cqw; animation: livedot 1.6s ease-in-out infinite; }
+  @keyframes livedot { 50% { opacity: .25; } }
+  #story .proof .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2.4cqw; }
+  #story .proof .pc { padding: 2.8cqw 2.8cqw 3cqw; border-radius: 3.6cqw; background: rgba(8,64,66,.38); border: .25cqw solid rgba(13,148,136,.22); }
+  #story .proof .pc.warn { border-color: rgba(245,158,11,.3); box-shadow: 0 0 4cqw rgba(245,158,11,.08); }
+  #story .proof .pc .k { display: flex; justify-content: space-between; align-items: center; font-size: 2.6cqw; font-weight: 600; letter-spacing: .04em; }
+  #story .proof .pc .k s { text-decoration: none; padding: .6cqw 1.3cqw; border-radius: 1.2cqw; font-size: 2.1cqw; letter-spacing: .02em; text-transform: none;
+                         color: #22c55e; background: rgba(34,197,94,.12); }
+  #story .proof .pc.warn .k s { color: #f59e0b; background: rgba(245,158,11,.13); }
+  #story .proof .pc .v { margin-top: 2.2cqw; font: 700 6.2cqw/1 Inter, sans-serif; letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+  #story .proof .pc .v small { margin-left: .8cqw; font-size: 2.6cqw; font-weight: 500; color: #bae4d5; letter-spacing: 0; }
+  #story .proof .v b { font-weight: inherit; transition: opacity .3s; }
+  #story .proof .chart { margin-top: 2.4cqw; padding: 3cqw 3cqw 2.4cqw; border-radius: 3.6cqw; background: rgba(8,64,66,.38); border: .25cqw solid rgba(13,148,136,.22); }
+  #story .proof .chart .h { font-size: 2.9cqw; font-weight: 600; }
+  #story .proof .chart .h span { display: block; margin-top: .7cqw; font-size: 2.2cqw; font-weight: 500; color: #f59e0b; }
+  #story .proof .plot { position: relative; height: 28cqw; margin-top: 2.6cqw; }
+  #story .proof .plot svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+  #story .proof .plot .dot { position: absolute; width: 2cqw; height: 2cqw; margin: -1cqw 0 0 -1cqw; border-radius: 50%; background: #ef4444;
+                           box-shadow: 0 0 0 .8cqw rgba(239,68,68,.25); transition: top .6s ease; }
+  #story .proof .axis { display: flex; justify-content: space-between; margin-top: 1.4cqw; font-size: 1.9cqw; color: rgba(186,228,213,.6); }
+  #story .proof .eq { display: flex; align-items: center; gap: 2.4cqw; margin-top: 2.4cqw; padding: 2.6cqw 3cqw; border-radius: 3.6cqw;
+                    background: rgba(8,64,66,.38); border: .25cqw solid rgba(13,148,136,.22); }
+  #story .proof .eq svg { width: 6.4cqw; height: 6.4cqw; padding: 1.4cqw; border-radius: 1.8cqw; background: rgba(13,148,136,.2); fill: #2dd4bf; }
+  #story .proof .eq b { display: block; font-size: 2.9cqw; font-weight: 600; }
+  #story .proof .eq span { display: block; margin-top: .5cqw; font-size: 2.2cqw; color: #bae4d5; }
+  #story .proof .eq u { margin-left: auto; position: relative; width: 8.6cqw; height: 5cqw; border-radius: 99px; background: #22c55e; }
+  #story .proof .eq u::after { content: ""; position: absolute; right: .6cqw; top: .6cqw; width: 3.8cqw; height: 3.8cqw; border-radius: 50%; background: #fff; }
+  #story .proof .sys { display: flex; align-items: center; gap: 2.4cqw; margin-top: 2.4cqw; padding: 2.4cqw 3cqw; border-radius: 3.6cqw;
+                     background: rgba(34,197,94,.07); border: .25cqw solid rgba(34,197,94,.2); }
+  #story .proof .sys > i { flex: none; width: 1.8cqw; height: 1.8cqw; border-radius: 50%; background: #22c55e; box-shadow: 0 0 2cqw #22c55e; }
+  #story .proof .sys b { display: block; font-size: 2.6cqw; font-weight: 600; }
+  #story .proof .sys span { display: block; margin-top: .4cqw; font-size: 2.1cqw; color: #bae4d5; font-variant-numeric: tabular-nums; }
+  #story .proof .sys em { font-style: normal; }
+  /* (a solid bar, no backdrop blur: under the phone's slow hover the blur was worked out again every frame) */
+  #story .proof .tabs { position: absolute; left: 0; right: 0; bottom: 0; z-index: 2; display: flex; justify-content: space-around; padding: 2.4cqw 3cqw 7.4cqw;
+                      background: rgba(3,18,26,.95); border-top: .25cqw solid rgba(13,148,136,.2); }
+  #story .proof .tabs span { position: relative; display: flex; flex-direction: column; align-items: center; gap: .9cqw; font-size: 1.9cqw; font-weight: 500; color: #7f97a6; }
+  #story .proof .tabs svg { width: 4.6cqw; height: 4.6cqw; fill: currentColor; }
+  #story .proof .tabs .on { color: #2dd4bf; }
+  #story .proof .tabs em { position: absolute; left: 55%; top: -1cqw; min-width: 3cqw; padding: .3cqw .6cqw; border-radius: 99px; background: #ef4444; color: #fff;
+                         font: 700 1.8cqw/1.2 Inter, sans-serif; text-align: center; }
+  #story .proof .home { position: absolute; z-index: 3; left: 50%; bottom: 2cqw; width: 33cqw; height: 1.2cqw; transform: translateX(-50%); border-radius: 99px; background: rgba(255,255,255,.85); }
+  @media (prefers-reduced-motion: reduce) { #story .proof .phone { animation: none; } }
+  /* the phone beside the alert steps: what each step looks like at 2:47 in the night (the screens switch with them) */
+  #story .proof.night .screen { color: #fff; font-family: Inter, system-ui, sans-serif;
+    background: radial-gradient(90% 55% at 30% 0%, #18344c, transparent 70%), linear-gradient(180deg, #0b1a2a, #050b14); }
+  #story .proof.night .sb { position: relative; z-index: 2; }
+  #story .proof.night .scr { position: absolute; inset: 0; padding: 12.6cqw 5cqw 0; opacity: 0; transform: scale(.98); transition: opacity .5s ease, transform .5s ease; }
+  #story .proof.night .scr.on { opacity: 1; transform: none; }
+  #story .proof.night .lock .clock { margin-top: 5cqw; text-align: center; font: 300 22cqw/1 -apple-system, "SF Pro Display", Inter, sans-serif; letter-spacing: -.02em; }
+  #story .proof.night .lock .day { margin-top: 1.5cqw; text-align: center; font-size: 4.2cqw; color: rgba(255,255,255,.75); }
+  #story .proof.night .lock .note { display: flex; gap: 3cqw; margin-top: 3cqw; padding: 3.4cqw; border-radius: 5cqw; background: rgba(255,255,255,.14); }
+  #story .proof.night .lock .day + .note { margin-top: 16cqw; }
+  #story .proof.night .lock .note > div { flex: 1; min-width: 0; }
+  #story .proof.night .lock .ic { flex: none; width: 8.5cqw; height: 8.5cqw; border-radius: 2.2cqw; }
+  #story .proof.night .lock .ic.sms { background: linear-gradient(#5ff777, #10b931); }
+  #story .proof.night .lock .ic.mail { background: linear-gradient(#55b9ff, #1771e6); }
+  #story .proof.night .lock .note b { display: flex; justify-content: space-between; font-size: 3.3cqw; font-weight: 600; }
+  #story .proof.night .lock .note b u { text-decoration: none; font-weight: 400; color: rgba(255,255,255,.6); }
+  #story .proof.night .lock .note span { display: block; margin-top: .8cqw; font-size: 3.3cqw; line-height: 1.3; color: rgba(255,255,255,.92); }
+  #story .proof.night .call .who { margin-top: 16cqw; text-align: center; }
+  #story .proof.night .call .who img { width: 22cqw; height: 22cqw; border-radius: 50%; box-shadow: 0 0 0 1.5cqw rgba(255,255,255,.08); }
+  #story .proof.night .call .who b { display: block; margin-top: 6cqw; font: 500 8cqw/1.1 -apple-system, Inter, sans-serif; }
+  #story .proof.night .call .who span { display: block; margin-top: 2cqw; font-size: 4cqw; color: rgba(255,255,255,.7); }
+  #story .proof.night .call .act { position: absolute; left: 12cqw; right: 12cqw; bottom: 22cqw; display: flex; justify-content: space-between; }
+  #story .proof.night .call .act i { width: 17cqw; height: 17cqw; border-radius: 50%; }
+  #story .proof.night .call .act .no { background: #ff3b30; }
+  #story .proof.night .call .act .yes { position: relative; background: #34c759; }
+  /* the ringing pulse grows and fades (transform and opacity: no repaint each frame, as an animated shadow had) */
+  #story .proof.night .call .act .yes::after { content: ""; position: absolute; inset: 0; border-radius: 50%; background: rgba(52,199,89,.4);
+                                               animation: ring 1.4s ease-out infinite; }
+  @keyframes ring { from { transform: scale(1); opacity: .7; } to { transform: scale(1.55); opacity: 0; } }
+  #story .proof.night .aer .do { margin-top: 12cqw; padding: 5cqw; border-radius: 5cqw; background: rgba(239,68,68,.1); border: .3cqw solid rgba(239,68,68,.35); }
+  #story .proof.night .aer .do span { font-size: 3.4cqw; color: rgba(255,255,255,.75); }
+  #story .proof.night .aer .do b { display: block; margin-top: 2cqw; font: 700 13cqw/1 Inter, sans-serif; letter-spacing: -.02em; }
+  #story .proof.night .aer .do b small { margin-left: 1.5cqw; font-size: 4cqw; font-weight: 500; color: rgba(255,255,255,.7); }
+  #story .proof.night .aer .do s { display: inline-block; margin-top: 3cqw; padding: 1cqw 2.4cqw; border-radius: 2cqw; text-decoration: none; font-size: 3cqw; font-weight: 600;
+                                   color: #fca5a5; background: rgba(239,68,68,.18); }
+  #story .proof.night .aer .sw { display: flex; align-items: center; gap: 3cqw; margin-top: 4cqw; padding: 5cqw; border-radius: 5cqw;
+                                 background: rgba(34,197,94,.1); border: .3cqw solid rgba(34,197,94,.35); }
+  #story .proof.night .aer .sw b { display: block; font-size: 4.2cqw; font-weight: 600; }
+  #story .proof.night .aer .sw span { display: block; margin-top: 1cqw; font-size: 3.2cqw; color: #86efac; }
+  #story .proof.night .aer .sw u { margin-left: auto; position: relative; flex: none; width: 13cqw; height: 7.6cqw; border-radius: 99px; background: #22c55e; }
+  #story .proof.night .aer .sw u::after { content: ""; position: absolute; right: .9cqw; top: .9cqw; width: 5.8cqw; height: 5.8cqw; border-radius: 50%; background: #fff; }
+  #alerts .proof { width: clamp(180px, min(20vw, 32vh), 260px); }   /* a little smaller than the app's: it clears the header */
+  @media (max-width: 760px) { #alerts .split2 { gap: 26px; } #alerts .proof { width: min(180px, 27vh); } .ladder { height: 150px; } }
+  @media (prefers-reduced-motion: reduce) { #story .proof.night .scr { transition: none; } #story .proof.night .call .act .yes::after { animation: none; } }
   #contact .btn:not(.ghost) { animation: none; background: var(--ink); color: #fff; box-shadow: none; }
   #contact .btn:not(.ghost):hover { box-shadow: 0 10px 24px rgba(13, 27, 42, .18); }
   #story .btn.ghost { background: transparent; border-color: var(--rule-2); color: var(--ink); }
@@ -575,39 +762,189 @@
 
 <div id="story">
 
-<section id="action">
+<section id="action" class="one">
   <div class="wrap">
-    <div class="say reveal">
-      <h2>When oxygen drops, <em>it acts</em></h2>
-      <p>It turns the aerator on first, then sends you a message. You don't have to be awake.</p>
+    <h2 class="big reveal">When oxygen drops, <em>it acts.</em></h2>
+    <p class="sub reveal">It watches the water all night, and makes sure someone hears about it the moment oxygen falls.</p>
+  </div>
+</section>
+
+<section id="alerts" aria-label="How it reaches you">
+  <div class="pin">
+    <div class="wrap split2">
+      <div>
+        <div class="kick">How it reaches you</div>
+        <ol class="ladder">
+          <li class="on"><b>Minute 0</b><span>A text, an email and an alert on your dashboard.</span></li>
+          <li><b>Minute 5</b><span>It calls you.</span></li>
+          <li><b>Minute 15</b><span>It calls again.</span></li>
+          <li><b>Minute 30</b><span>Your farm manager gets the call.</span></li>
+          <li><b>Below 4 mg/L</b><span>Your aerator turns on through your PLC.</span></li>
+        </ol>
+        <div class="ticks" aria-hidden="true"><i class="on"></i><i></i><i></i><i></i><i></i></div>
+      </div>
+      <!-- what each step looks like on the phone: the screens switch with the steps -->
+      <figure class="proof night" aria-hidden="true">
+        <div class="phone">
+          <i class="key act"></i><i class="key vu"></i><i class="key vd"></i><i class="key pw"></i>
+          <div class="glass"><div class="screen">
+            <div class="sb"><span>2:47</span><span>
+              <svg viewBox="0 0 18 12"><rect y="8" width="3" height="4" rx=".8"/><rect x="5" y="5.5" width="3" height="6.5" rx=".8"/><rect x="10" y="3" width="3" height="9" rx=".8"/><rect x="15" width="3" height="12" rx=".8"/></svg>
+              <svg viewBox="0 0 27 12"><rect x=".6" y=".6" width="22.8" height="10.8" rx="3.2" fill="none" stroke="#fff" stroke-opacity=".5" stroke-width="1.1"/><rect x="2.2" y="2.2" width="12" height="7.6" rx="1.8"/><path d="M25 4.1v3.8c.8-.3 1.3-1.1 1.3-1.9s-.5-1.6-1.3-1.9z" fill-opacity=".5"/></svg>
+            </span></div>
+            <!-- minute 0: the lock screen, a text and an email -->
+            <div class="scr lock on">
+              <div class="clock">2:47</div><div class="day">Tuesday</div>
+              <div class="note"><i class="ic sms"></i><div><b>RoySync <u>now</u></b><span>Pool 1: oxygen 4.6 mg/L and falling.</span></div></div>
+              <div class="note"><i class="ic mail"></i><div><b>Mail <u>now</u></b><span>RoySync alert · Pool 1 oxygen low</span></div></div>
+            </div>
+            <!-- minutes 5 and 15: it calls you, then again -->
+            <div class="scr call"><div class="who"><img src="assets/logo.png" alt=""><b>RoySync Alert</b><span>Pool 1 · oxygen low</span></div>
+              <div class="act"><i class="no"></i><i class="yes"></i></div></div>
+            <div class="scr call"><div class="who"><img src="assets/logo.png" alt=""><b>RoySync Alert</b><span>Pool 1 · second call</span></div>
+              <div class="act"><i class="no"></i><i class="yes"></i></div></div>
+            <!-- minute 30: the farm manager's phone rings -->
+            <div class="scr call"><div class="who"><img src="assets/logo.png" alt=""><b>RoySync Alert</b><span>To the farm manager · Pool 1</span></div>
+              <div class="act"><i class="no"></i><i class="yes"></i></div></div>
+            <!-- below 4 mg/L: the aerator is on, in the app -->
+            <div class="scr aer"><div class="do"><span>Dissolved oxygen</span><b>3.9<small>mg/L</small></b><s>Below 4.0</s></div>
+              <div class="sw"><div><b>Main Aerator</b><span>On · started automatically</span></div><u></u></div></div>
+            <span class="island"></span>
+            <span class="home"></span>
+          </div></div>
+        </div>
+      </figure>
     </div>
-    <div class="say reveal">
-      <h2>Works on <em>any farm</em></h2>
-      <p>Solar powered, nothing to wire. It reports over satellite, Wi-Fi or LTE.</p>
+  </div>
+</section>
+
+<section id="farm" class="one band">
+  <svg class="wave top" viewBox="0 0 1440 40" preserveAspectRatio="none" aria-hidden="true"><path d="M0 0H1440V16C1260 34 1080 4 900 16S540 34 360 16 120 4 0 14Z"/></svg>
+  <svg class="wave bot" viewBox="0 0 1440 40" preserveAspectRatio="none" aria-hidden="true"><path d="M0 0H1440V16C1260 34 1080 4 900 16S540 34 360 16 120 4 0 14Z"/></svg>
+  <!-- a trout pond in the rain (Pexels 7663532, free to use), looping; it plays only while on screen -->
+  <video class="band-media" data-src="media/farm-trout-720.mp4" poster="media/farm-trout.jpg" muted loop playsinline preload="none" aria-hidden="true"></video>
+  <div class="wrap">
+    <h2 class="big reveal">Works on <em>any farm.</em></h2>
+    <p class="sub reveal">Solar powered, nothing to wire. It reports over satellite, Wi-Fi or LTE.</p>
+  </div>
+</section>
+
+<section id="app" class="one">
+  <div class="wrap split2">
+    <div>
+      <h2 class="big reveal">Everything on <em>one screen.</em></h2>
+      <p class="sub reveal">Every reading from the float, on your phone, wherever you are.</p>
     </div>
+    <figure class="proof reveal">
+      <div class="phone">
+        <i class="key act"></i><i class="key vu"></i><i class="key vd"></i><i class="key pw"></i>
+        <div class="glass"><div class="screen app" role="img" aria-label="The RoySync dashboard on a phone: live dissolved oxygen, temperature, pH and conductivity from the float">
+          <div class="sb" aria-hidden="true"><span>9:41</span><span>
+            <svg viewBox="0 0 18 12"><rect y="8" width="3" height="4" rx=".8"/><rect x="5" y="5.5" width="3" height="6.5" rx=".8"/><rect x="10" y="3" width="3" height="9" rx=".8"/><rect x="15" width="3" height="12" rx=".8"/></svg>
+            <svg viewBox="0 0 16 12"><path d="M8 2.3c2.4 0 4.6.9 6.3 2.5l1.3-1.4C13.5 1.4 10.9.3 8 .3S2.5 1.4.4 3.4l1.3 1.4C3.4 3.2 5.6 2.3 8 2.3zm0 3.6c1.4 0 2.6.5 3.6 1.4l1.3-1.4C11.6 4.7 9.9 4 8 4S4.4 4.7 3.1 5.9l1.3 1.4c1-.9 2.2-1.4 3.6-1.4zM8 9.4c-.6 0-1 .2-1.4.5L8 11.6l1.4-1.7c-.4-.3-.8-.5-1.4-.5z"/></svg>
+            <svg viewBox="0 0 27 12"><rect x=".6" y=".6" width="22.8" height="10.8" rx="3.2" fill="none" stroke="#fff" stroke-opacity=".5" stroke-width="1.1"/><rect x="2.2" y="2.2" width="16" height="7.6" rx="1.8"/><path d="M25 4.1v3.8c.8-.3 1.3-1.1 1.3-1.9s-.5-1.6-1.3-1.9z" fill-opacity=".5"/></svg>
+          </span></div>
+          <div class="ah" aria-hidden="true"><img src="assets/logo.png" alt=""><b>RoySync</b>
+            <span class="bell"><svg viewBox="0 0 24 24"><path d="M12 22.5a2.6 2.6 0 0 0 2.6-2.6H9.4a2.6 2.6 0 0 0 2.6 2.6zm7.2-6.2V11a7.2 7.2 0 0 0-5.6-7V3.3a1.6 1.6 0 0 0-3.2 0V4a7.2 7.2 0 0 0-5.6 7v5.3l-2 2v1h18.4v-1z"/></svg><i></i></span></div>
+          <div class="tt" aria-hidden="true"><b>Pool 1 <em>Analytics</em></b><span>Raceway · Rainbow trout · Live telemetry</span></div>
+          <div class="lbl" aria-hidden="true">Live parameters <i>Live</i></div>
+          <div class="grid" aria-hidden="true">
+            <div class="pc warn"><div class="k">DO <s>Warning</s></div><div class="v"><b data-k="do">5.4</b><small>mg/L</small></div></div>
+            <div class="pc"><div class="k">Temp <s>Optimal</s></div><div class="v"><b data-k="temp">14.8</b><small>°C</small></div></div>
+            <div class="pc"><div class="k">pH <s>Optimal</s></div><div class="v"><b data-k="ph">7.4</b><small>pH</small></div></div>
+            <div class="pc"><div class="k">EC <s>Optimal</s></div><div class="v"><b data-k="ec">1.2</b><small>mS/cm</small></div></div>
+          </div>
+          <div class="chart" aria-hidden="true">
+            <div class="h">Dissolved Oxygen · 24 h<span>Drop below 7.0 mg/L detected</span></div>
+            <div class="plot">
+              <svg viewBox="0 0 160 60" preserveAspectRatio="none">
+                <defs><linearGradient id="do-fill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ef4444" stop-opacity=".34"/><stop offset="1" stop-color="#ef4444" stop-opacity="0"/></linearGradient></defs>
+                <path d="M0 15H160M0 30H160M0 45H160" stroke="rgba(13,148,136,.18)" stroke-width="1" vector-effect="non-scaling-stroke"/>
+                <path d="M0 25.7H160" stroke="#f59e0b" stroke-opacity=".7" stroke-width="1" stroke-dasharray="3 3" vector-effect="non-scaling-stroke"/>
+                <path class="area" fill="url(#do-fill)"/>
+                <path class="line" fill="none" stroke="#ef4444" stroke-width="1.7" stroke-linejoin="round" stroke-linecap="round" vector-effect="non-scaling-stroke"/>
+              </svg>
+              <span class="dot"></span>
+            </div>
+            <div class="axis"><span>24h</span><span>12h</span><span>Now</span></div>
+          </div>
+          <div class="eq" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><path d="M3 8.2h10.6a3.2 3.2 0 1 0-3.2-3.2h2.2a1 1 0 1 1 1 1H3zm0 4.1h15.2a3.2 3.2 0 1 1-3.2 3.2h2.2a1 1 0 1 0 1-1H3zm0 4.1h7.5v2.2H3z"/></svg>
+            <div><b>Main Aerator</b><span>Auto mode</span></div><u></u>
+          </div>
+          <div class="sys" aria-hidden="true"><i></i><div><b>System status</b><span>All sensors reporting · updated <em>3</em> s ago</span></div></div>
+          <nav class="tabs" aria-hidden="true">
+            <span><svg viewBox="0 0 24 24"><path d="M12 3.2 3 10.6V21h6.2v-6.1h5.6V21H21V10.6z"/></svg>Home</span>
+            <span class="on"><svg viewBox="0 0 24 24"><path d="M3 3h8v9H3zm10 0h8v5h-8zm0 7h8v11h-8zM3 14h8v7H3z"/></svg>Dashboard</span>
+            <span><svg viewBox="0 0 24 24"><path d="M12 22.5a2.6 2.6 0 0 0 2.6-2.6H9.4a2.6 2.6 0 0 0 2.6 2.6zm7.2-6.2V11a7.2 7.2 0 0 0-5.6-7V3.3a1.6 1.6 0 0 0-3.2 0V4a7.2 7.2 0 0 0-5.6 7v5.3l-2 2v1h18.4v-1z"/></svg>Alerts<em>1</em></span>
+            <span><svg viewBox="0 0 24 24"><path d="M5 2.5h10l4.5 4.5v14.5H5zm3 15.5h2.2v-5H8zm4 0h2.2V9.5H12zm4 0h2.2v-3H16z"/></svg>Reports</span>
+          </nav>
+          <span class="island"></span>
+          <span class="home"></span>
+        </div></div>
+      </div>
+      <script>   // the dashboard ticks like the live one: the real app's 24 h oxygen curve, readings that move a little every few seconds
+        (app => {
+          const DO = [8.2, 8.0, 7.9, 7.5, 7.2, 6.8, 6.5, 6.1, 5.9, 5.7, 5.5, 5.4, 5.4, 5.5, 5.4, 5.4, 5.4];   // Dashboard.jsx METRICS.do
+          const Y = v => 60 - (v - 3) / 7 * 60, X = i => i * 160 / (DO.length - 1);
+          const draw = () => {
+            let d = `M0 ${Y(DO[0]).toFixed(2)}`;
+            for (let i = 0; i < DO.length - 1; i++) {   // Catmull-Rom through the readings, as cubic Béziers
+              const p0 = DO[Math.max(i - 1, 0)], p1 = DO[i], p2 = DO[i + 1], p3 = DO[Math.min(i + 2, DO.length - 1)], k = 1 / 6, w = X(1);
+              d += ` C${(X(i) + w * k * 2).toFixed(2)} ${(Y(p1) + (Y(p2) - Y(p0)) * k).toFixed(2)} ${(X(i + 1) - w * k * 2).toFixed(2)} ${(Y(p2) - (Y(p3) - Y(p1)) * k).toFixed(2)} ${X(i + 1)} ${Y(p2).toFixed(2)}`;
+            }
+            app.querySelector('.line').setAttribute('d', d);
+            app.querySelector('.area').setAttribute('d', d + ' L160 60 L0 60Z');
+            const dot = app.querySelector('.dot'); dot.style.left = '100%'; dot.style.top = (Y(DO[DO.length - 1]) / 60 * 100) + '%';
+          };
+          draw();
+          const live = { do: [5.4, 0.1, 1], temp: [14.8, 0.1, 1], ph: [7.4, 0.1, 1] };   // [centre, step, decimals]
+          const agoEl = app.querySelector('.sys em'); let ago = 3;
+          setInterval(() => { agoEl.textContent = ++ago; }, 1000);
+          setInterval(() => {
+            const k = Object.keys(live)[Math.floor(Math.random() * 3)], [c, s, n] = live[k], el = app.querySelector(`[data-k="${k}"]`);
+            const v = (c + s * (Math.floor(Math.random() * 3) - 1)).toFixed(n);
+            if (v === el.textContent) return;
+            ago = 0;
+            el.style.opacity = 0;
+            setTimeout(() => { el.textContent = v; el.style.opacity = 1; if (k === 'do') { DO[DO.length - 1] = +v; draw(); } }, 300);
+          }, 2600);
+        })(document.currentScript.previousElementSibling.querySelector('.app'));
+      </script>
+    </figure>
   </div>
 </section>
 
 <section id="trust">
   <div class="wrap">
-    <h2 class="title reveal">Capabilities</h2>
-    <div class="caps">
-      <div class="cap"><svg viewBox="0 0 48 48" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M27 4 11 27h12l-3 17 17-24H25z" fill="currentColor" stroke="none"/></svg><h3>Onboard power</h3><p>Solar panel &amp; battery</p></div>
-      <div class="cap"><svg viewBox="0 0 48 48" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="24" cy="24" r="17"/><path d="M7 24h34M24 7v34" stroke-dasharray="3 4"/></svg><h3>Compact construction</h3><p>About 200 mm in diameter</p></div>
-      <div class="cap"><svg viewBox="0 0 48 48" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M24 30v12M17 42h14"/><circle cx="24" cy="26" r="3" fill="currentColor"/><path d="M16 18a11 11 0 0 1 16 0M10 12a19 19 0 0 1 28 0"/></svg><h3>Seamless connectivity</h3><p>Satellite | Wi-Fi | LTE</p></div>
-      <div class="cap"><svg viewBox="0 0 48 48" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M24 5s12 13 12 22a12 12 0 0 1-24 0c0-9 12-22 12-22z"/><path d="M19 28h10"/></svg><h3>Eight sensors</h3><p>Oxygen | pH | Conductivity | Temperature | Turbidity | and more</p></div>
-      <div class="cap"><svg viewBox="0 0 48 48" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M24 8v6M24 34v6M8 24h6M34 24h6M12.7 12.7l4.2 4.2M31.1 31.1l4.2 4.2M12.7 35.3l4.2-4.2M31.1 16.9l4.2-4.2"/><circle cx="24" cy="24" r="6"/></svg><h3>Acts on its own</h3><p>Switches on the aeration when oxygen falls</p></div>
-      <div class="cap"><svg viewBox="0 0 48 48" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="24" cy="24" r="17"/><path d="m16 24 6 6 11-12"/></svg><h3>Registered design</h3><p>Reg. No. 6535677</p></div>
+    <div class="kick reveal">Capabilities</div>
+    <h2 class="big reveal">Small float, <em>eight sensors.</em></h2>
+    <div class="float-grid">
+      <div class="caps caps-l">
+        <div class="cap"><svg viewBox="0 0 48 48" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="24" cy="24" r="17"/><path d="M7 24h34M24 7v34" stroke-dasharray="3 4"/></svg><h3>Compact construction</h3><p>About 200 mm in diameter</p></div>
+        <div class="cap"><svg viewBox="0 0 48 48" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M27 4 11 27h12l-3 17 17-24H25z" fill="currentColor" stroke="none"/></svg><h3>Onboard power</h3><p>Solar panel &amp; battery</p></div>
+      </div>
+      <!-- the float itself, rendered from the same model the dive uses (film-work/studio-shot.mjs) -->
+      <figure class="float-shot reveal"><img src="assets/float.webp" alt="The RoySync float: a white dome over a twisted spiral of blades" width="1000" height="1600" loading="lazy" decoding="async"></figure>
+      <div class="caps caps-r">
+        <div class="cap"><svg viewBox="0 0 48 48" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M24 5s12 13 12 22a12 12 0 0 1-24 0c0-9 12-22 12-22z"/><path d="M19 28h10"/></svg><h3>Eight sensors</h3><p>Oxygen | pH | Conductivity | Temperature | Turbidity | and more</p></div>
+        <div class="cap"><svg viewBox="0 0 48 48" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M24 8v6M24 34v6M8 24h6M34 24h6M12.7 12.7l4.2 4.2M31.1 31.1l4.2 4.2M12.7 35.3l4.2-4.2M31.1 16.9l4.2-4.2"/><circle cx="24" cy="24" r="6"/></svg><h3>Acts on its own</h3><p>Switches on the aeration when oxygen falls</p></div>
+        <div class="cap"><svg viewBox="0 0 48 48" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="24" cy="24" r="17"/><path d="m16 24 6 6 11-12"/></svg><h3>Registered design</h3><p>Reg. No. 6535677</p></div>
+      </div>
     </div>
   </div>
 </section>
 
-<section id="contact">
+<section id="contact" class="band">
+  <svg class="wave top" viewBox="0 0 1440 40" preserveAspectRatio="none" aria-hidden="true"><path d="M0 0H1440V16C1260 34 1080 4 900 16S540 34 360 16 120 4 0 14Z"/></svg>
+  <!-- the evening sea of the dive, under a dark wash: the page closes where it opened -->
+  <img class="band-media" src="assets/sunset-band.webp" alt="" width="1920" height="640" loading="lazy" decoding="async">
   <div class="wrap">
-    <div class="kicker reveal">Get started</div>
-    <h2 class="title reveal">Want to try it <em>on your farm?</em></h2>
-    <p class="lead reveal">Tell us about your ponds. We'll come back within one working day.</p>
-    <div class="cta-row reveal" style="justify-content:center">
+    <div>
+      <h2 class="title reveal">Want to try it <em>on your farm?</em></h2>
+      <p class="lead reveal">Tell us about your ponds and the fish you raise. We'll come back to you within one working day.</p>
+    </div>
+    <div class="cta-row reveal">
       <a class="btn" href="contact.html">Contact us</a>
       <a class="btn ghost" href="mailto:info@roysync.com?subject=Pilot%20request">info@roysync.com</a>
     </div>
@@ -730,16 +1067,51 @@
       dot.style.top = `${p * 100}%`;
       tick.style.top = `${p * 100}%`;
       label.style.top = `calc(${p * 100}% - 4px)`;
-      // the chapter whose midpoint is closest to the middle of the viewport
-      const mid = scrollY + innerHeight / 2;
-      let best = chapters[0], bd = Infinity;
-      for (const s of chapters) {
-        const c = s.offsetTop + s.offsetHeight / 2;
-        const d = Math.abs(c - mid);
-        if (d < bd) { bd = d; best = s; }
-      }
-      const name = best.id === 'contact' ? 'Contact' : best.id.charAt(0).toUpperCase() + best.id.slice(1);
+      // the chapter under the middle of the viewport, measured on screen (offsetTop counted from #story, not the
+      // page, and named the last chapters whatever was on screen)
+      const mid = innerHeight / 2;
+      let best = chapters[chapters.length - 1];
+      for (const s of chapters) { const r = s.getBoundingClientRect(); if (r.top <= mid && r.bottom > mid) { best = s; break; } }
+      const name = { action: 'Action', alerts: 'Alerts', farm: 'Farm', app: 'App', trust: 'Capabilities', contact: 'Contact' }[best.id] || best.id;
       if (label.textContent !== name) label.textContent = name;
+    };
+    addEventListener('scroll', () => { if (!ticking) { ticking = true; requestAnimationFrame(update); } }, { passive: true });
+    addEventListener('resize', update);
+    update();
+  })();
+
+  // the band films load only when they come near the screen, and play only while on it
+  (() => {
+    const vids = [...document.querySelectorAll('video.band-media[data-src]')];
+    if (!vids.length || !('IntersectionObserver' in window)) return;
+    const still = matchMedia('(prefers-reduced-motion: reduce)').matches;   // the poster stays: no motion asked for
+    const io = new IntersectionObserver(es => es.forEach(e => {
+      const v = e.target;
+      if (e.isIntersecting) {
+        if (still) return;
+        if (!v.src) v.src = v.dataset.src;
+        v.play().catch(() => {});
+      } else if (!v.paused) v.pause();
+    }), { rootMargin: '200px 0px' });
+    vids.forEach(v => io.observe(v));
+  })();
+
+  // how it reaches you: the section is held on screen (sticky) and the scroll through it picks the step shown
+  (() => {
+    const sec = document.getElementById('alerts');
+    if (!sec) return;
+    const steps = [...sec.querySelectorAll('.ladder li')], ticks = [...sec.querySelectorAll('.ticks i')], screens = [...sec.querySelectorAll('.scr')];
+    let cur = 0, ticking = false;
+    const update = () => {
+      ticking = false;
+      const r = sec.getBoundingClientRect();
+      const f = Math.min(Math.max(-r.top / Math.max(1, r.height - innerHeight), 0), 0.9999);
+      const k = Math.floor(f * steps.length);
+      if (k === cur) return;
+      cur = k;
+      steps.forEach((s, i) => s.classList.toggle('on', i === k));
+      screens.forEach((s, i) => s.classList.toggle('on', i === k));
+      ticks.forEach((t, i) => t.classList.toggle('on', i <= k));
     };
     addEventListener('scroll', () => { if (!ticking) { ticking = true; requestAnimationFrame(update); } }, { passive: true });
     addEventListener('resize', update);
@@ -2842,6 +3214,10 @@ function tick(static_ = false) {
   // dive is off-screen — the water drifting behind the panels is what makes them feel submerged
   // (it reads span and curScrollY, so it has to come after both: above them it threw on every frame)
   const storyScrolling = curScrollY > span && Math.abs(scrollTargetY - curScrollY) > 0.5;
+  // the scene has scrolled away under the light page: none of it is on screen, so none of it is worked out. (The
+  // loop is "static_ !== true", as for govern above: setAnimationLoop passes a timestamp there, so the old
+  // "!static_" checks never ran and the 3D went on drawing behind the whole page.)
+  if (static_ !== true && storyEl.getBoundingClientRect().top <= 0) return;
 
   // camera: descend from above the surface to below it, pulling in on the blades.
   // 1. Surface float: p = 0 .. 0.10
@@ -3048,7 +3424,6 @@ function tick(static_ = false) {
   bakeCaustics();
 
   if (!static_ && !document.hidden) {
-    if (storyEl.getBoundingClientRect().top <= 0) return;   // the scene has scrolled away: nothing to draw
     const stageGone = scroller.getBoundingClientRect().bottom <= 0;
     if (stageGone && Math.abs(q - lastQ) < 0.0004 && !storyScrolling && !isOrbitDragging && Math.abs(orbitVelYaw) < 0.0001 && Math.abs(orbitVelPitch) < 0.0001) return;
     lastQ = q;
