@@ -1360,6 +1360,7 @@ const MU = {
   uSunDir: { value: sunDir },
   uSunCol: { value: sunCol },
   uApparent: { value: 1 },                    // < 1 while drawing what the surface refracts: apparent depth at grazing view
+  uUwLift: { value: 0.55 },                   // the light the water scatters onto a white hull from every side (the film's float is white down there)
   uLup: { value: new THREE.Vector3(0.25, 0.55, 0.90) },    // natural water radiance looking up towards Snell's window
   uLhz: { value: LHZ0.clone() },                           // looking level: deep luminous oceanic cerulean
   uLdn: { value: LDN0.clone() },                           // looking down: rich marine abyssal navy
@@ -2026,7 +2027,7 @@ function patchProbe(sh) {
       vec4 mvPosition = viewMatrix * wApp;
       gl_Position = projectionMatrix * mvPosition;`);
   sh.fragmentShader = sh.fragmentShader
-    .replace('#include <common>', '#include <common>\nvarying vec3 vWPos;\nvarying vec3 vLPos;\nvarying float vAO;\nuniform float uPlate, uPlateK, uApparent;\nuniform vec3 uPlateTint;\n' + NOISE + MEDIUM + WAVES + UWLIGHT + CAUSTIC + RAYS)
+    .replace('#include <common>', '#include <common>\nvarying vec3 vWPos;\nvarying vec3 vLPos;\nvarying float vAO;\nuniform float uPlate, uPlateK, uApparent, uUwLift;\nuniform vec3 uPlateTint;\n' + NOISE + MEDIUM + WAVES + UWLIGHT + CAUSTIC + RAYS)
     .replace('#include <color_fragment>', `#include <color_fragment>
       // height above the water standing at this point of the hull (a passing set moves it well off y = 0)
       float yW = vWPos.y < -4.0 ? vWPos.y : vWPos.y - waterAt(vWPos.xz, uTime);   // (deep down, e.g. the fish, y will do)
@@ -2072,6 +2073,8 @@ function patchProbe(sh) {
         vec3 caust = causticRGB(vWPos, dep) * exp(-uSigma * dep / max(-uLt.y, 0.3));
         vec3 k = mix(vec3(1.0), caust, 0.16);
         reflectedLight.directDiffuse *= mix(vec3(1.0), k, uwF);
+        // the water all round lights the hull from every side, not just from the surface: so it reads white down there
+        reflectedLight.indirectDiffuse += diffuseColor.rgb * vec3(0.62, 0.8, 0.92) * uUwLift * uwF * vAO;
       }`)
     .replace('#include <opaque_fragment>', `#include <opaque_fragment>
       if (uPlate > 0.5 && uMode > 0.5 && uMode < 1.5 && yW > 0.0) {
@@ -2099,15 +2102,33 @@ const fishMat = new THREE.MeshStandardMaterial({
 fishMat.onBeforeCompile = sh => {
   patchProbe(sh);
   // live scales keep their sheen under water (the hull's plastic loses ~92% of it there): without it the fish looked matte, dead
-  sh.fragmentShader = sh.fragmentShader.replace('float wet = mix(1.0, 0.08, uwF);', 'float wet = mix(1.0, 0.6, uwF);');
+  sh.fragmentShader = sh.fragmentShader.replace('float wet = mix(1.0, 0.08, uwF);', 'float wet = mix(1.0, 0.6, uwF);')
+    // one silver from nose to tail (the barramundi skin is pale at the head and dark green behind): a salmon's
+    // countershading, darker on the back and pale on the belly, with only the skin's scale detail kept from the map
+    .replace('#include <color_fragment>', `#include <color_fragment>
+      // the skin's own light and dark (every scale and fin) in one cool silver: only the green cast of its body is dropped
+      float fShade = smoothstep(0.05, -0.06, vLPos.y);
+      float fLum = dot(diffuseColor.rgb, vec3(0.299, 0.587, 0.114));
+      diffuseColor.rgb = vec3(fLum) * vec3(0.92, 0.98, 1.06) * mix(0.85, 1.1, fShade) * (1.0 - 0.6 * vGape);`)
+    .replace('#include <emissivemap_fragment>', `#include <emissivemap_fragment>
+      totalEmissiveRadiance *= clamp(fLum * 2.2, 0.25, 1.4) * mix(0.75, 1.05, fShade) * (1.0 - vGape);`)
+    .replace('#include <common>', '#include <common>\nvarying float vGape;');
   Object.assign(sh.uniforms, fishU);
-  sh.vertexShader = 'attribute float aPhase;\nattribute float aSpeed;\nuniform float uFishT;\n' + sh.vertexShader
+  sh.vertexShader = 'attribute float aPhase;\nattribute float aSpeed;\nuniform float uFishT;\nvarying float vGape;\n' + sh.vertexShader
     .replace('#include <begin_vertex>', `#include <begin_vertex>
       // Biomimetic Carangiform swim dynamics:
       // Rigid cranial/pectoral zone (transformed.z > 0.10) for steady realistic heading;
       // Fluid sinusoidal flex increasing naturally toward caudal tailfin
       // (the body is 0.87 long, nose at z = +0.43: about one wavelength runs down it, ~1.7 tail beats a second for the
       // fish's cruising pace, and the tail swings ~5% of the length each way; the head recoils a little against it)
+      // a salmon's low dorsal fin, not the barramundi's tall spiny one: whatever stands above the back is pressed down
+      if (transformed.y > 0.05) transformed.y = 0.05 + (transformed.y - 0.05) * 0.35;
+      // half the fish (by phase) open and close their mouths now and then: the lower jaw (ahead of z = 0.3, below the
+      // mouth line) swings down from the hinge, and the skin stretched across the gape is shaded as the open mouth
+      float gulp = step(3.14159, aPhase) * pow(max(sin(uFishT * 1.6 + aPhase * 3.0), 0.0), 3.0);
+      float jaw = smoothstep(-0.005, -0.03, transformed.y) * smoothstep(0.28, 0.38, transformed.z);
+      transformed.y -= gulp * jaw * (transformed.z - 0.28) * 0.75;
+      vGape = gulp * jaw * (1.0 - jaw) * 4.0 * smoothstep(0.3, 0.4, transformed.z);
       float tailFactor = smoothstep(0.12, -0.42, transformed.z);
       float flex = tailFactor * tailFactor;
       float beat = uFishT * (10.5 * aSpeed) + aPhase;
@@ -2179,7 +2200,6 @@ new GLTFLoader().load('assets/fish.glb', gltf => {
   const m = src.material;
   Object.assign(fishMat, {
     map: m.map,
-    emissiveMap: m.map,
     normalMap: m.normalMap,
     aoMap: m.aoMap,
     roughnessMap: m.roughnessMap,
