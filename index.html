@@ -2112,7 +2112,7 @@ fishMat.onBeforeCompile = sh => {
       // the skin's own light and dark (every scale and fin) in one cool silver: only the green cast of its body is dropped
       float fShade = smoothstep(0.05, -0.06, vLPos.y);
       float fLum = dot(diffuseColor.rgb, vec3(0.299, 0.587, 0.114));
-      diffuseColor.rgb = vec3(fLum) * vec3(0.92, 0.98, 1.06) * mix(0.85, 1.1, fShade) * (1.0 - 0.6 * vGape);`)
+      diffuseColor.rgb = vec3(fLum) * vec3(0.92, 0.98, 1.06) * mix(0.85, 1.1, fShade) * (1.0 - 0.85 * vGape);`)
     .replace('#include <emissivemap_fragment>', `#include <emissivemap_fragment>
       totalEmissiveRadiance *= clamp(fLum * 2.2, 0.25, 1.4) * mix(0.75, 1.05, fShade) * (1.0 - vGape);`)
     .replace('#include <common>', '#include <common>\nvarying float vGape;');
@@ -2126,12 +2126,14 @@ fishMat.onBeforeCompile = sh => {
       // fish's cruising pace, and the tail swings ~5% of the length each way; the head recoils a little against it)
       // a salmon's low dorsal fin, not the barramundi's tall spiny one: whatever stands above the back is pressed down
       if (transformed.y > 0.05) transformed.y = 0.05 + (transformed.y - 0.05) * 0.35;
-      // half the fish (by phase) open and close their mouths now and then: the lower jaw (ahead of z = 0.3, below the
-      // mouth line) swings down from the hinge, and the skin stretched across the gape is shaded as the open mouth
+      // half the fish (by phase) open and close their mouths now and then. The snout is low and slim (at the tip,
+      // z 0.43, it spans y -0.041..-0.020; the mouth line runs at about y -0.031 back to z ~0.33): only what lies below
+      // that line ahead of the hinge swings down, and only the thin seam of skin stretched across the gape is shaded
+      // as the open mouth (a wider jaw dropped the whole lower head like a chin, under a dark smear)
       float gulp = step(3.14159, aPhase) * pow(max(sin(uFishT * 1.6 + aPhase * 3.0), 0.0), 3.0);
-      float jaw = smoothstep(-0.005, -0.03, transformed.y) * smoothstep(0.28, 0.38, transformed.z);
-      transformed.y -= gulp * jaw * (transformed.z - 0.28) * 0.75;
-      vGape = gulp * jaw * (1.0 - jaw) * 4.0 * smoothstep(0.3, 0.4, transformed.z);
+      float jaw = smoothstep(-0.029, -0.036, transformed.y) * smoothstep(0.33, 0.37, transformed.z);
+      transformed.y -= gulp * jaw * (transformed.z - 0.33) * 0.32;
+      vGape = gulp * jaw * (1.0 - jaw) * 4.0 * smoothstep(0.35, 0.39, transformed.z);
       float tailFactor = smoothstep(0.12, -0.42, transformed.z);
       float flex = tailFactor * tailFactor;
       float beat = uFishT * (10.5 * aSpeed) + aPhase;
