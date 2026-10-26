@@ -10,6 +10,7 @@
 <meta property="og:type" content="website">
 <meta property="og:image" content="assets/logo.png">
 <link rel="icon" type="image/png" href="assets/favicon.png">
+<link rel="preload" href="assets/fonts/instrument-serif.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="assets/fonts/jost.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="assets/fonts/inter.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="probe-baked.glb?v=65" as="fetch" crossorigin>
@@ -18,6 +19,9 @@
 <style>
   @font-face { font-family: 'Inter'; font-style: normal; font-weight: 400 600; font-display: swap; src: url(assets/fonts/inter.woff2) format('woff2'); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
   @font-face { font-family: 'Jost'; font-style: normal; font-weight: 300 700; font-display: swap; src: url(assets/fonts/jost.woff2) format('woff2'); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+  /* the opening headline's serif (the other headings stay Jost) */
+  @font-face { font-family: 'Instrument Serif'; font-style: normal; font-weight: 400; font-display: swap; src: url(assets/fonts/instrument-serif.woff2) format('woff2'); }
+  @font-face { font-family: 'Instrument Serif'; font-style: italic; font-weight: 400; font-display: swap; src: url(assets/fonts/instrument-serif-italic.woff2) format('woff2'); }
   :root {
     /* palette from the logo: deep navy, white, and the steel-to-ice blue of its ring */
     --bg: #050c16; --bg-2: #0a1524; --panel: rgba(255,255,255,.04); --line: rgba(170,210,255,.12);
@@ -60,7 +64,10 @@
   header.scrolled .navlinks { opacity: 1; transform: none; pointer-events: auto; }
   .navlinks a { color: #d6e6f3; text-decoration: none; font-size: 14px; letter-spacing: .01em; transition: color .2s; }
   .navlinks a:hover { color: #fff; }
-  @media (max-width: 640px) { .navlinks { gap: 14px; margin-right: 14px; } header:not(.scrolled) .navlinks { display: none; } .navlinks a { font-size: 13px; } header.scrolled .logo b, header.scrolled .logo i { display: none; } header .btn.cta { padding: 8px 14px; font-size: 13px; } }
+  .navlinks a, header .btn.cta { white-space: nowrap; }
+  @media (max-width: 640px) { .navlinks { gap: 14px; margin-right: 14px; } header:not(.scrolled) .navlinks { display: none; } .navlinks a { font-size: 13px; }
+    .navlinks a[data-dive] { display: none; }   /* three links and the button don't fit a phone's capsule: the dive is a scroll away anyway */
+    .navlinks { gap: 2px; margin-right: 8px; } .navlinks a { padding: 7px 8px; } header.scrolled .logo b, header.scrolled .logo i { display: none; } header .btn.cta { padding: 8px 14px; font-size: 13px; } }
   header.scrolled { background: rgba(5, 14, 26, .6); backdrop-filter: blur(14px); padding-top: 14px; padding-bottom: 14px; }
   .logo { display: flex; align-items: center; gap: 12px; font-weight: 600; font-size: 19px; letter-spacing: -.01em; }
   .logo img { width: 40px; height: 40px; border-radius: 50%; display: block; }
@@ -84,14 +91,25 @@
   /* ---------- hero overlay ---------- */
   .copy { position: absolute; z-index: 5; transition: opacity .4s; }
   .copy.faded { pointer-events: none; }
-  #hero-copy { left: 6vw; bottom: 13vh; max-width: 680px; transition: none; }   /* keyed to the waterline each frame: no lag */
+  /* the block ends above 60% of the screen's height, which is above the float's dome at any width, and stops short of
+     the float's column on the right: the headline never lies over the device */
+  #hero-copy { left: 6vw; bottom: 40vh; max-width: min(52vw, 820px); transition: none; }   /* keyed to the waterline each frame: no lag */
   .eyebrow { display: inline-flex; align-items: center; gap: 8px; font-size: 12px; letter-spacing: .18em; text-transform: uppercase; color: var(--accent-2); margin-bottom: 20px; }
   .eyebrow::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--accent-2); box-shadow: 0 0 12px var(--accent-2); }
-  #hero-copy h1 { font-size: clamp(30px, 3.6vw, 52px); font-weight: 600; line-height: 1.08; letter-spacing: -.015em; margin: 0 0 20px; }
-  #hero-copy h1 em { font-style: normal; background: linear-gradient(90deg, #6fb8f2, #a8dbff 55%, #e6f5ff); -webkit-background-clip: text; background-clip: text; color: transparent;
+  /* the category in one small line under the headline, for whoever needs to place us at a glance (investors) */
+  #hero-copy .eyebrow { font-size: 13px; font-weight: 600; letter-spacing: .2em; margin: 0; color: #cfe9ff; text-shadow: 0 1px 10px rgba(0, 12, 24, .7); }
+  /* a display headline in an editorial serif: the day's line in white with "sunset" in italic and the sky's own warm colours,
+     the night's line in the cool blue of the water */
+  /* sized by the window's height as well as its width: on a short laptop window the block would otherwise climb into the logo */
+  #hero-copy h1 { font: 400 clamp(40px, min(7.4vw, 19vh - 46px), 120px)/1 'Instrument Serif', Georgia, serif; letter-spacing: -.01em; margin: 0 0 24px; }
+  /* an upright tablet frames the float in the middle of the screen: the headline goes up into the sky instead */
+  @media (orientation: portrait) and (min-width: 761px) { #hero-copy { bottom: auto; top: 14vh; max-width: 82vw; } }
+  #hero-copy h1 .warm { font-style: italic; padding-right: .06em; background: linear-gradient(100deg, #ffe7c2 0%, #ffbf8f 45%, #f59a7a 100%); -webkit-background-clip: text; background-clip: text;
+                        color: transparent; text-shadow: none; filter: drop-shadow(0 2px 16px rgba(60, 20, 0, .35)); }
+  #hero-copy h1 em { display: block; font-style: normal;
+                     background: linear-gradient(90deg, #6fb8f2, #a8dbff 55%, #e6f5ff); -webkit-background-clip: text; background-clip: text; color: transparent;
                      text-shadow: none; filter: drop-shadow(0 2px 14px rgba(0,0,0,.45)); }
   #hero-copy p { color: var(--muted); font-size: 17px; line-height: 1.55; margin: 0 0 26px; max-width: 520px; }
-  #hero-copy .cta-row { display: flex; gap: 12px; flex-wrap: wrap; }
   #solid-copy { display: none; }
   .beat { left: 6vw; bottom: 14vh; max-width: 520px; opacity: 0; pointer-events: none; }
   .beat h2 { font-size: clamp(24px, 2.7vw, 38px); font-weight: 600; letter-spacing: -.01em; line-height: 1.12; margin: 0 0 12px; text-shadow: 0 2px 18px rgba(0,0,0,.6); }
@@ -101,8 +119,50 @@
   @media (max-width: 760px) { .beat { left: 16px; right: 16px; bottom: 9vh; text-align: center; } }
   #solid-copy h2 { font-size: clamp(28px, 4vw, 50px); font-weight: 500; letter-spacing: -.03em; margin: 0 0 12px; }
   #solid-copy p { color: var(--muted); font-size: 16px; line-height: 1.55; margin: 0; }
-  #hint { position: absolute; bottom: 22px; left: 50%; transform: translateX(-50%); font-size: 11px;
-          letter-spacing: .25em; text-transform: uppercase; color: var(--faint); z-index: 5; transition: opacity .4s; }
+  #hint { position: absolute; bottom: 18px; left: 50%; transform: translateX(-50%); z-index: 5; transition: opacity .4s; pointer-events: none;
+          display: flex; flex-direction: column; align-items: center; gap: 6px;
+          font: 700 13px/1 Inter, system-ui, sans-serif; letter-spacing: .28em; text-transform: uppercase; color: #fff; text-shadow: 0 2px 14px rgba(0,12,24,.75); }
+  #hint span { padding-left: .28em; }   /* the tracking hangs off the last letter: even it up */
+  /* under the words a drop falls down a thin line and rings the water where it lands: the dive, in small */
+  #hint .drop { position: relative; width: 2px; height: 58px; margin-top: 6px; border-radius: 2px;
+                background: linear-gradient(rgba(255,255,255,0), rgba(255,255,255,.4)); }
+  #hint .drop::before { content: ""; position: absolute; left: 50%; top: 0; width: 8px; height: 11px; margin-left: -4px;
+                        border-radius: 50% 50% 50% 50% / 62% 62% 38% 38%; background: #eaf7ff;
+                        box-shadow: 0 0 10px 2px rgba(159, 208, 247, .9), 0 0 26px 6px rgba(79, 159, 224, .45); animation: drip 2.2s cubic-bezier(.5, 0, .9, .45) infinite; }
+  #hint .drop::after { content: ""; position: absolute; left: 50%; bottom: -5px; width: 34px; height: 10px; margin-left: -17px; border-radius: 50%;
+                       border: 1.5px solid rgba(190, 228, 255, .95); box-shadow: 0 0 12px rgba(79, 159, 224, .6); opacity: 0; animation: ring 2.2s ease-out infinite; }
+  @keyframes drip { 0% { transform: translateY(-6px); opacity: 0; } 12% { opacity: 1; } 66% { transform: translateY(49px); opacity: 1; } 72%, 100% { transform: translateY(49px); opacity: 0; } }
+  @keyframes ring { 0%, 64% { transform: scale(.15); opacity: 0; } 70% { opacity: 1; } 100% { transform: scale(1.7); opacity: 0; } }
+  /* on touch screens, a line over the cue: the float can be turned with a finger (a mouse gets the badge, #drag-cursor) */
+  #hint em { display: flex; align-items: center; gap: 9px; margin-bottom: 14px; font: 600 12.5px/1 Inter, system-ui, sans-serif; font-style: normal;
+             letter-spacing: .04em; text-transform: none; white-space: nowrap; color: rgba(236, 245, 252, .9); transition: opacity .5s; }
+  #hint em i { position: relative; width: 30px; height: 12px; border-radius: 6px; border: 1.5px solid rgba(159, 208, 247, .7); }
+  #hint em i::after { content: ""; position: absolute; top: 1.5px; left: 2px; width: 6px; height: 6px; border-radius: 50%; background: #eaf7ff;
+                      box-shadow: 0 0 8px rgba(159, 208, 247, .9); animation: swipe 1.6s ease-in-out infinite alternate; }
+  @keyframes swipe { from { transform: translateX(0); } to { transform: translateX(15px); } }
+  #hint.turned em { opacity: 0; }
+  @media (hover: hover) and (pointer: fine) { #hint em { display: none; } }
+  /* with a mouse, a ship's compass in the opening shot's lower right corner: a hairline bezel of degree ticks swinging to and
+     fro under a sunset-coloured lubber mark, "360°" in the headline's italic serif in the middle */
+  #drag-cursor { position: absolute; right: 6vw; bottom: 8vh; z-index: 6; width: 132px; height: 132px; border-radius: 50%; pointer-events: none;
+                 display: grid; place-content: center; text-align: center; color: #fff; text-shadow: 0 1px 10px rgba(0, 12, 24, .6);
+                 background: radial-gradient(closest-side, rgba(4, 16, 30, .55) 0 78%, rgba(4, 16, 30, .32) 100%);
+                 filter: drop-shadow(0 0 8px rgba(159, 208, 247, .35));
+                 opacity: 0; scale: .85; transition: opacity .4s, scale .5s cubic-bezier(.16, 1, .3, 1); }
+  #drag-cursor.on { opacity: 1; scale: 1; }
+  #drag-cursor .bezel { position: absolute; inset: 0; border-radius: 50%; border: 1px solid rgba(255, 255, 255, .6); animation: sway 5s ease-in-out infinite; }
+  #drag-cursor .bezel::before, #drag-cursor .bezel::after { content: ""; position: absolute; inset: 0; border-radius: 50%; }
+  #drag-cursor .bezel::before {   /* minor ticks every 6° */
+    background: repeating-conic-gradient(rgba(230, 243, 255, .85) 0 1deg, transparent 1deg 6deg);
+    -webkit-mask: radial-gradient(closest-side, transparent calc(100% - 6px), #000 calc(100% - 6px)); mask: radial-gradient(closest-side, transparent calc(100% - 6px), #000 calc(100% - 6px)); }
+  #drag-cursor .bezel::after {    /* major ticks every 30°, longer */
+    background: repeating-conic-gradient(#fff 0 1.4deg, transparent 1.4deg 30deg);
+    -webkit-mask: radial-gradient(closest-side, transparent calc(100% - 12px), #000 calc(100% - 12px)); mask: radial-gradient(closest-side, transparent calc(100% - 12px), #000 calc(100% - 12px)); }
+  #drag-cursor .pin { position: absolute; top: -9px; left: 50%; translate: -50% 0; border: 6px solid transparent; border-top: 9px solid #ffbf8f; border-bottom: 0;
+                      filter: drop-shadow(0 0 6px rgba(255, 170, 120, .8)); }
+  #drag-cursor b { font: italic 400 34px/1 'Instrument Serif', Georgia, serif; }
+  #drag-cursor small { margin-top: 6px; font: 600 8.5px/1 Inter, system-ui, sans-serif; letter-spacing: .26em; padding-left: .26em; color: #cfe9ff; }
+  @keyframes sway { 0%, 100% { rotate: -24deg; } 50% { rotate: 28deg; } }
   /* depth rail: a dot travels down as the camera dives; the tick marks the waterline */
   #dive { position: absolute; right: max(18px, 2vw); top: 28vh; bottom: 28vh; width: 2px; z-index: 5; pointer-events: none;
           background: linear-gradient(180deg, rgba(255,255,255,.14), rgba(255,255,255,.05)); opacity: 0; transition: opacity .5s; }
@@ -615,6 +675,10 @@
   @media (max-width: 760px) {
     #hero-copy, #solid-copy { left: 16px; right: 16px; bottom: 7vh; text-align: center; margin: 0 auto; }
     #hero-copy p, #solid-copy p { margin-left: auto; margin-right: auto; font-size: 15px; }
+    #hero-copy { bottom: calc(3vh + 128px); max-width: none; }   /* clear of the scroll cue below it */
+    #hero-copy h1 { font-size: clamp(38px, 12.5vw, 56px); }
+    #hero-copy .eyebrow { font-size: 10.5px; letter-spacing: .13em; text-wrap: balance; }
+    #hero-copy .eyebrow::before { display: none; }
     #stage::before { background: linear-gradient(0deg, rgba(4,22,38,.75) 0%, rgba(4,22,38,.35) 38%, rgba(4,22,38,0) 58%),
                 linear-gradient(180deg, rgba(4,22,38,.45) 0%, rgba(4,22,38,0) 14%); }
     header { padding: 16px; }
@@ -643,7 +707,7 @@
   #stage.grabbing { cursor: grabbing !important; }
   .orbit-hint {
     position: absolute; bottom: 62px; left: 50%;
-    display: inline-flex; align-items: center; gap: 8px;
+    display: inline-flex; align-items: center; gap: 8px; white-space: nowrap;
     padding: 7px 15px 7px 11px; border-radius: 999px;
     background: rgba(5, 14, 26, 0.72); border: 1px solid rgba(159, 208, 247, 0.32);
     backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
@@ -652,7 +716,8 @@
     transition: opacity .45s ease, transform .45s cubic-bezier(0.16, 1, 0.3, 1);
     box-shadow: 0 4px 24px rgba(0,0,0,0.4), 0 0 16px rgba(79,159,224,0.22);
   }
-  .orbit-hint svg { width: 15px; height: 15px; color: var(--accent-2); display: block; flex-shrink: 0; }
+  .orbit-hint svg { width: 15px; height: 15px; color: var(--accent-2); display: block; flex-shrink: 0; animation: turn 2.4s ease-in-out infinite; }
+  @keyframes turn { 0%, 100% { transform: rotate(-35deg); } 50% { transform: rotate(35deg); } }
   .orbit-hint.visible { opacity: 0.95; transform: translate(-50%, 0); }
   @media (max-width: 640px) {
     .orbit-hint { bottom: 52px; font-size: 10px; padding: 6px 12px 6px 9px; }
@@ -714,6 +779,7 @@
     <span class="nav-lens" aria-hidden="true"></span>
     <a href="#top" data-dive="0.28">The dive</a>
     <a href="#trust" data-sec="trust">Capabilities</a>
+    <a href="contact.html">Investors</a>
   </div>
   <a class="btn cta" href="contact.html"><span>Contact us</span></a>
   </nav>
@@ -727,12 +793,8 @@
   <div id="stage">
     <div id="loading">LOADING 0%</div>
     <div class="copy" id="hero-copy">
-      <h1>Sleep through the night.<br><em>We'll watch the water.</em></h1>
-      <p>A small float sits in your tank with eight sensors. If the oxygen drops, it turns the aerator on and sends you a message.</p>
-      <div class="cta-row">
-        <a class="btn" href="contact.html">Contact us</a>
-        <a class="btn ghost" href="#trust" data-sec="trust">See how it works</a>
-      </div>
+      <h1>Clock out at <span class="warm">sunset.</span> <em>We've got the night&nbsp;shift.</em></h1>
+      <span class="eyebrow">Autonomous water intelligence for aquaculture</span>
     </div>
     <div class="copy beat" data-in="0.15" data-out="0.26">
       <h2>Eight sensors, <em>under the waterline</em></h2>
@@ -753,9 +815,10 @@
         <path d="M16 21h5v-5"/>
         <circle cx="12" cy="12" r="2.5" fill="currentColor"/>
       </svg>
-      <span>Drag to inspect 360°</span>
+      <span>Drag to turn it 360°</span>
     </div>
-    <div id="hint">Scroll to dive</div>
+    <div id="hint"><em><i aria-hidden="true"></i>Swipe the float to turn it 360°</em><span>Scroll to dive</span><i class="drop" aria-hidden="true"></i></div>
+    <div id="drag-cursor" aria-hidden="true"><i class="bezel"></i><i class="pin"></i><b>360°</b><small>DRAG TO TURN</small></div>
     <div id="dive" aria-hidden="true"><u></u><span>Waterline</span><i></i></div>
   </div>
 </div>
@@ -2333,10 +2396,8 @@ const onProbeLoaded = gltf => {
     mesh.castShadow = mesh.receiveShadow = true;
     (grp === 'main' ? probeMain : probeProxy).add(mesh);
   });
-  // the meniscus goes round the hull where the water stands on it: the collar's rim at FLOAT_SINK (the model's own
-  // rWater is the neck's, at its origin)
-  const rWater = FLOAT_SINK > 0.08 ? 1.27 : ex.rWater || 0;
-  if (rWater > 0) { foam = makeFoam(rWater); foam.userData.r0 = rWater; scene.add(foam); }
+  // no meniscus ring (makeFoam): its bright hairline read as a white band round the collar, so the water meets the
+  // hull bare
   loadingEl.style.transform = 'scaleX(1)'; loadingEl.style.opacity = 0;
   dispatchEvent(new Event('probe-ready'));   // the footage starts loading only now, so it never competes with the probe
 };
@@ -2975,6 +3036,9 @@ let orbitVelYaw = 0;       // inertia velocity
 let orbitVelPitch = 0;
 let userHasInteracted = false;
 const orbitHintEl = document.getElementById('orbit-hint');
+// with a mouse, a "Drag 360°" badge sits in the opening shot until the float has been turned once (touch gets #hint em)
+const dragCursor = document.getElementById('drag-cursor');
+const finePointer = matchMedia('(hover: hover) and (pointer: fine)').matches;
 
 // Pointer controls: full mouse and touch support with inertia damping
 stage.addEventListener('pointerdown', e => {
@@ -3342,6 +3406,8 @@ function tick(static_ = false) {
     const showHint = !userHasInteracted && p >= 0.12 && p <= 0.41;   // gone before the dive ends (DIVE_END)
     orbitHintEl.classList.toggle('visible', showHint);
   }
+  hint.classList.toggle('turned', userHasInteracted);   // the opening shot's drag line goes once they've turned it
+  dragCursor.classList.toggle('on', finePointer && !userHasInteracted && p < 0.07);
 
   if (foam) {   // froth while the float works against the water: heaving through it, or rocking (the hull's edge moving)
     const r0 = foam.userData.r0, fdt = buoy.dt;
