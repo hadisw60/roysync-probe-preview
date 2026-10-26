@@ -2005,8 +2005,9 @@ function probeLOD(proxy) {
 }
 const MATS = {
   // moulded white ASA, as the real float is: a satin, slightly matte plastic with no lacquer coat on it
-  head: new THREE.MeshPhysicalMaterial({ color: 0xf0f0ec, roughness: 0.5, envMapIntensity: 1.3, side: THREE.DoubleSide }),
-  paye: new THREE.MeshPhysicalMaterial({ color: 0xe9ebe7, roughness: 0.56, envMapIntensity: 1.3, side: THREE.DoubleSide }),
+  // (one plastic for both parts: the user wants the head and the body the same white)
+  head: new THREE.MeshPhysicalMaterial({ color: 0xefefeb, roughness: 0.52, envMapIntensity: 1.3, side: THREE.DoubleSide }),
+  paye: new THREE.MeshPhysicalMaterial({ color: 0xefefeb, roughness: 0.52, envMapIntensity: 1.3, side: THREE.DoubleSide }),
 };
 MATS.head.defines.PROBE_AO = MATS.paye.defines.PROBE_AO = '';   // these two carry the occlusion baked into the GLB
 // moulded-plastic grain, the wet band at the waterline, underwater daylight and caustics, and the water to the eye
@@ -2034,9 +2035,11 @@ function patchProbe(sh) {
       if (uApparent < 1.0 && yW > 0.03) discard;                 // what the surface refracts: only what is under it
       float wet = 1.0 - smoothstep(${(0.04 + FLOAT_SINK).toFixed(2)}, ${(0.22 + FLOAT_SINK).toFixed(2)}, vLPos.y);   // the band the bobbing keeps wet, and all below it
       float grain = vnoise(vLPos.xz * 23.0 + vLPos.y * 7.0) * 0.6 + vnoise(vLPos.xy * 61.0 + 3.7) * 0.4;
-      diffuseColor.rgb *= mix(1.0, 0.8, wet * step(0.0, yW)) * (0.985 + 0.03 * grain);`)
+      // (the wet band only a shade darker and a touch glossier: at 20% darker and mirror-glossy it greyed the whole collar,
+      // which the sunk float holds in the band, against the dry white head)
+      diffuseColor.rgb *= mix(1.0, 0.96, wet * step(0.0, yW)) * (0.985 + 0.03 * grain);`)
     .replace('#include <roughnessmap_fragment>', `#include <roughnessmap_fragment>
-      roughnessFactor = mix(roughnessFactor * (0.82 + 0.36 * grain), 0.1, wet * step(0.0, yW));`)
+      roughnessFactor = mix(roughnessFactor * (0.82 + 0.36 * grain), 0.38, wet * step(0.0, yW));`)
     .replace('#include <lights_fragment_maps>', `float uwF = smoothstep(0.02, -0.1, yW);
       if (uwF < 0.999) {                                         // the sky probe is only needed above the water
       #include <lights_fragment_maps>
@@ -3371,6 +3374,7 @@ function tick(static_ = false) {
 
   finish.uniforms.uTime.value = t;
   finish.uniforms.uUW.value = uw;
+  MU.uUwLift.value = 0.55 * uw;   // only once the lens is under: seen from the air the submerged hull glowed through the water
   finish.uniforms.uDive.value = dive;
   finish.uniforms.uSubmerge.value = plungePeak;
   finish.uniforms.uSplash.value = plungePeak * (Math.abs(curScrollY - _uw.y) > 0.5 ? 0.75 : 0.35);
