@@ -301,17 +301,18 @@
     #intro .in-mark img { width: 64px; height: 64px; }
     #intro .in-note { bottom: 44px; font-size: 10px; letter-spacing: .28em; }
   }
-  /* the oxygen line (after lusion.co's thread through its sections): a ribbon of thin strands sweeping across the page;
-     the sections stack above it, so it runs behind the words and the phones and goes under the film bands. It is drawn
-     once: a page-coloured cover, sticky 70% down the screen, hides what lies below it, so the scroll alone draws it */
+  /* the oxygen line (after lusion.co's thread through its sections): a ribbon of thin strands that draws itself on along
+     its course as the page scrolls, its tip two thirds down the screen; the sections stack above it, so it runs behind the
+     words and the phones and goes under the film bands */
   #o2wrap { position: absolute; inset: 0; z-index: 0; pointer-events: none; }
   #story > section { position: relative; z-index: 1; }
   #o2line { position: absolute; left: 0; top: 0; width: 100%; height: 100%; }
-  #o2line g { fill: none; stroke-linecap: round; stroke-linejoin: round; }
+  #o2line .rb { fill: none; stroke-linejoin: round; }   /* (butt caps, so the pieces meet without beads where they overlap) */
+  #o2line .ahead { visibility: hidden; }
+  #o2line .halo, #o2line .dip, #o2label { opacity: 0; transition: opacity .6s ease; }
+  #o2wrap.dipped .halo, #o2wrap.dipped .dip, #o2wrap.dipped #o2label { opacity: 1; }
   #o2label { position: absolute; transform: translateY(-50%); font-size: 11px; font-weight: 600; letter-spacing: .2em;
              text-transform: uppercase; white-space: nowrap; color: #c25a45; }
-  #o2cover { position: sticky; top: 70vh; height: calc(30vh + 260px); background: linear-gradient(rgba(221, 231, 241, 0), var(--paper) 240px); }
-  @media (prefers-reduced-motion: reduce) { #o2cover { display: none; } }
   /* gentle continuous drift on decorative elements (paused when reduced motion is set) */
   @keyframes floaty { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-9px); } }
   @keyframes breathe { 0%, 100% { box-shadow: 0 8px 30px var(--glow); } 50% { box-shadow: 0 8px 44px rgba(79,159,224,.55); } }
@@ -945,13 +946,11 @@
 <div id="o2wrap" aria-hidden="true">
   <svg id="o2line">
     <defs><linearGradient id="o2grad" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#8fd0fa"/><stop offset=".45" stop-color="#4aa3e6"/><stop offset="1" stop-color="#2b7fca"/></linearGradient></defs>
-    <!-- a soft shadow under the ribbon: three wide faint strokes stand in for a blur, which would cost a page-tall buffer -->
-    <g class="sh" stroke="#0d1b2a" transform="translate(24 40)"><path stroke-opacity=".02"/><path stroke-opacity=".025"/><path stroke-opacity=".03"/></g>
-    <g class="st" stroke="url(#o2grad)"><path stroke-width="1" stroke-opacity=".3"/><path stroke-width="1" stroke-opacity=".42"/><path stroke-width="1.2" stroke-opacity=".58"/><path stroke-width="1.8" stroke-opacity=".8"/></g>
+    <!-- the ribbon, built by the script in pieces along its course, so drawing it on repaints only the piece at its tip -->
+    <g class="rb"></g>
     <circle class="halo" fill="#e0705a" fill-opacity=".16"/><circle class="dip" fill="#fff" stroke="#e0705a" stroke-width="3.5"/>
   </svg>
   <div id="o2label">Below 4 mg/L · aerator on</div>
-  <div id="o2cover"></div>
 </div>
 
 <section id="action" class="one ed">
@@ -3818,12 +3817,14 @@ if (REDUCED) {
 // the oxygen line: a ribbon of thin strands along a course pinned to the sections (so its low point always falls in
 // the alerts, under "Below 4 mg/L"). Each strand sits off the course by R(s)·sin(θ(s) + kδ), so the bundle twists, its
 // strands crossing and fanning out; the twist's length, the ribbon's width and the fan all wander on slow noise, so it
-// never settles into one rhythm. Built once and again only when the page's size changes: the sticky cover reveals it.
+// never settles into one rhythm. Built when the page's size changes, then drawn on up to a pen two thirds down the screen.
 (() => {
-  const story = document.getElementById('story'), svg = document.getElementById('o2line');
+  const story = document.getElementById('story'), wrap = document.getElementById('o2wrap'), svg = document.getElementById('o2line');
   if (!story || !svg) return;
-  const grad = svg.querySelector('#o2grad'), shadow = svg.querySelectorAll('.sh path'), strands = svg.querySelectorAll('.st path');
+  const grad = svg.querySelector('#o2grad'), rb = svg.querySelector('.rb');
   const halo = svg.querySelector('.halo'), dip = svg.querySelector('.dip'), label = document.getElementById('o2label');
+  const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const WEIGHTS = [[1, 0.3], [1, 0.42], [1.2, 0.58], [1.8, 0.8]];   // the strands' four [width, opacity] sets
   // the course of the approved design: [x as a fraction of the width, section, y as a fraction down that section]
   const COURSE = [
     [-0.111, 'action', 0.184], [0.292, 'action', 0.053], [0.625, 'action', 0.158], [0.903, 'action', 0.553],
@@ -3835,7 +3836,41 @@ if (REDUCED) {
     [0.21, 'trust', 0.04], [0.62, 'trust', 0.16], [1.1, 'trust', 0.42], [1.05, 'trust', 0.78], [0.6, 'trust', 0.98], [0.3, 'contact', 0.3], [0.1, 'contact', 0.6]
   ];
   const DIP = 9;
-  let size = '', queued = false;
+  let size = '', queued = false, cy = [], ca = [], pieces = [], dipArc = 0, cur = 0, raf = 0, last = 0;
+  // how far along the course the pen has reached: up to the first point of the course below it
+  const aim = () => {
+    if (still) return Infinity;
+    const pen = innerHeight * 0.66 - story.getBoundingClientRect().top;
+    let a = 0;
+    for (let i = 0; i < cy.length && cy[i] <= pen; i++) a = ca[i];
+    return a;
+  };
+  // pieces behind the tip are drawn whole, those ahead hidden; only the one at the tip is dashed (pathLength 1, so the
+  // dash is the share of the piece drawn, the same for every strand). The shadow's three strokes trail the tip by
+  // different lengths, so it tapers in under the strands instead of ending square
+  let lag = [0, 0, 0];
+  const share = (a, p) => (a >= p.a1 ? '' : a <= p.a0 ? '0 2' : `${((a - p.a0) / (p.a1 - p.a0)).toFixed(4)} 2`);
+  const paint = a => {
+    for (const p of pieces) {
+      const ahead = a <= p.a0;
+      if (ahead !== p.ahead) { p.ahead = ahead; p.el.classList.toggle('ahead', ahead); }
+      if (ahead) continue;
+      [a, a - lag[0], a - lag[1], a - lag[2]].forEach((x, j) => {
+        const d = share(x, p);
+        if (d !== p.d[j]) { p.d[j] = d; p.paths[j].style.strokeDasharray = d; }
+      });
+    }
+    wrap.classList.toggle('dipped', a >= dipArc);
+  };
+  // the tip eases after the pen, so where the course runs across the page it is drawn across rather than appearing at once
+  const step = now => {
+    const target = aim(), dt = Math.min(0.05, (now - last) / 1000);
+    last = now;
+    cur += (target - cur) * (1 - Math.exp(-dt / 0.14));
+    if (Math.abs(target - cur) < 1) cur = target;
+    paint(cur);
+    raf = cur === target ? 0 : requestAnimationFrame(step);
+  };
   const build = () => {
     queued = false;
     const W = story.clientWidth, H = story.offsetHeight;
@@ -3875,23 +3910,41 @@ if (REDUCED) {
     const wig = 4 * Math.max(sc, 0.7);
     const strand = (k, side, spread, scale, twist) => pts.map((p, i) => {
       const s = arc[i], o = (side ? branch(s) : 0) + scale * R(s) * Math.sin(theta[i] * twist + k * fan(s) * spread) + wig * Math.sin(s / 37 + k * 0.4);
-      return (i ? 'L' : 'M') + (p[0] + nrm[i][0] * o).toFixed(1) + ' ' + (p[1] + nrm[i][1] * o).toFixed(1);
-    }).join('');
+      return [p[0] + nrm[i][0] * o, p[1] + nrm[i][1] * o];
+    });
     const groups = [[], [], [], []];
     for (let k = 0, N = phone ? 18 : 32; k < N; k++) groups[k % 7 === 3 ? 3 : k % 3].push(strand(k, false, 1, 1, 1));
     for (let k = 0, N = phone ? 6 : 12; k < N; k++) groups[k % 5 === 2 ? 3 : k % 3].push(strand(k, true, 1.6, 0.45, 1.35));
-    strands.forEach((el, i) => el.setAttribute('d', groups[i].join(' ')));
-    const centre = pts.map((p, i) => (i ? 'L' : 'M') + p[0].toFixed(1) + ' ' + p[1].toFixed(1)).join('');
-    shadow.forEach((el, i) => { el.setAttribute('d', centre); el.setAttribute('stroke-width', ([130, 100, 70][i] * sc).toFixed(1)); });
+    // cut into pieces of about 360 px of course; each piece holds its stretch of the shadow (three wide faint strokes
+    // standing in for a blur, which would cost a page-tall buffer) and of every strand
+    const cuts = [0];
+    for (let i = 1; i < pts.length; i++) if (arc[i] - arc[cuts[cuts.length - 1]] >= 360 || i === pts.length - 1) cuts.push(i);
+    const seg = (q, i0, i1) => { let d = ''; for (let i = i0; i <= i1; i++) d += (i > i0 ? 'L' : 'M') + q[i][0].toFixed(1) + ' ' + q[i][1].toFixed(1); return d; };
+    const shade = `<g stroke="#0d1b2a" transform="translate(${(24 * sc).toFixed(1)} ${(40 * sc).toFixed(1)})">`;
+    let html = '';
+    for (let c = 0; c < cuts.length - 1; c++) {
+      const i0 = cuts[c], i1 = cuts[c + 1], mid = seg(pts, i0, i1);
+      html += '<g>' + shade + [[130, 0.02], [100, 0.025], [70, 0.03]].map(([w, o]) => `<path pathLength="1" stroke-width="${(w * sc).toFixed(1)}" stroke-opacity="${o}" d="${mid}"/>`).join('')
+        + '</g><g stroke="url(#o2grad)">' + WEIGHTS.map(([w, o], g) => `<g stroke-width="${w}" stroke-opacity="${o}">`
+        + groups[g].map(q => `<path pathLength="1" d="${seg(q, i0, i1)}"/>`).join('') + '</g>').join('') + '</g></g>';
+    }
+    rb.innerHTML = html;
+    // (per piece: the strands' group, then the shadow's three strokes, widest first)
+    pieces = [...rb.children].map((el, c) => ({ el, paths: [el.children[1], ...el.children[0].children], a0: arc[cuts[c]], a1: arc[cuts[c + 1]], ahead: false, d: [] }));
+    lag = [200, 130, 70].map(l => l * sc);
+    cy = pts.map(p => p[1]); ca = arc; dipArc = arc[at[DIP]];
     svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
     grad.setAttribute('x2', W); grad.setAttribute('y2', H);
     const [dx, dy] = P[DIP], m = Math.max(sc, 0.6);
     halo.setAttribute('cx', dx.toFixed(1)); halo.setAttribute('cy', dy.toFixed(1)); halo.setAttribute('r', (24 * m).toFixed(1));
     dip.setAttribute('cx', dx.toFixed(1)); dip.setAttribute('cy', dy.toFixed(1)); dip.setAttribute('r', (9 * m).toFixed(1));
     label.style.left = (dx + 34 * m).toFixed(1) + 'px'; label.style.top = dy.toFixed(1) + 'px';
+    cur = aim();   // (drawn at once up to where the page already is, e.g. after a reload halfway down)
+    paint(cur);
   };
   new ResizeObserver(() => { if (!queued) { queued = true; requestAnimationFrame(build); } }).observe(story);
   build();
+  if (!still) addEventListener('scroll', () => { if (!raf) { last = performance.now(); raf = requestAnimationFrame(step); } }, { passive: true });
 })();
 </script>
 </body>
