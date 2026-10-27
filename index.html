@@ -58,14 +58,17 @@
     display: flex; align-items: center; justify-content: space-between;
     padding: 22px 6vw; transition: background .4s, padding .4s, backdrop-filter .4s;
   }
-  /* section links slide in once the visitor starts scrolling */
+  /* section links slide in once the visitor starts scrolling (the user wants the first screen bare). While hidden they
+     are visibility: hidden too, out of the Tab order (at opacity 0 alone the keyboard landed on invisible links); a
+     keyboard visitor who tabs into the header (the logo) brings them in at once */
   .navlinks { display: flex; gap: 30px; margin-left: auto; margin-right: 26px; opacity: 0; transform: translateY(-6px); pointer-events: none;
-              transition: opacity .5s ease, transform .5s ease; }
-  header.scrolled .navlinks { opacity: 1; transform: none; pointer-events: auto; }
+              visibility: hidden; transition: opacity .5s ease, transform .5s ease, visibility 0s linear .5s; }
+  header.scrolled .navlinks, header:focus-within .navlinks { opacity: 1; transform: none; pointer-events: auto; visibility: visible;
+              transition: opacity .5s ease, transform .5s ease, visibility 0s; }
   .navlinks a { color: #d6e6f3; text-decoration: none; font-size: 14px; letter-spacing: .01em; transition: color .2s; }
   .navlinks a:hover { color: #fff; }
   .navlinks a, header .btn.cta { white-space: nowrap; }
-  @media (max-width: 640px) { .navlinks { gap: 14px; margin-right: 14px; } header:not(.scrolled) .navlinks { display: none; } .navlinks a { font-size: 13px; }
+  @media (max-width: 720px) { .navlinks { gap: 14px; margin-right: 14px; } header:not(.scrolled) .navlinks { display: none; } .navlinks a { font-size: 13px; }
     .navlinks a[data-dive] { display: none; }   /* three links and the button don't fit a phone's capsule: the dive is a scroll away anyway */
     .navlinks { gap: 2px; margin-right: 8px; } .navlinks a { padding: 7px 8px; } header.scrolled .logo b, header.scrolled .logo i { display: none; } header .btn.cta { padding: 8px 14px; font-size: 13px; } }
   header.scrolled { background: rgba(5, 14, 26, .6); backdrop-filter: blur(14px); padding-top: 14px; padding-bottom: 14px; }
@@ -76,6 +79,10 @@
             border: 1px solid rgba(159,208,247,.4); border-radius: 999px; padding: 3px 8px 2px; margin-left: 2px; }
   .skip { position: absolute; left: -999px; top: 8px; z-index: 20; background: var(--accent); color: #fff; padding: 8px 16px; border-radius: 8px; }
   .skip:focus { left: 16px; }
+  /* a clear ring wherever the keyboard is (there was none): ice blue on the dark scene, navy on the light page */
+  :focus-visible { outline: 2px solid #9fd0f7; outline-offset: 3px; border-radius: 6px; }
+  #story :focus-visible, footer :focus-visible { outline-color: #1f6fb8; }
+  .btn:focus-visible { outline-offset: 4px; border-radius: 999px; }
   .btn.small { padding: 9px 18px; font-size: 13px; }
   .btn {
     display: inline-flex; align-items: center; gap: 8px; padding: 12px 22px; border-radius: 999px;
@@ -111,6 +118,10 @@
                      text-shadow: none; filter: drop-shadow(0 2px 14px rgba(0,0,0,.45)); }
   #hero-copy p { color: var(--muted); font-size: 17px; line-height: 1.55; margin: 0 0 26px; max-width: 520px; }
   #solid-copy { display: none; }
+  /* a soft shade of deeper water behind each message, so the words keep their contrast over the sun's glare on the
+     surface and over the fish crossing behind them (it follows the text, so it costs the picture nothing elsewhere) */
+  #hero-copy::before, .beat::before { content: ""; position: absolute; z-index: -1; pointer-events: none; inset: -18% -22% -22% -14%;
+    background: radial-gradient(closest-side, rgba(3, 16, 30, .46), rgba(3, 16, 30, .22) 60%, rgba(3, 16, 30, 0)); }
   .beat { left: 6vw; bottom: 14vh; max-width: 520px; opacity: 0; pointer-events: none; }
   .beat h2 { font-size: clamp(24px, 2.7vw, 38px); font-weight: 600; letter-spacing: -.01em; line-height: 1.12; margin: 0 0 12px; text-shadow: 0 2px 18px rgba(0,0,0,.6); }
   .beat h2::before { content: ""; display: block; width: 34px; height: 3px; border-radius: 3px; margin: 0 0 16px; background: linear-gradient(90deg, var(--accent), var(--accent-2)); box-shadow: 0 0 12px var(--glow); }
@@ -692,7 +703,8 @@
     html { scroll-behavior: auto; }
     .reveal { opacity: 1; transform: none; transition: none; }
     .flow .dash, .flow.in .beam:not(.dash) { animation: none; }
-    #hint { display: none; }
+    /* the cues stay (on a phone the swipe line is the only word that the float turns), only their motion stops */
+    #hint .drop::before, #hint .drop::after, #hint em i::after, #drag-cursor .bezel { animation: none; }
     /* everything below keeps the final visual state without movement */
     .param .ico, .feature::after, #contact .btn:not(.ghost) { animation: none; }
     h2.title.u::after { transition: none; transform: scaleX(1); }
@@ -705,24 +717,6 @@
   /* 360-degree interactive probe inspection affordances */
   #stage { cursor: grab; user-select: none; -webkit-user-select: none; touch-action: pan-y; }
   #stage.grabbing { cursor: grabbing !important; }
-  .orbit-hint {
-    position: absolute; bottom: 62px; left: 50%;
-    display: inline-flex; align-items: center; gap: 8px; white-space: nowrap;
-    padding: 7px 15px 7px 11px; border-radius: 999px;
-    background: rgba(5, 14, 26, 0.72); border: 1px solid rgba(159, 208, 247, 0.32);
-    backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
-    color: var(--accent-2); font-size: 11px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase;
-    z-index: 6; pointer-events: none; opacity: 0; transform: translate(-50%, 10px);
-    transition: opacity .45s ease, transform .45s cubic-bezier(0.16, 1, 0.3, 1);
-    box-shadow: 0 4px 24px rgba(0,0,0,0.4), 0 0 16px rgba(79,159,224,0.22);
-  }
-  .orbit-hint svg { width: 15px; height: 15px; color: var(--accent-2); display: block; flex-shrink: 0; animation: turn 2.4s ease-in-out infinite; }
-  @keyframes turn { 0%, 100% { transform: rotate(-35deg); } 50% { transform: rotate(35deg); } }
-  .orbit-hint.visible { opacity: 0.95; transform: translate(-50%, 0); }
-  @media (max-width: 640px) {
-    .orbit-hint { bottom: 52px; font-size: 10px; padding: 6px 12px 6px 9px; }
-    .orbit-hint svg { width: 13px; height: 13px; }
-  }
   /* ---- the header, upgraded: full width over the hero, then it gathers into a floating glass capsule ---- */
   header { transition: background .5s, padding .5s, backdrop-filter .5s, top .5s cubic-bezier(.2,.8,.2,1), left .5s cubic-bezier(.2,.8,.2,1),
            right .5s cubic-bezier(.2,.8,.2,1), border-radius .5s, box-shadow .5s, border-color .5s; border: 1px solid transparent; }
@@ -769,6 +763,7 @@
 </head>
 <body>
 
+<a class="skip" href="#story">Skip to content</a>   <!-- the first stop for the keyboard: past the dive, to the page itself -->
 <header id="site-header" role="banner">
   <nav aria-label="Primary" style="display:contents">
   <a class="logo" href="#top" aria-label="RoySync Gen2 home">
@@ -786,7 +781,6 @@
   <i class="nav-progress" aria-hidden="true"></i>
 </header>
 
-<a class="skip" href="#trust">Skip to content</a>
 <div id="depth-rail" aria-hidden="true"><u></u><span>Problem</span><i></i></div>
 <a id="top"></a>
 <div id="scroller">
@@ -796,27 +790,17 @@
       <h1>Clock out at <span class="warm">sunset.</span> <em>We've got the night&nbsp;shift.</em></h1>
       <span class="eyebrow">Autonomous water intelligence for aquaculture</span>
     </div>
-    <div class="copy beat" data-in="0.15" data-out="0.26">
+    <div class="copy beat" data-in="0.24" data-out="0.32">
       <h2>Eight sensors, <em>under the waterline</em></h2>
       <p>Oxygen, pH, temperature and more, measured right where your fish live.</p>
     </div>
-    <div class="copy beat" data-in="0.30" data-out="0.41">
+    <div class="copy beat" data-in="0.34" data-out="0.43">
       <h2>Most fish are lost <em>before sunrise</em></h2>
       <p>Oxygen drops slowly all night. By the morning check, it's often too late.</p>
     </div>
     <div class="copy" id="solid-copy"></div>
     <div id="veil" aria-hidden="true"></div>
     <canvas id="uwsnow" aria-hidden="true"></canvas>
-    <div id="orbit-hint" class="orbit-hint" aria-hidden="true">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
-        <path d="M3 3v5h5"/>
-        <path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/>
-        <path d="M16 21h5v-5"/>
-        <circle cx="12" cy="12" r="2.5" fill="currentColor"/>
-      </svg>
-      <span>Drag to turn it 360°</span>
-    </div>
     <div id="hint"><em><i aria-hidden="true"></i>Swipe the float to turn it 360°</em><span>Scroll to dive</span><i class="drop" aria-hidden="true"></i></div>
     <div id="drag-cursor" aria-hidden="true"><i class="bezel"></i><i class="pin"></i><b>360°</b><small>DRAG TO TURN</small></div>
     <div id="dive" aria-hidden="true"><u></u><span>Waterline</span><i></i></div>
@@ -838,11 +822,11 @@
       <div>
         <div class="kick">How it reaches you</div>
         <ol class="ladder">
-          <li class="on"><b>Minute 0</b><span>A text, an email and an alert on your dashboard.</span></li>
+          <li class="on"><b>Minute 0</b><span>Oxygen is falling: a text, an email and an alert on your dashboard.</span></li>
           <li><b>Minute 5</b><span>It calls you.</span></li>
           <li><b>Minute 15</b><span>It calls again.</span></li>
           <li><b>Minute 30</b><span>Your farm manager gets the call.</span></li>
-          <li><b>Below 4 mg/L</b><span>Your aerator turns on through your PLC.</span></li>
+          <li><b>Below 4 mg/L</b><span>It stops warning and acts: your aerator turns on through your PLC.</span></li>
         </ol>
         <div class="ticks" aria-hidden="true"><i class="on"></i><i></i><i></i><i></i><i></i></div>
       </div>
@@ -2193,19 +2177,27 @@ for (let i = 0; i < N_FISH; i++) {
 // surging and easing by a fifth over a minute or so (so they overtake one another)
 function fishAt(i, t, out) {
   const ph = fPhase[i], w = school.w[i];
+  let x, y, z;
   if (i >= N_RING) {
     // a roamer: two slow swings on each axis (~1..2.5 units a second, easing where it turns), kept off the float itself
     const R = school.roam, k = i * 16, tt = t * fSpeed[i];
-    let x = R[k] * Math.sin(R[k + 2] * tt + R[k + 4]) + R[k + 1] * Math.sin(R[k + 3] * tt + R[k + 5]);
-    let z = R[k + 6] + R[k + 7] * Math.sin(R[k + 9] * tt + R[k + 11]) + R[k + 8] * Math.sin(R[k + 10] * tt + R[k + 12]);
+    x = R[k] * Math.sin(R[k + 2] * tt + R[k + 4]) + R[k + 1] * Math.sin(R[k + 3] * tt + R[k + 5]);
+    z = R[k + 6] + R[k + 7] * Math.sin(R[k + 9] * tt + R[k + 11]) + R[k + 8] * Math.sin(R[k + 10] * tt + R[k + 12]);
     const d = Math.hypot(x, z), d2 = d + Math.max(0, 4 - d) ** 2 / 4;   // nearer the axis than 4: eased outward
     if (d > 1e-3) { x *= d2 / d; z *= d2 / d; } else x = 4;
-    return out.set(x, school.y[i] + R[k + 13] * Math.sin(R[k + 14] * t + R[k + 15]), z);
+    y = school.y[i] + R[k + 13] * Math.sin(R[k + 14] * t + R[k + 15]);
+  } else {
+    const th = school.th[i] + w * (t + (0.2 / 0.11) * Math.sin(0.11 * t + ph));
+    const r = school.r[i] + 0.6 * Math.sin(0.09 * t + ph) + 0.25 * Math.sin(0.23 * t + 2.3 * ph);
+    x = r * Math.cos(th); z = r * Math.sin(th);
+    y = school.y[i] + 0.35 * Math.sin(0.12 * t + 1.7 * ph) + 0.12 * Math.sin(0.31 * t + ph);
   }
-  const th = school.th[i] + w * (t + (0.2 / 0.11) * Math.sin(0.11 * t + ph));
-  const r = school.r[i] + 0.6 * Math.sin(0.09 * t + ph) + 0.25 * Math.sin(0.23 * t + 2.3 * ph);
-  out.set(r * Math.cos(th), school.y[i] + 0.35 * Math.sin(0.12 * t + 1.7 * ph) + 0.12 * Math.sin(0.31 * t + ph), r * Math.sin(th));
-  return out;
+  // the float is always in sight: a fish crossing between it and the camera (in front, +z, and in its column) dips
+  // smoothly under its tip (y -4.8) on the way across, instead of swimming over the device
+  // (over a wide band, so the way down is a gentle glide: a narrow one stood the fish on their noses)
+  const dip = smooth(6.0, 2.0, Math.abs(x)) * smooth(0.4, 3.2, z);
+  if (dip > 0) y += (Math.min(y, -6.6) - y) * dip;
+  return out.set(x, y, z);
 }
 new GLTFLoader().load('assets/fish.glb', gltf => {
   let src = null;
@@ -2302,7 +2294,7 @@ function updateFish(t, cx, cy, cz) {
   for (let i = 0; i < N_FISH; i++) {
     fishAt(i, t, _fv); fishAt(i, t + 0.1, _fn);
     _fo.position.set(cx + _fv.x, cy + _fv.y, cz + _fv.z);
-    _fo.lookAt(cx + _fn.x, cy + _fv.y + (_fn.y - _fv.y) * 0.5, cz + _fn.z);
+    _fo.lookAt(cx + _fn.x, cy + _fv.y + (_fn.y - _fv.y) * 0.3, cz + _fn.z);   // a fish keeps itself near level as it rises or sinks
     // leaning a touch into the turn, rocking slightly with each tail beat
     _fo.rotateZ(-0.08 + 0.025 * Math.sin(t * 10.5 * fSpeed[i] + fPhase[i]));
     _fo.scale.setScalar(school.size[i]);
@@ -3125,7 +3117,6 @@ let userOrbitPitch = 0;    // vertical pitch inspection (-24° to +24°)
 let orbitVelYaw = 0;       // inertia velocity
 let orbitVelPitch = 0;
 let userHasInteracted = false;
-const orbitHintEl = document.getElementById('orbit-hint');
 // with a mouse, a "Drag 360°" badge sits in the opening shot until the float has been turned once (touch gets #hint em)
 const dragCursor = document.getElementById('drag-cursor');
 const finePointer = matchMedia('(hover: hover) and (pointer: fine)').matches;
@@ -3161,7 +3152,6 @@ const onPointerMove = e => {
   orbitVelPitch = dy * sensY;
 
   userHasInteracted = true;
-  if (orbitHintEl) orbitHintEl.classList.remove('visible');
 };
 
 const onPointerUp = e => {
@@ -3344,6 +3334,10 @@ function tick(static_ = false) {
   const dEnd = scroller.offsetTop + scroller.offsetHeight;
   const docSpan = Math.max(1, document.documentElement.scrollHeight - innerHeight - dEnd);
   const qTarget = Math.min(Math.max((window.scrollY - dEnd) / docSpan, 0), 1);
+  // every layout read up front, before this frame writes a single style: a read after a write forces the browser to lay
+  // the page out again in the middle of the frame
+  const storyTop = storyEl.getBoundingClientRect().top, contactTop = contactEl.getBoundingClientRect().top;
+  const hcTop = heroCopy.offsetTop, hcH = heroCopy.offsetHeight;
 
   if (static_) {
     pCurrent = pTarget;
@@ -3363,7 +3357,7 @@ function tick(static_ = false) {
   const q = qCurrent;
   const curScrollY = scrollCurrentY;
   header.classList.toggle('scrolled', curScrollY > 40);
-  header.classList.toggle('on-light', storyEl.getBoundingClientRect().top < 70);   // the light page is under it
+  header.classList.toggle('on-light', storyTop < 70);   // the light page is under it
   // story sections ride over the fixed scene: keep the frame loop alive while they scroll, even after the
   // dive is off-screen — the water drifting behind the panels is what makes them feel submerged
   // (it reads span and curScrollY, so it has to come after both: above them it threw on every frame)
@@ -3371,7 +3365,7 @@ function tick(static_ = false) {
   // the scene has scrolled away under the light page: none of it is on screen, so none of it is worked out. (The
   // loop is "static_ !== true", as for govern above: setAnimationLoop passes a timestamp there, so the old
   // "!static_" checks never ran and the 3D went on drawing behind the whole page.)
-  if (static_ !== true && storyEl.getBoundingClientRect().top <= 0) return;
+  if (static_ !== true && storyTop <= 0) return;
 
   // camera: descend from above the surface to below it, pulling in on the blades.
   // 1. Surface float: p = 0 .. 0.10
@@ -3465,7 +3459,7 @@ function tick(static_ = false) {
     updateFish(t, buoy.sx, buoy.y - FLOAT_SINK - recede * 4.6, buoy.sz);   // round the float, wherever it has drifted to
     updateBubbles(t, buoy.y);
   }
-  bubbles.visible = !!fishMesh && p > 0.06;
+  bubbles.visible = !!fishMesh && p > 0.06 && !UW_RM;   // reduced motion: no frozen beads hanging in the water
   const settle = smooth(0.28, 0.50, p);
   MU.uLhz.value.lerpVectors(LHZ0, LHZ_DEEP, settle).lerp(LHZ_REEF, reefV);
   MU.uLdn.value.lerpVectors(LDN0, LDN_DEEP, settle).lerp(LDN_REEF, reefV);
@@ -3495,10 +3489,7 @@ function tick(static_ = false) {
   if (!isOrbitDragging) {
     stage.style.cursor = probeInView ? 'grab' : 'default';
   }
-  if (orbitHintEl) {
-    const showHint = !userHasInteracted && p >= 0.12 && p <= 0.41;   // gone before the dive ends (DIVE_END)
-    orbitHintEl.classList.toggle('visible', showHint);
-  }
+  // (no drag pill through the dive any more: it sat on the messages on a phone; the opening shot teaches the turning)
   hint.classList.toggle('turned', userHasInteracted);   // the opening shot's drag line goes once they've turned it
   dragCursor.classList.toggle('on', finePointer && !userHasInteracted && p < 0.07);
 
@@ -3517,14 +3508,16 @@ function tick(static_ = false) {
     buoy.rel = buoy.y;
   }
 
-  const wlY = waterlineY(), hcTop = heroCopy.offsetTop, hcH = heroCopy.offsetHeight;
-  const leave = Math.max(smooth(hcTop + hcH + 30, hcTop + hcH * 0.5, wlY), smooth(0.10, 0.24, p));
+  // the opening words are gone before the plunge (by p 0.14), so the first under-water message (from 0.24) never
+  // shares the screen with them; each message fades out before the next fades in
+  const wlY = waterlineY();
+  const leave = Math.max(smooth(hcTop + hcH + 30, hcTop + hcH * 0.5, wlY), smooth(0.07, 0.14, p));
   heroCopy.style.opacity = (1 - leave).toFixed(3);
   heroCopy.style.transform = leave > 0 ? `translateY(${(-18 * leave).toFixed(1)}px)` : '';
   heroCopy.classList.toggle('faded', leave > 0.5);
 
   // the dive is 3D all the way down again: no filmed clips under the water (Hamed, 2026-10-21)
-  const kEnd = (innerHeight - contactEl.getBoundingClientRect().top) / innerHeight;
+  const kEnd = (innerHeight - contactTop) / innerHeight;
   const uwDy = curScrollY - _uw.y;
   _uw.t = performance.now(); _uw.y = curScrollY;
   drawUwSnow(uwDy, UW_RM ? 0 : 0.75 * smooth(0.22, 0.38, p));
