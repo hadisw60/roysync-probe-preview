@@ -268,6 +268,50 @@
 
   /* ---------- scroll-driven motion for the story sections ---------- */
   #story { position: relative; }
+  /* the opening screen, "rising water" (designed and approved on the canvas, 2026-10-27): the screen fills like a tank
+     as the float loads; the number rides the waterline, white above it and refracted pale blue below; the mark sits
+     large at the top and goes under at the end, then the screen fades into the dive. Only two layers move (transforms). */
+  #intro { position: fixed; inset: 0; z-index: 100; overflow: hidden; color: #eef6fc; background: linear-gradient(180deg, #03070d 0%, #071526 100%);
+           transition: opacity .8s ease; }
+  #intro.gone { opacity: 0; }
+  #intro .in-water { position: absolute; left: 0; right: 0; top: 0; height: 100%; will-change: transform;
+                     background: linear-gradient(180deg, #154d78 0%, #0b3354 34%, #041729 100%); }
+  #intro .in-water::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 90px;   /* the light just under the surface */
+                             background: linear-gradient(180deg, rgba(207, 234, 255, .16), rgba(207, 234, 255, 0)); }
+  #intro .in-water::after { content: ""; position: absolute; left: 57%; top: 70px; width: 700px; height: 420px; border-radius: 50%;
+                            background: radial-gradient(closest-side, rgba(159, 208, 247, .12), rgba(159, 208, 247, 0)); }
+  #intro .in-line { position: absolute; left: 0; top: -20px; width: 100%; height: 40px; overflow: visible; }
+  #intro .in-line path { fill: none; stroke: #d8efff; stroke-width: 1.5; stroke-opacity: .9; vector-effect: non-scaling-stroke; }
+  #intro .in-line path + path { stroke: #9fd0f7; stroke-width: 1; stroke-opacity: .25; }
+  #intro .in-bub { position: absolute; left: 33%; top: 70px; width: 40px; height: 160px; }
+  #intro .in-ride { position: absolute; left: 0; right: 0; top: 0; will-change: transform; }
+  #intro .in-num { position: absolute; left: max(24px, 5.3vw); top: -.625em; font: 400 clamp(140px, 16.7vw, 240px)/1 'Instrument Serif', Georgia, serif;
+                   letter-spacing: -.02em; }
+  #intro .in-num .dry { display: block; clip-path: inset(0 0 .375em 0); }
+  #intro .in-num .wet { position: absolute; left: .017em; top: .008em; color: #8fc9f2; opacity: .85; clip-path: inset(.615em 0 0 0); }
+  #intro .in-num i { position: absolute; left: 100%; top: .146em; margin-left: .06em; font-size: .27em; font-style: italic; color: #8fc1e8; }
+  #intro .in-mark { position: absolute; left: 0; right: 0; top: 56px; display: flex; justify-content: center; align-items: center; gap: 22px;
+                    font: 600 44px/1 var(--head); letter-spacing: -.015em; transition: opacity .4s, color .4s; }
+  #intro .in-mark img { width: 88px; height: 88px; border-radius: 50%; display: block; }
+  #intro .in-mark.under { opacity: .78; color: #cfeaff; }   /* the water has risen over it */
+  #intro .in-note { position: absolute; left: 0; right: 0; bottom: 52px; text-align: center; font: 600 11px/1 Inter, system-ui, sans-serif;
+                    letter-spacing: .3em; text-transform: uppercase; color: rgba(191, 228, 255, .72); }
+  @media (max-width: 760px) {
+    #intro .in-mark { top: 64px; flex-direction: column; gap: 14px; font-size: 28px; }
+    #intro .in-mark img { width: 64px; height: 64px; }
+    #intro .in-note { bottom: 44px; font-size: 10px; letter-spacing: .28em; }
+  }
+  /* the oxygen line (after lusion.co's thread through its sections): a ribbon of thin strands sweeping across the page;
+     the sections stack above it, so it runs behind the words and the phones and goes under the film bands. It is drawn
+     once: a page-coloured cover, sticky 70% down the screen, hides what lies below it, so the scroll alone draws it */
+  #o2wrap { position: absolute; inset: 0; z-index: 0; pointer-events: none; }
+  #story > section { position: relative; z-index: 1; }
+  #o2line { position: absolute; left: 0; top: 0; width: 100%; height: 100%; }
+  #o2line g { fill: none; stroke-linecap: round; stroke-linejoin: round; }
+  #o2label { position: absolute; transform: translateY(-50%); font-size: 11px; font-weight: 600; letter-spacing: .2em;
+             text-transform: uppercase; white-space: nowrap; color: #c25a45; }
+  #o2cover { position: sticky; top: 70vh; height: calc(30vh + 260px); background: linear-gradient(rgba(221, 231, 241, 0), var(--paper) 240px); }
+  @media (prefers-reduced-motion: reduce) { #o2cover { display: none; } }
   /* gentle continuous drift on decorative elements (paused when reduced motion is set) */
   @keyframes floaty { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-9px); } }
   @keyframes breathe { 0%, 100% { box-shadow: 0 8px 30px var(--glow); } 50% { box-shadow: 0 8px 44px rgba(79,159,224,.55); } }
@@ -456,6 +500,34 @@
   .big { font-size: clamp(34px, 5.2vw, 68px); font-weight: 600; letter-spacing: -.015em; line-height: 1.05; margin: 0 0 24px; max-width: 13ch; text-wrap: balance; color: var(--ink); }
   .big em { font-style: normal; color: var(--blue); }
   .sub { font-size: clamp(16px, 1.45vw, 20px); line-height: 1.6; color: var(--ink-2); margin: 0; max-width: 32em; }
+  /* an editorial layout (the user liked lusion.co's): a huge title right across the page, the few words under it set in
+     their own column to the right and lower, a small caps label, a pill to go on, and fine + marks on the grid lines */
+  #story section.ed .wrap { max-width: 1280px; }
+  #story .ed .big { font-size: clamp(46px, 8.2vw, 128px); font-weight: 500; line-height: .98; letter-spacing: -.028em; max-width: none; margin: 0 0 7vh; }
+  #story .ed .split2 .big { font-size: clamp(42px, 5.6vw, 88px); }   /* beside the phone */
+  #story .marks { display: flex; justify-content: space-between; margin: 0 0 9vh; color: var(--rule-2); font: 300 20px/1 var(--head); user-select: none; }
+  #story .band .marks { color: rgba(255, 255, 255, .35); }
+  #story .ed-row { display: grid; grid-template-columns: repeat(12, 1fr); gap: 0 2vw; }
+  #story .ed-side { grid-column: 7 / span 6; }
+  #story .ed .sub { max-width: 28em; }
+  .pill { display: inline-flex; align-items: center; gap: 12px; margin-top: 30px; padding: 13px 22px 13px 18px; border-radius: 999px;
+          background: var(--ink); color: #fff; font: 600 12px/1 Inter, system-ui, sans-serif; letter-spacing: .16em; text-transform: uppercase;
+          transition: background .25s, transform .25s; }
+  .pill::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: #9fd0f7; }
+  .pill:hover { background: var(--blue); transform: translateY(-1px); }
+  #trust.ed .wrap, #trust.ed .big { text-align: left; margin-left: 0; margin-right: 0; }
+  #story .ed-head { display: grid; grid-template-columns: 1fr auto; align-items: end; gap: 4vw; margin-bottom: 4vh; }
+  #story .ed-head .big { margin: 0; }
+  #story .ed-note, #trust.ed .ed-note { margin: 0 0 1.2em; line-height: 2; text-align: right; color: var(--ink-2); }
+  @media (max-width: 760px) {
+    #story .ed .big { font-size: clamp(40px, 12vw, 64px); margin-bottom: 5vh; }
+    #story .ed-side { grid-column: 1 / -1; }
+    #story .ed-head { grid-template-columns: 1fr; }
+    #story .ed-note, #trust.ed .ed-note { text-align: left; margin: 0; }
+    #o2line { opacity: .75; }   /* the words fill a phone's width, so the ribbon goes quieter behind them */
+    #o2label { font-size: 10px; letter-spacing: .16em; }
+    #story .marks { margin-bottom: 6vh; }
+  }
   /* how it reaches you: one step at a time, held on screen while the scroll moves through them */
   #alerts { position: relative; height: 320vh; }
   #alerts .pin { position: sticky; top: 0; height: 100vh; display: flex; align-items: center; padding: 0 6vw; box-sizing: border-box; }
@@ -763,6 +835,66 @@
 </head>
 <body>
 
+<div id="intro" aria-hidden="true">
+  <div class="in-water">
+    <svg class="in-line" viewBox="0 0 1440 40" preserveAspectRatio="none"><path d="M0 20C180 13 340 27 520 20S880 12 1060 19S1320 27 1440 19"/><path d="M0 27C200 21 360 33 540 27S900 20 1080 26S1330 32 1440 26"/></svg>
+    <svg class="in-bub" viewBox="0 0 40 160" fill="none" stroke="#cfeaff"><circle cx="20" cy="18" r="3" stroke-opacity=".55" stroke-width="1.2"/><circle cx="12" cy="74" r="4.5" stroke-opacity=".4" stroke-width="1.2"/><circle cx="24" cy="136" r="2.5" stroke-opacity=".3"/></svg>
+  </div>
+  <div class="in-mark"><img src="assets/logo.png" alt="" width="88" height="88"><span>RoySync</span></div>
+  <div class="in-ride"><div class="in-num"><span class="dry">00</span><span class="wet">00</span><i>%</i></div></div>
+  <div class="in-note">Autonomous water intelligence</div>
+</div>
+<script>
+// the opening screen: the water (and the number on it) rises while the float's model loads, to 86% at most until it is
+// in (and the fonts), then to the top; at least ~0.9 s so it never flashes, at most ~9 s whatever happens
+(() => {
+  const el = document.getElementById('intro'); if (!el) return;
+  const water = el.querySelector('.in-water'), ride = el.querySelector('.in-ride'), mark = el.querySelector('.in-mark');
+  const digits = el.querySelectorAll('.in-num .dry, .in-num .wet'), t0 = performance.now();
+  let done = false, lastN = -1;
+  const finish = () => { done = true; };
+  addEventListener('probe-ready', () => (document.fonts ? document.fonts.ready : Promise.resolve()).then(finish));
+  setTimeout(finish, 9000);
+  const lift = () => { el.classList.add('gone'); setTimeout(() => el.remove(), 900); };
+  // the waterline: near the foot of the screen empty (93.6% down), near its top full (7.1% down)
+  const yAt = f => innerHeight * (0.936 - 0.865 * f);
+  const go = f => { water.style.transform = ride.style.transform = `translateY(${yAt(f).toFixed(1)}px)`; };
+  // the rise as an explicit animation (Web Animations, run by the compositor): a CSS transition set while the page is
+  // still loading never starts (the browser takes the end value at once), so the water jumped straight to 86%
+  let anims = [];
+  const rise = (yFrom, yTo, ms, easing) => {
+    anims.forEach(a => a.cancel());
+    anims = [water, ride].map(e => e.animate([{ transform: `translateY(${yFrom}px)` }, { transform: `translateY(${yTo}px)` }], { duration: ms, easing, fill: 'forwards' }));
+  };
+  // the number and the mark follow the water where it actually is (read off its transform), not where the script hoped
+  const show = () => {
+    const y = new DOMMatrixReadOnly(getComputedStyle(water).transform).m42;
+    const f = Math.min(Math.max((0.936 - y / innerHeight) / 0.865, 0), 1);
+    mark.classList.toggle('under', y < mark.offsetTop + mark.offsetHeight);
+    const n = Math.round(f * 100);
+    if (n !== lastN) { lastN = n; const s = String(n).padStart(2, '0'); digits.forEach(d => (d.textContent = s)); }
+    return f;
+  };
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) {   // no rising: the tank as it is, gone (a fade) when ready
+    go(0.5); show(); const wait = () => (done ? lift() : setTimeout(wait, 100)); wait(); return;
+  }
+  // the compositor keeps it rising while the page's own work (the 3D scene being built) holds the script up; a
+  // frame-by-frame script stalled there and then jumped
+  go(0); rise(yAt(0), yAt(0.86), 7000, 'cubic-bezier(.15, .6, .35, 1)');
+  let filling = false;
+  const step = now => {
+    const f = show();
+    if (done && !filling && now - t0 > 900) {
+      filling = true;
+      rise(new DOMMatrixReadOnly(getComputedStyle(water).transform).m42, yAt(1), 350 + 600 * (1 - f), 'ease-out');
+    }
+    if (filling && f > 0.995) { setTimeout(lift, 260); return; }
+    requestAnimationFrame(step);
+  };
+  requestAnimationFrame(step);
+})();
+</script>
+
 <a class="skip" href="#story">Skip to content</a>   <!-- the first stop for the keyboard: past the dive, to the page itself -->
 <header id="site-header" role="banner">
   <nav aria-label="Primary" style="display:contents">
@@ -808,11 +940,31 @@
 </div>
 
 <div id="story">
+<!-- the oxygen line: a ribbon drawn as the page scrolls, sweeping across it and down through the night of the alerts to
+     its low point at "Below 4 mg/L", then on under the film bands; its strands are built by the script at the page's foot -->
+<div id="o2wrap" aria-hidden="true">
+  <svg id="o2line">
+    <defs><linearGradient id="o2grad" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#8fd0fa"/><stop offset=".45" stop-color="#4aa3e6"/><stop offset="1" stop-color="#2b7fca"/></linearGradient></defs>
+    <!-- a soft shadow under the ribbon: three wide faint strokes stand in for a blur, which would cost a page-tall buffer -->
+    <g class="sh" stroke="#0d1b2a" transform="translate(24 40)"><path stroke-opacity=".02"/><path stroke-opacity=".025"/><path stroke-opacity=".03"/></g>
+    <g class="st" stroke="url(#o2grad)"><path stroke-width="1" stroke-opacity=".3"/><path stroke-width="1" stroke-opacity=".42"/><path stroke-width="1.2" stroke-opacity=".58"/><path stroke-width="1.8" stroke-opacity=".8"/></g>
+    <circle class="halo" fill="#e0705a" fill-opacity=".16"/><circle class="dip" fill="#fff" stroke="#e0705a" stroke-width="3.5"/>
+  </svg>
+  <div id="o2label">Below 4 mg/L · aerator on</div>
+  <div id="o2cover"></div>
+</div>
 
-<section id="action" class="one">
+<section id="action" class="one ed">
   <div class="wrap">
+    <div class="marks" aria-hidden="true"><i>+</i><i>+</i><i>+</i><i>+</i></div>
+    <div class="kick reveal">What it does</div>
     <h2 class="big reveal">When oxygen drops, <em>it acts.</em></h2>
-    <p class="sub reveal">It watches the water all night, and makes sure someone hears about it the moment oxygen falls.</p>
+    <div class="ed-row">
+      <div class="ed-side">
+        <p class="sub reveal">It watches the water all night, and makes sure someone hears about it the moment oxygen falls.</p>
+        <a class="pill reveal" href="#alerts">How it reaches you</a>
+      </div>
+    </div>
   </div>
 </section>
 
@@ -865,20 +1017,24 @@
   </div>
 </section>
 
-<section id="farm" class="one band">
+<section id="farm" class="one band ed">
   <svg class="wave top" viewBox="0 0 1440 40" preserveAspectRatio="none" aria-hidden="true"><path d="M0 0H1440V16C1260 34 1080 4 900 16S540 34 360 16 120 4 0 14Z"/></svg>
   <svg class="wave bot" viewBox="0 0 1440 40" preserveAspectRatio="none" aria-hidden="true"><path d="M0 0H1440V16C1260 34 1080 4 900 16S540 34 360 16 120 4 0 14Z"/></svg>
   <!-- a trout pond in the rain (Pexels 7663532, free to use), looping; it plays only while on screen -->
   <video class="band-media" data-src="media/farm-trout-720.mp4" poster="media/farm-trout.jpg" muted loop playsinline preload="none" aria-hidden="true"></video>
   <div class="wrap">
     <h2 class="big reveal">Works on <em>any farm.</em></h2>
-    <p class="sub reveal">Solar powered, nothing to wire. It reports over satellite, Wi-Fi or LTE.</p>
+    <div class="ed-row">
+      <div class="ed-side"><p class="sub reveal">Solar powered, nothing to wire. It reports over satellite, Wi-Fi or LTE.</p></div>
+    </div>
   </div>
 </section>
 
-<section id="app" class="one">
+<section id="app" class="one ed">
   <div class="wrap split2">
     <div>
+      <div class="marks" aria-hidden="true"><i>+</i><i>+</i><i>+</i></div>
+      <div class="kick reveal">The app</div>
       <h2 class="big reveal">Everything on <em>one screen.</em></h2>
       <p class="sub reveal">Every reading from the float, on your phone, wherever you are.</p>
     </div>
@@ -962,10 +1118,13 @@
   </div>
 </section>
 
-<section id="trust">
+<section id="trust" class="ed">
   <div class="wrap">
-    <div class="kick reveal">Capabilities</div>
-    <h2 class="big reveal">Small float, <em>eight sensors.</em></h2>
+    <div class="marks" aria-hidden="true"><i>+</i><i>+</i><i>+</i><i>+</i></div>
+    <div class="ed-head">
+      <h2 class="big reveal">Small float, <em>eight sensors.</em></h2>
+      <p class="kick ed-note reveal">Capabilities<br>Solar powered · Satellite, Wi-Fi or LTE</p>
+    </div>
     <div class="float-grid">
       <div class="caps caps-l">
         <div class="cap"><svg viewBox="0 0 48 48" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="24" cy="24" r="17"/><path d="M7 24h34M24 7v34" stroke-dasharray="3 4"/></svg><h3>Compact construction</h3><p>About 200 mm in diameter</p></div>
@@ -3654,6 +3813,85 @@ if (REDUCED) {
   };
   b.addEventListener('pointerenter', ripple); b.addEventListener('pointermove', ripple);
   b.addEventListener('pointerdown', e => { last = 0; ripple(e); });
+})();
+
+// the oxygen line: a ribbon of thin strands along a course pinned to the sections (so its low point always falls in
+// the alerts, under "Below 4 mg/L"). Each strand sits off the course by R(s)·sin(θ(s) + kδ), so the bundle twists, its
+// strands crossing and fanning out; the twist's length, the ribbon's width and the fan all wander on slow noise, so it
+// never settles into one rhythm. Built once and again only when the page's size changes: the sticky cover reveals it.
+(() => {
+  const story = document.getElementById('story'), svg = document.getElementById('o2line');
+  if (!story || !svg) return;
+  const grad = svg.querySelector('#o2grad'), shadow = svg.querySelectorAll('.sh path'), strands = svg.querySelectorAll('.st path');
+  const halo = svg.querySelector('.halo'), dip = svg.querySelector('.dip'), label = document.getElementById('o2label');
+  // the course of the approved design: [x as a fraction of the width, section, y as a fraction down that section]
+  const COURSE = [
+    [-0.111, 'action', 0.184], [0.292, 'action', 0.053], [0.625, 'action', 0.158], [0.903, 'action', 0.553],
+    // (the alerts' words are held on screen while it scrolls by, so its descent keeps to the margin left of them)
+    [1.104, 'alerts', 0], [0.861, 'alerts', 0.213], [0.486, 'alerts', 0.266], [0.1, 'alerts', 0.447], [0.055, 'alerts', 0.703],
+    [0.271, 'alerts', 0.9375],   // the low point: it reaches the pen once the last step shows, just under its words
+    [0.431, 'alerts', 0.96], [0.799, 'alerts', 0.953], [1.111, 'farm', 0],
+    [1.111, 'app', 0.046], [0.764, 'app', 0.123], [0.611, 'app', 0.385], [0.722, 'app', 0.631], [0.417, 'app', 0.785], [-0.111, 'app', 0.846],
+    [0.21, 'trust', 0.04], [0.62, 'trust', 0.16], [1.1, 'trust', 0.42], [1.05, 'trust', 0.78], [0.6, 'trust', 0.98], [0.3, 'contact', 0.3], [0.1, 'contact', 0.6]
+  ];
+  const DIP = 9;
+  let size = '', queued = false;
+  const build = () => {
+    queued = false;
+    const W = story.clientWidth, H = story.offsetHeight;
+    if (!W || `${W}x${H}` === size) return;
+    size = `${W}x${H}`;
+    const sc = Math.min(1, Math.max(0.45, W / 1440)), phone = W < 760;
+    const P = COURSE.map(([fx, id, fy]) => { const s = document.getElementById(id); return [fx * W, s ? s.offsetTop + s.offsetHeight * fy : 0]; });
+    // Catmull-Rom through the course, as cubic Béziers sampled about every 12 px
+    const pts = [], at = [0];
+    for (let i = 0; i < P.length - 1; i++) {
+      const p0 = P[i - 1] || P[i], p1 = P[i], p2 = P[i + 1], p3 = P[i + 2] || p2;
+      const c1 = [p1[0] + (p2[0] - p0[0]) / 6, p1[1] + (p2[1] - p0[1]) / 6], c2 = [p2[0] - (p3[0] - p1[0]) / 6, p2[1] - (p3[1] - p1[1]) / 6];
+      const n = Math.max(8, Math.ceil((Math.hypot(c1[0] - p1[0], c1[1] - p1[1]) + Math.hypot(c2[0] - c1[0], c2[1] - c1[1]) + Math.hypot(p2[0] - c2[0], p2[1] - c2[1])) / 12));
+      for (let j = i ? 1 : 0; j <= n; j++) {
+        const t = j / n, u = 1 - t;
+        pts.push([0, 1].map(k => u * u * u * p1[k] + 3 * u * u * t * c1[k] + 3 * u * t * t * c2[k] + t * t * t * p2[k]));
+      }
+      at.push(pts.length - 1);   // the sample that lands on course point i + 1
+    }
+    const nrm = [], arc = [0];
+    for (let i = 0; i < pts.length; i++) {
+      const a = pts[Math.max(i - 1, 0)], b = pts[Math.min(i + 1, pts.length - 1)];
+      const dx = b[0] - a[0], dy = b[1] - a[1], L = Math.hypot(dx, dy) || 1;
+      nrm.push([-dy / L, dx / L]);
+      if (i) arc.push(arc[i - 1] + Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]));
+    }
+    // slow noise (sums of unrelated sines) for the twist's length, the width and the fan
+    const noise = (s, a, b, c) => Math.min(1, Math.max(0, 0.5 + 0.28 * Math.sin(s / 610 + a) + 0.14 * Math.sin(s / 233 + b) + 0.08 * Math.sin(s / 1490 + c)));
+    const theta = [0];
+    for (let i = 1; i < pts.length; i++) theta.push(theta[i - 1] + 2 * Math.PI * (arc[i] - arc[i - 1]) / (380 + 1000 * noise(arc[i], 1.7, 0.3, 2.6)));
+    const R = s => sc * (8 + 66 * Math.pow(noise(s, 0.4, 2.1, 4.0), 1.4));
+    const fan = s => 0.05 + 0.08 * noise(s, 3.1, 1.2, 0.5);
+    // a thinner second ribbon splits off for a while and joins again, twice: down through the alerts, and through the app
+    const arcAt = x => { const i = Math.floor(x); return arc[at[i]] + (x - i) * (arc[at[i + 1]] - arc[at[i]]); };
+    const win = [[arcAt(3.58), arcAt(8.81), 150 * sc], [arcAt(12.74), arcAt(16.82), -120 * sc]];
+    const branch = s => win.reduce((o, [a, b, h]) => o + (s > a && s < b ? h * Math.pow(Math.sin(Math.PI * (s - a) / (b - a)), 2) : 0), 0);
+    const wig = 4 * Math.max(sc, 0.7);
+    const strand = (k, side, spread, scale, twist) => pts.map((p, i) => {
+      const s = arc[i], o = (side ? branch(s) : 0) + scale * R(s) * Math.sin(theta[i] * twist + k * fan(s) * spread) + wig * Math.sin(s / 37 + k * 0.4);
+      return (i ? 'L' : 'M') + (p[0] + nrm[i][0] * o).toFixed(1) + ' ' + (p[1] + nrm[i][1] * o).toFixed(1);
+    }).join('');
+    const groups = [[], [], [], []];
+    for (let k = 0, N = phone ? 18 : 32; k < N; k++) groups[k % 7 === 3 ? 3 : k % 3].push(strand(k, false, 1, 1, 1));
+    for (let k = 0, N = phone ? 6 : 12; k < N; k++) groups[k % 5 === 2 ? 3 : k % 3].push(strand(k, true, 1.6, 0.45, 1.35));
+    strands.forEach((el, i) => el.setAttribute('d', groups[i].join(' ')));
+    const centre = pts.map((p, i) => (i ? 'L' : 'M') + p[0].toFixed(1) + ' ' + p[1].toFixed(1)).join('');
+    shadow.forEach((el, i) => { el.setAttribute('d', centre); el.setAttribute('stroke-width', ([130, 100, 70][i] * sc).toFixed(1)); });
+    svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+    grad.setAttribute('x2', W); grad.setAttribute('y2', H);
+    const [dx, dy] = P[DIP], m = Math.max(sc, 0.6);
+    halo.setAttribute('cx', dx.toFixed(1)); halo.setAttribute('cy', dy.toFixed(1)); halo.setAttribute('r', (24 * m).toFixed(1));
+    dip.setAttribute('cx', dx.toFixed(1)); dip.setAttribute('cy', dy.toFixed(1)); dip.setAttribute('r', (9 * m).toFixed(1));
+    label.style.left = (dx + 34 * m).toFixed(1) + 'px'; label.style.top = dy.toFixed(1) + 'px';
+  };
+  new ResizeObserver(() => { if (!queued) { queued = true; requestAnimationFrame(build); } }).observe(story);
+  build();
 })();
 </script>
 </body>
