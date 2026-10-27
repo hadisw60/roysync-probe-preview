@@ -2112,9 +2112,22 @@ fishMat.onBeforeCompile = sh => {
       // the skin's own light and dark (every scale and fin) in one cool silver: only the green cast of its body is dropped
       float fShade = smoothstep(0.05, -0.06, vLPos.y);
       float fLum = dot(diffuseColor.rgb, vec3(0.299, 0.587, 0.114));
-      diffuseColor.rgb = vec3(fLum) * vec3(0.92, 0.98, 1.06) * mix(0.85, 1.1, fShade) * (1.0 - 0.85 * vGape);`)
+      diffuseColor.rgb = vec3(fLum) * vec3(0.92, 0.98, 1.06) * mix(0.85, 1.1, fShade) * (1.0 - 0.85 * vGape);
+      // the eye, painted over the skin's own faint one (z 0.3855, y -0.0146, found on a side view): a big black pupil,
+      // a dark olive iris with a paler ring, glossy, and a glint of the light above
+      float fEd = length(vec2(vLPos.z - 0.3855, vLPos.y + 0.0146)) / 0.0075;
+      float fEye = 1.0 - smoothstep(0.86, 1.0, fEd);
+      // (a salmon's iris is bright silver round the black pupil: a dark eye on a dark fish didn't show at all)
+      vec3 fEyeC = mix(vec3(0.17, 0.16, 0.12), vec3(0.36, 0.35, 0.27), smoothstep(0.6, 0.68, fEd) * (1.0 - smoothstep(0.7, 0.84, fEd)));
+      fEyeC = mix(fEyeC, vec3(0.004), 1.0 - smoothstep(0.54, 0.62, fEd));
+      fEyeC = mix(fEyeC, vec3(0.05, 0.05, 0.045), smoothstep(0.8, 0.95, fEd));   // a dark rim into the skin (a bare pale ring looked drawn)
+      diffuseColor.rgb = mix(diffuseColor.rgb, fEyeC, fEye);
+      float fGlint = 1.0 - smoothstep(0.0, 0.3, length(vec2(vLPos.z - 0.3855 - 0.22 * 0.0075, vLPos.y + 0.0146 - 0.26 * 0.0075)) / 0.0075);`)
+    .replace('#include <roughnessmap_fragment>', `#include <roughnessmap_fragment>
+      roughnessFactor = mix(roughnessFactor, 0.08, fEye);`)
     .replace('#include <emissivemap_fragment>', `#include <emissivemap_fragment>
-      totalEmissiveRadiance *= clamp(fLum * 2.2, 0.25, 1.4) * mix(0.75, 1.05, fShade) * (1.0 - vGape);`)
+      totalEmissiveRadiance *= clamp(fLum * 2.2, 0.25, 1.4) * mix(0.75, 1.05, fShade) * (1.0 - vGape);
+      totalEmissiveRadiance = mix(totalEmissiveRadiance, fEyeC * 0.42, fEye) + vec3(1.1, 1.15, 1.2) * fGlint;`)
     .replace('#include <common>', '#include <common>\nvarying float vGape;');
   Object.assign(sh.uniforms, fishU);
   sh.vertexShader = 'attribute float aPhase;\nattribute float aSpeed;\nuniform float uFishT;\nvarying float vGape;\n' + sh.vertexShader
@@ -2220,7 +2233,69 @@ new GLTFLoader().load('assets/fish.glb', gltf => {
   fishMesh.layers.set(L_UNDER);
   scene.add(fishMesh);
 });
-const _fo = new THREE.Object3D(), _fv = new THREE.Vector3(), _fn = new THREE.Vector3();
+// ---------------- bubbles: now and then a fish lets out a little puff that wobbles up and away ----------------
+// each fish owns BUB_PER bubbles, let out together every 5..9 s from just behind its head and left behind as it swims on
+const BUB_PER = 6, N_BUB = N_FISH * BUB_PER;
+const bubPos = new Float32Array(N_BUB * 3), bubSize = new Float32Array(N_BUB), bubAlpha = new Float32Array(N_BUB);
+const bubFrom = new Float32Array(N_BUB * 3), bubBorn = new Float32Array(N_BUB).fill(-1e9), bubLife = new Float32Array(N_BUB),
+  bubRise = new Float32Array(N_BUB), bubSeed = new Float32Array(N_BUB);
+const puffEvery = new Float32Array(N_FISH), puffAt = new Float32Array(N_FISH), fishGill = new Float32Array(N_FISH * 3);
+for (let i = 0; i < N_FISH; i++) { puffEvery[i] = 5 + 4 * Math.random(); puffAt[i] = Math.random() * puffEvery[i]; }
+for (let i = 0; i < N_BUB; i++) {
+  bubSize[i] = 0.035 + 0.07 * Math.random() ** 2;   // mostly small, a few bigger
+  bubLife[i] = 2.4 + 1.4 * Math.random(); bubRise[i] = 0.45 + 0.4 * Math.random(); bubSeed[i] = Math.random() * 6.3;
+}
+const bubGeo = new THREE.BufferGeometry();
+bubGeo.setAttribute('position', new THREE.BufferAttribute(bubPos, 3).setUsage(THREE.DynamicDrawUsage));
+bubGeo.setAttribute('aSize', new THREE.BufferAttribute(bubSize, 1));
+bubGeo.setAttribute('aAlpha', new THREE.BufferAttribute(bubAlpha, 1).setUsage(THREE.DynamicDrawUsage));
+const bubMat = new THREE.ShaderMaterial({
+  transparent: true, depthWrite: false, uniforms: { uFocal: { value: 900 } },
+  vertexShader: /* glsl */`
+    attribute float aSize, aAlpha; uniform float uFocal; varying float vA;
+    void main(){
+      vec4 mv = modelViewMatrix * vec4(position, 1.0);
+      gl_Position = projectionMatrix * mv;
+      gl_PointSize = max(aSize * uFocal / -mv.z, 1.0);
+      vA = aAlpha * exp(-0.035 * -mv.z);              // the water swallows the far ones
+    }`,
+  fragmentShader: /* glsl */`
+    varying float vA;
+    void main(){
+      vec2 c = gl_PointCoord * 2.0 - 1.0; float d = length(c);
+      if (d > 1.0) discard;
+      float rim = smoothstep(0.55, 0.9, d) * (1.0 - smoothstep(0.9, 1.0, d));        // a bright edge, a clear middle
+      float hi = 1.0 - smoothstep(0.0, 0.32, length(c - vec2(-0.32, -0.32)));       // the window light caught on top
+      gl_FragColor = vec4(vec3(0.86, 0.95, 1.0), (0.08 + 0.7 * rim + 0.9 * hi) * vA);
+    }`
+});
+const bubbles = new THREE.Points(bubGeo, bubMat);
+bubbles.frustumCulled = false;
+bubbles.layers.set(L_UNDER);
+scene.add(bubbles);
+function updateBubbles(t, surfaceY) {
+  for (let i = 0; i < N_BUB; i++) {
+    const k = i % N_FISH, j = (i / N_FISH) | 0, i3 = i * 3;
+    const born = puffAt[k] + Math.floor((t - puffAt[k]) / puffEvery[k]) * puffEvery[k] + j * 0.14;
+    if (born !== bubBorn[i] && t >= born) {          // a new puff: it starts from where the fish's head is now
+      bubBorn[i] = born;
+      bubFrom[i3] = fishGill[k * 3] + (Math.random() - 0.5) * 0.12;
+      bubFrom[i3 + 1] = fishGill[k * 3 + 1] + (Math.random() - 0.5) * 0.08;
+      bubFrom[i3 + 2] = fishGill[k * 3 + 2] + (Math.random() - 0.5) * 0.12;
+    }
+    const age = t - bubBorn[i], s = bubSeed[i];
+    const y = bubFrom[i3 + 1] + bubRise[i] * age + 0.12 * age * age;   // rising, a little faster as it goes
+    bubPos[i3] = bubFrom[i3] + 0.06 * Math.sin(age * 5.5 + s) + 0.05 * age;
+    bubPos[i3 + 1] = y;
+    bubPos[i3 + 2] = bubFrom[i3 + 2] + 0.06 * Math.cos(age * 4.7 + s);
+    const life = bubLife[i];
+    bubAlpha[i] = age < 0 || age > life || y > surfaceY - 0.1 ? 0 : Math.min(age / 0.15, 1) * Math.min((life - age) / 0.6, 1);
+  }
+  bubGeo.attributes.position.needsUpdate = true; bubGeo.attributes.aAlpha.needsUpdate = true;
+  bubMat.uniforms.uFocal.value = (renderer.domElement.height / 2) / Math.tan(THREE.MathUtils.degToRad(camera.fov / 2));
+}
+
+const _fo = new THREE.Object3D(), _fv = new THREE.Vector3(), _fn = new THREE.Vector3(), _fw = new THREE.Vector3();
 function updateFish(t, cx, cy, cz) {
   // each fish swims its own wandering ring round the float's axis (cx, cz) and faces where it is actually going (a step
   // ahead on its own path), so the ones in front cross the screen one way and the ones behind the other
@@ -2233,6 +2308,9 @@ function updateFish(t, cx, cy, cz) {
     _fo.scale.setScalar(school.size[i]);
     _fo.updateMatrix();
     fishMesh.setMatrixAt(i, _fo.matrix);
+    // just behind the head (the gills, ~0.28 of the 0.87 body ahead of its middle): where its bubbles come from
+    _fw.set(0, 0, 0.28 * school.size[i]).applyQuaternion(_fo.quaternion).add(_fo.position);
+    fishGill[i * 3] = _fw.x; fishGill[i * 3 + 1] = _fw.y; fishGill[i * 3 + 2] = _fw.z;
   }
   fishMesh.instanceMatrix.needsUpdate = true;
 }
@@ -3385,7 +3463,9 @@ function tick(static_ = false) {
   fishU.uFishT.value = t;
   if (fishMesh && p > 0.06) {
     updateFish(t, buoy.sx, buoy.y - FLOAT_SINK - recede * 4.6, buoy.sz);   // round the float, wherever it has drifted to
+    updateBubbles(t, buoy.y);
   }
+  bubbles.visible = !!fishMesh && p > 0.06;
   const settle = smooth(0.28, 0.50, p);
   MU.uLhz.value.lerpVectors(LHZ0, LHZ_DEEP, settle).lerp(LHZ_REEF, reefV);
   MU.uLdn.value.lerpVectors(LDN0, LDN_DEEP, settle).lerp(LDN_REEF, reefV);
