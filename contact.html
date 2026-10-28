@@ -10,6 +10,7 @@
 <link rel="preload" href="assets/fonts/jost.woff2" as="font" type="font/woff2" crossorigin>
 <style>
   @font-face { font-family: 'Sora'; font-style: normal; font-weight: 500 700; font-display: swap; src: url(assets/fonts/sora.woff2) format('woff2'); }
+  @font-face { font-family: 'Inter'; font-style: normal; font-weight: 400 600; font-display: swap; src: url(assets/fonts/inter.woff2) format('woff2'); }
   @font-face { font-family: 'Jost'; font-style: normal; font-weight: 300 700; font-display: swap; src: url(assets/fonts/jost.woff2) format('woff2'); }
   :root {
     /* the landing's navy and ice blue on a white page; Sora for the big lines, Jost for the rest */
@@ -27,28 +28,46 @@
   /* one column for everything: the doors, the form box and the trout strip share its edges */
   .col { max-width: calc(var(--col) + 2 * var(--gut)); margin: 0 auto; padding: 0 var(--gut); }
 
-  /* ---- header: the landing's capsule; plain over the white page, white glass once scrolled ---- */
-  /* before it gathers, the bar's logo and email sit on the content column's edges */
-  header { position: fixed; top: 0; left: 0; right: 0; z-index: 10; display: flex; align-items: center; gap: 28px; background: rgba(255,255,255,.92);
-           padding: 18px max(var(--gut), calc(50vw - var(--col) / 2));
-           border: 1px solid transparent; transition: background .5s, padding .5s, top .5s cubic-bezier(.2,.8,.2,1), left .5s cubic-bezier(.2,.8,.2,1),
-           right .5s cubic-bezier(.2,.8,.2,1), border-radius .5s, box-shadow .5s, border-color .5s; }
-  header.scrolled { top: 12px; left: max(16px, calc(50vw - 560px)); right: max(16px, calc(50vw - 560px)); border-radius: 999px; padding: 8px 10px 8px 16px;
-                    background: rgba(255,255,255,.8); backdrop-filter: blur(18px) saturate(1.4); -webkit-backdrop-filter: blur(18px) saturate(1.4);
-                    border-color: rgba(18,38,58,.1); box-shadow: 0 10px 30px rgba(18,38,58,.12); }
-  .logo { display: flex; align-items: center; gap: 10px; font: 600 19px var(--head); letter-spacing: -.02em; color: var(--navy); text-decoration: none; }
-  .logo img { width: 34px; height: 34px; border-radius: 50%; }
-  .navlinks { position: relative; display: flex; gap: 4px; margin-left: auto; }
-  .navlinks a { position: relative; z-index: 1; padding: 8px 14px; border-radius: 999px; font-size: 15.5px; text-decoration: none; }
+  /* ---- header: the landing's own capsule, as it shows over the landing's light page (dark navy glass, ice-blue Contact us) ---- */
+  header { position: fixed; z-index: 10; display: flex; align-items: center; justify-content: space-between; color: #f2f7fc; font-family: Inter, system-ui, sans-serif;
+           top: 12px; left: max(16px, calc(50vw - 520px)); right: max(16px, calc(50vw - 520px)); border-radius: 999px;
+           padding: 10px 10px 10px 18px; background: rgba(9, 22, 38, .9); backdrop-filter: blur(18px) saturate(1.4); -webkit-backdrop-filter: blur(18px) saturate(1.4);
+           border: 1px solid rgba(170,215,255,.16);
+           box-shadow: 0 18px 50px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.08), 0 0 0 1px rgba(79,159,224,.06); }
+  .logo { display: flex; align-items: center; gap: 12px; font-family: Jost, system-ui, sans-serif; font-weight: 600; font-size: 19px; letter-spacing: -.01em; color: inherit; text-decoration: none; }
+  .logo img { width: 32px; height: 32px; border-radius: 50%; display: block; }
+  .logo b { font-weight: 600; }
+  .logo i { position: relative; overflow: hidden; font-style: normal; font-size: 11px; font-weight: 600; letter-spacing: .12em; color: var(--ice);
+            border: 1px solid rgba(159,208,247,.4); border-radius: 999px; padding: 3px 8px 2px; margin-left: 2px; }
+  .logo i::after { content: ""; position: absolute; inset: 0; transform: translateX(-120%);
+                   background: linear-gradient(100deg, transparent 30%, rgba(255,255,255,.55) 50%, transparent 70%); animation: tagshine 6s ease-in-out 2s infinite; }
+  @keyframes tagshine { 0%, 80% { transform: translateX(-120%); } 95%, 100% { transform: translateX(120%); } }
+  .navlinks { position: relative; display: flex; gap: 4px; margin-left: auto; margin-right: 26px; }
+  .navlinks a { position: relative; z-index: 1; padding: 8px 14px; border-radius: 999px; color: #d6e6f3; text-decoration: none; font-size: 14px; letter-spacing: .01em; white-space: nowrap; transition: color .2s; }
+  .navlinks a:hover, .navlinks a.on { color: #fff; }
   .nav-lens { position: absolute; top: 0; left: 0; height: 100%; width: 0; border-radius: 999px; opacity: 0; pointer-events: none;
-              background: rgba(31,95,158,.08); border: 1px solid rgba(31,95,158,.18);
+              background: linear-gradient(180deg, rgba(159,208,247,.16), rgba(159,208,247,.06)); border: 1px solid rgba(159,208,247,.22);
+              box-shadow: inset 0 1px 0 rgba(255,255,255,.12), 0 4px 18px rgba(79,159,224,.18);
               transition: transform .45s cubic-bezier(.2,.9,.25,1.15), width .45s cubic-bezier(.2,.9,.25,1.15), opacity .3s; }
-  .nav-progress { position: absolute; left: 22px; right: 22px; bottom: -1px; height: 2px; border-radius: 2px; opacity: 0; pointer-events: none;
-                  background: linear-gradient(90deg, rgba(31,95,158,0), #1f5f9e 40%, #9fd0f7); transform-origin: left; transform: scaleX(0); transition: opacity .4s; }
-  header.scrolled .nav-progress { opacity: .9; }
-  .mail { font-size: 15.5px; text-underline-offset: 5px; }
-  header.scrolled .mail { padding: 8px 14px; border-radius: 999px; background: var(--navy); color: #fff; text-decoration: none; }
-  @media (max-width: 760px) { .navlinks { display: none; } .mail { margin-left: auto; } }
+  .nav-progress { position: absolute; left: 22px; right: 22px; bottom: -1px; height: 2px; border-radius: 2px; opacity: .9; pointer-events: none;
+                  background: linear-gradient(90deg, rgba(159,208,247,0), #9fd0f7 40%, #e3f3ff); transform-origin: left; transform: scaleX(0);
+                  box-shadow: 0 0 10px rgba(159,208,247,.8); }
+  .btn.cta { position: relative; overflow: hidden; display: inline-flex; align-items: center; padding: 10px 20px; border-radius: 999px; white-space: nowrap;
+             background: linear-gradient(135deg, #e3f3ff 0%, #9fd0f7 48%, #5fa9e6 100%); color: #06182b; font-family: Inter, system-ui, sans-serif; font-weight: 600; font-size: 13.5px; letter-spacing: .01em; text-decoration: none;
+             box-shadow: 0 0 0 4px rgba(159,208,247,.12), 0 8px 26px rgba(79,159,224,.35), inset 0 1px 0 rgba(255,255,255,.7); transition: transform .2s, filter .2s; }
+  .btn.cta:hover { transform: translateY(-1px); filter: brightness(1.06); }
+  .btn.cta::after { content: ""; position: absolute; top: 0; bottom: 0; width: 60%; left: -80%; transform: skewX(-20deg);
+                    background: linear-gradient(90deg, transparent, rgba(255,255,255,.75), transparent); transition: left .7s ease; }
+  .btn.cta:hover::after { left: 130%; }
+  .btn.cta > span { position: relative; z-index: 2; }
+  .btn.cta .rip { position: absolute; z-index: 1; width: 10px; height: 10px; margin: -5px 0 0 -5px; border-radius: 50%;
+                  pointer-events: none; border: 2px solid rgba(255,255,255,.9); animation: ctarip .9s ease-out forwards; }
+  @keyframes ctarip { to { transform: scale(18); opacity: 0; border-width: .5px; } }
+  header :focus-visible { outline-color: #9fd0f7; }
+  @media (max-width: 720px) { .navlinks { gap: 2px; margin-right: 8px; } .navlinks a { padding: 7px 8px; font-size: 13px; }
+    .logo b, .logo i { display: none; } .btn.cta { padding: 8px 14px; font-size: 13px; } }
+  @media (max-width: 640px) { header { left: 10px; right: 10px; top: 10px; padding: 8px 8px 8px 12px; } }
+  @media (prefers-reduced-motion: reduce) { .logo i::after { animation: none; } .nav-lens { transition: none; } }
 
   /* ---- opening: the line, then the two doors as two real pictures ---- */
   .open { padding-top: 130px; }
@@ -148,7 +167,6 @@
   @media (max-width: 900px) { .ft { grid-template-columns: 1fr 1fr; } .steps { grid-template-columns: minmax(0, 1fr); gap: 26px; } }
   @media (max-width: 640px) {
     :root { --gut: 20px; }
-    header { padding-top: 12px; padding-bottom: 12px; }
     .open { padding-top: 92px; }
     .open-head p { font-size: 16px; margin: 0; }
     /* on a phone both doors are seen at once: two tall tiles, the title and the link only */
@@ -174,13 +192,18 @@
 </head>
 <body class="door-farm">
 
-<header role="banner">
-  <a class="logo" href="./" aria-label="RoySync home"><img src="assets/logo.png" alt="" width="34" height="34">RoySync</a>
-  <nav class="navlinks" aria-label="Main">
+<header id="site-header" role="banner">
+  <nav aria-label="Primary" style="display:contents">
+  <a class="logo" href="./" aria-label="RoySync Gen2 home">
+    <img src="assets/logo.png" alt="" width="40" height="40">
+    <b>RoySync</b><i>Gen2</i>
+  </a>
+  <div class="navlinks">
     <span class="nav-lens" aria-hidden="true"></span>
-    <a href="./">The dive</a><a href="./#solution">Solution</a><a href="./#trust">Capabilities</a>
+    <a href="./#trust">Solution</a>
+  </div>
+  <a class="btn cta back" href="./"><span><span aria-hidden="true">←</span> Back to home</span></a>
   </nav>
-  <a class="mail" href="mailto:info@roysync.com">info@roysync.com</a>
   <i class="nav-progress" aria-hidden="true"></i>
 </header>
 
@@ -313,16 +336,21 @@
 <script>
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  // header: capsule once scrolled, a lens under the hovered link, the progress line along its foot
-  const hdr = document.querySelector('header'), nav = document.querySelector('.navlinks'), lens = nav.querySelector('.nav-lens'), bar = document.querySelector('.nav-progress');
+  // header, as on the landing: a lens under the hovered link, the progress line along its foot, a ripple on Contact us
+  const nav = document.querySelector('.navlinks'), lens = nav.querySelector('.nav-lens'), bar = document.querySelector('.nav-progress');
   const lensOn = a => { if (!a) { lens.style.opacity = 0; return; } lens.style.width = a.offsetWidth + 'px'; lens.style.transform = `translateX(${a.offsetLeft}px)`; lens.style.opacity = 1; };
   nav.querySelectorAll('a').forEach(a => a.addEventListener('pointerenter', () => lensOn(a)));
   nav.addEventListener('pointerleave', () => lensOn(null));
-  const onScroll = () => {
-    hdr.classList.toggle('scrolled', scrollY > 40);
-    bar.style.transform = `scaleX(${Math.min(1, scrollY / Math.max(1, document.documentElement.scrollHeight - innerHeight))})`;
-  };
+  const onScroll = () => { bar.style.transform = `scaleX(${Math.min(1, scrollY / Math.max(1, document.documentElement.scrollHeight - innerHeight))})`; };
   addEventListener('scroll', onScroll, { passive: true }); onScroll();
+  (() => {
+    const b = document.querySelector('header .btn.cta'); if (!b || reduce) return;
+    let last = 0;
+    const ripple = e => { const now = performance.now(); if (now - last < 160) return; last = now;
+      const r = b.getBoundingClientRect(), i = document.createElement('i'); i.className = 'rip';
+      i.style.left = (e.clientX - r.left) + 'px'; i.style.top = (e.clientY - r.top) + 'px'; b.appendChild(i); setTimeout(() => i.remove(), 950); };
+    b.addEventListener('pointerenter', ripple); b.addEventListener('pointermove', ripple); b.addEventListener('pointerdown', e => { last = 0; ripple(e); });
+  })();
 
   // the films load only when they come near the screen and play only while seen; a still stays for reduced motion
   document.querySelectorAll('video[data-src]').forEach(v => {
