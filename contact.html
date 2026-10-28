@@ -4,288 +4,314 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Contact — RoySync</title>
-<meta name="description" content="Talk to RoySync about water-quality monitoring for your fish farm. Request a pilot or write to us.">
+<meta name="description" content="Fish farmers: plan an AquaRoy pilot with us. Investors and partners: talk to the founders. RoySync, water-quality monitoring for fish farms.">
 <link rel="icon" type="image/png" href="assets/favicon.png">
+<link rel="preload" href="assets/fonts/sora.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="assets/fonts/jost.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300..700&display=swap">
 <style>
+  @font-face { font-family: 'Sora'; font-style: normal; font-weight: 500 700; font-display: swap; src: url(assets/fonts/sora.woff2) format('woff2'); }
   @font-face { font-family: 'Jost'; font-style: normal; font-weight: 300 700; font-display: swap; src: url(assets/fonts/jost.woff2) format('woff2'); }
   :root {
-    /* the landing's navy and ice blue, on a light page */
-    --navy: #0e2236; --ink: #12263a; --muted: #5a6f82; --line: rgba(18,38,58,.14); --paper: #f3f6f9;
-    --blue: #1f5f9e; --ice: #9fd0f7; --glow: rgba(79,159,224,.35); --ok: #39d39a; --warn: #b0461f;
-    --head: Jost, 'DM Sans', system-ui, sans-serif;
+    /* the landing's navy and ice blue on a white page; Sora for the big lines, Jost for the rest */
+    --navy: #0e2236; --ink: #12263a; --muted: #4a5f72; --faint: #6b7f91; --line: rgba(18,38,58,.14); --paper: #f3f6f9;
+    --blue: #1f5f9e; --ice: #9fd0f7; --warn: #b0461f;
+    --head: Sora, Jost, system-ui, sans-serif;
+    --col: 1240px; --gut: 32px;
   }
   * { box-sizing: border-box; }
   html { scroll-behavior: smooth; }
-  html, body { margin: 0; background: #fff; color: var(--ink); font-family: 'DM Sans', system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
-  a { color: inherit; text-decoration: none; }
-  .wrap { max-width: 1180px; margin: 0 auto; padding: 0 clamp(16px, 5vw, 64px); }
+  html, body { margin: 0; background: #fff; color: var(--ink); font-family: Jost, system-ui, sans-serif; font-size: 16px; -webkit-font-smoothing: antialiased; }
+  a { color: inherit; }
+  img, video { display: block; }
+  :focus-visible { outline: 2px solid var(--blue); outline-offset: 3px; }
+  /* one column for everything: the doors, the form box and the trout strip share its edges */
+  .col { max-width: calc(var(--col) + 2 * var(--gut)); margin: 0 auto; padding: 0 var(--gut); }
 
-  /* ---- header: the landing's, full width over the film, then a floating glass capsule (white on this light page) ---- */
-  header { position: fixed; top: 0; left: 0; right: 0; z-index: 10; display: flex; align-items: center; padding: 20px clamp(16px, 5vw, 64px); color: #fff;
+  /* ---- header: the landing's capsule; plain over the white page, white glass once scrolled ---- */
+  /* before it gathers, the bar's logo and email sit on the content column's edges */
+  header { position: fixed; top: 0; left: 0; right: 0; z-index: 10; display: flex; align-items: center; gap: 28px; background: rgba(255,255,255,.92);
+           padding: 18px max(var(--gut), calc(50vw - var(--col) / 2));
            border: 1px solid transparent; transition: background .5s, padding .5s, top .5s cubic-bezier(.2,.8,.2,1), left .5s cubic-bezier(.2,.8,.2,1),
-           right .5s cubic-bezier(.2,.8,.2,1), border-radius .5s, box-shadow .5s, border-color .5s, color .3s; }
-  header.scrolled { top: 12px; left: max(16px, calc(50vw - 540px)); right: max(16px, calc(50vw - 540px)); border-radius: 999px; padding: 9px 9px 9px 16px;
-                    color: var(--ink); background: rgba(255,255,255,.78); backdrop-filter: blur(18px) saturate(1.4); -webkit-backdrop-filter: blur(18px) saturate(1.4);
+           right .5s cubic-bezier(.2,.8,.2,1), border-radius .5s, box-shadow .5s, border-color .5s; }
+  header.scrolled { top: 12px; left: max(16px, calc(50vw - 560px)); right: max(16px, calc(50vw - 560px)); border-radius: 999px; padding: 8px 10px 8px 16px;
+                    background: rgba(255,255,255,.8); backdrop-filter: blur(18px) saturate(1.4); -webkit-backdrop-filter: blur(18px) saturate(1.4);
                     border-color: rgba(18,38,58,.1); box-shadow: 0 10px 30px rgba(18,38,58,.12); }
-  .logo { display: flex; align-items: center; gap: 11px; font: 600 19px var(--head); letter-spacing: -.01em; }
-  .logo img { width: 38px; height: 38px; border-radius: 50%; display: block; transition: width .4s, height .4s; }
-  header.scrolled .logo img { width: 32px; height: 32px; }
-  .logo i { font-style: normal; font: 600 11px 'DM Sans', sans-serif; letter-spacing: .12em; border: 1px solid currentColor; opacity: .75; border-radius: 999px; padding: 3px 8px 2px; }
-  .navlinks { position: relative; display: flex; gap: 4px; margin-left: auto; margin-right: 18px; }
-  .navlinks a { position: relative; z-index: 1; padding: 8px 14px; border-radius: 999px; font-size: 14px; opacity: .9; }
-  .navlinks a:hover { opacity: 1; }
+  .logo { display: flex; align-items: center; gap: 10px; font: 600 19px var(--head); letter-spacing: -.02em; color: var(--navy); text-decoration: none; }
+  .logo img { width: 34px; height: 34px; border-radius: 50%; }
+  .navlinks { position: relative; display: flex; gap: 4px; margin-left: auto; }
+  .navlinks a { position: relative; z-index: 1; padding: 8px 14px; border-radius: 999px; font-size: 15.5px; text-decoration: none; }
   .nav-lens { position: absolute; top: 0; left: 0; height: 100%; width: 0; border-radius: 999px; opacity: 0; pointer-events: none;
-              background: rgba(159,208,247,.18); border: 1px solid rgba(159,208,247,.3);
+              background: rgba(31,95,158,.08); border: 1px solid rgba(31,95,158,.18);
               transition: transform .45s cubic-bezier(.2,.9,.25,1.15), width .45s cubic-bezier(.2,.9,.25,1.15), opacity .3s; }
-  header.scrolled .nav-lens { background: rgba(31,95,158,.08); border-color: rgba(31,95,158,.18); }
   .nav-progress { position: absolute; left: 22px; right: 22px; bottom: -1px; height: 2px; border-radius: 2px; opacity: 0; pointer-events: none;
                   background: linear-gradient(90deg, rgba(31,95,158,0), #1f5f9e 40%, #9fd0f7); transform-origin: left; transform: scaleX(0); transition: opacity .4s; }
   header.scrolled .nav-progress { opacity: .9; }
+  .mail { font-size: 15.5px; text-underline-offset: 5px; }
+  header.scrolled .mail { padding: 8px 14px; border-radius: 999px; background: var(--navy); color: #fff; text-decoration: none; }
+  @media (max-width: 760px) { .navlinks { display: none; } .mail { margin-left: auto; } }
 
-  .btn { position: relative; overflow: hidden; isolation: isolate; display: inline-flex; align-items: center; gap: 8px; border: 0; cursor: pointer;
-         font: 600 14px 'DM Sans', sans-serif; padding: 11px 20px; border-radius: 999px; color: #06182b;
-         background: linear-gradient(135deg, #e3f3ff 0%, #9fd0f7 48%, #5fa9e6 100%); box-shadow: 0 8px 24px var(--glow), inset 0 1px 0 rgba(255,255,255,.7);
-         transition: transform .25s, box-shadow .25s, background .25s; }
-  .btn:hover { transform: translateY(-1px); }
-  .btn > span { position: relative; z-index: 2; }
-  .btn .rip { position: absolute; z-index: 1; width: 10px; height: 10px; margin: -5px 0 0 -5px; border-radius: 50%; pointer-events: none;
-              border: 2px solid rgba(255,255,255,.9); animation: rip .9s ease-out forwards; }
-  @keyframes rip { to { transform: scale(18); opacity: 0; border-width: .5px; } }
-  header > .btn { margin-left: auto; }
-  header.scrolled .btn { background: var(--blue); color: #fff; box-shadow: 0 6px 16px rgba(31,95,158,.3); }
-  @media (max-width: 680px) { header:not(.scrolled) .navlinks { display: none; } .logo i { display: none; } header.scrolled .logo b { display: none; }
-    .navlinks { margin-right: 8px; } .navlinks a { padding: 7px 9px; font-size: 13px; } .navlinks .home { display: none; } }
+  /* ---- opening: the line, then the two doors as two real pictures ---- */
+  .open { padding-top: 130px; }
+  .open-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 24px; }
+  .open h1 { margin: 0; max-width: 860px; font: 500 clamp(40px, 6vw, 84px)/1 var(--head); letter-spacing: -.045em; color: var(--navy); }
+  .open-head p { margin: 0 0 8px; max-width: 300px; font-size: 18px; line-height: 1.55; color: var(--muted); }
+  .doors { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin-top: 48px; }
+  .door { position: relative; display: block; height: clamp(420px, 46vw, 620px); overflow: hidden; color: #fff; text-decoration: none; background: var(--navy); }
+  .door video, .door img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transition: transform 1.2s cubic-bezier(.2,.7,.2,1); }
+  .door:hover video, .door:hover img { transform: scale(1.04); }
+  .door::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(14,34,54,0) 45%, rgba(14,34,54,.85) 100%); }
+  .door .cap { position: absolute; z-index: 1; left: 36px; right: 36px; bottom: 36px; }
+  .door b { display: block; font: 500 clamp(26px, 3vw, 44px)/1.05 var(--head); letter-spacing: -.035em; }
+  .door p { margin: 10px 0 0; max-width: 400px; font-size: 17px; line-height: 1.5; color: rgba(255,255,255,.88); }
+  .door .go { display: inline-block; margin-top: 18px; font-size: 16px; border-bottom: 1px solid #fff; padding-bottom: 3px; }
+  .door[aria-current="true"] .go { border-bottom-width: 2px; }
 
-  /* ---- the farm, filmed: the opening clip, with the callout riding the AquaRoy head ---- */
-  .hero { position: relative; height: 72vh; min-height: 480px; overflow: hidden; color: #fff; background: #04122a url("media/contact-farm.jpg?v=59") center/cover; }
-  .hero video, .hero .shade { position: absolute; inset: 0; width: 100%; height: 100%; }
-  .hero video { object-fit: cover; transition: opacity .9s ease; }
-  .hero .shade { background: linear-gradient(180deg, rgba(6,18,32,.5), rgba(6,18,32,0) 30%, rgba(6,18,32,.15) 60%, rgba(6,18,32,.72)); }
-  .hero .copy { position: absolute; left: 0; right: 0; bottom: 150px; z-index: 2; text-shadow: 0 2px 16px rgba(0,0,0,.45); pointer-events: none; }
-  .hero h1 { margin: 0 0 12px; font: 600 clamp(34px, 4.6vw, 62px)/1.04 var(--head); letter-spacing: -.01em; max-width: 640px; text-wrap: balance; }
-  .hero h1 em { font-style: normal; color: var(--ice); }
-  .hero p { margin: 0; font-size: 17px; line-height: 1.55; max-width: 500px; opacity: .92; }
-  .tag { position: absolute; left: 0; top: 0; z-index: 1; --r: 15px; pointer-events: none; opacity: 0; transition: opacity .6s ease; will-change: transform; }
-  .tag.on { opacity: 1; }
-  .tag i { position: absolute; left: calc(var(--r) * -1); top: calc(var(--r) * -1); width: calc(var(--r) * 2); height: calc(var(--r) * 2); border-radius: 50%;
-           border: 1.5px solid rgba(159,208,247,.95); box-shadow: 0 0 12px rgba(79,159,224,.45); }
-  .tag i + i { box-shadow: none; animation: ping 2.6s cubic-bezier(.2,.6,.3,1) infinite; }
-  @keyframes ping { from { transform: scale(1); opacity: .9; } to { transform: scale(2.7); opacity: 0; } }
-  .tag svg { position: absolute; left: calc(var(--r) * .7); top: calc(var(--r) * -.7 - 40px); width: 104px; height: 40px; overflow: visible; }
-  .tag polyline { fill: none; stroke: rgba(159,208,247,.9); stroke-width: 1.5; } .tag circle { fill: #9fd0f7; }
-  .tag .chip { position: absolute; left: calc(var(--r) * .7 + 106px); top: calc(var(--r) * -.7 - 34px); transform: translateY(-50%); white-space: nowrap;
-               padding: 8px 12px 9px; border-radius: 10px; background: rgba(5,14,26,.62); border: 1px solid rgba(159,208,247,.3); backdrop-filter: blur(6px); }
-  .tag .chip b { display: block; font-size: 10px; font-weight: 600; letter-spacing: .18em; text-transform: uppercase; color: var(--ice); margin-bottom: 2px; }
-  .tag .chip span { display: block; font: 600 15px var(--head); }
-  .tag.flip svg { left: auto; right: calc(var(--r) * .7); transform: scaleX(-1); } .tag.flip .chip { left: auto; right: calc(var(--r) * .7 + 106px); }
-  @media (max-width: 640px) { .tag svg { width: 70px; } .tag .chip { left: calc(var(--r) * .7 + 72px); } .tag.flip .chip { right: calc(var(--r) * .7 + 72px); } }
-
-  /* ---- the desk: the form card rides up over the film; the live card beside it shows what the device does ---- */
-  .desk { position: relative; z-index: 3; margin-top: -110px; display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, .85fr); gap: 26px; align-items: start; }
-  .card { position: relative; overflow: hidden; background: #fff; border-radius: 16px; padding: clamp(22px, 3.2vw, 36px); box-shadow: 0 24px 70px rgba(14,34,54,.18); }
-  .card h2 { margin: 0 0 4px; font: 600 22px var(--head); letter-spacing: -.01em; text-wrap: balance; }
-  .card .sub { margin: 0 0 22px; color: var(--muted); font-size: 14.5px; }
-  .f { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-  .f .w { grid-column: 1 / -1; }
-  .f label, .f .lab { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; }
-  .f label i { font-style: normal; font-weight: 400; color: var(--muted); }
-  .f input, .f textarea { width: 100%; font: inherit; font-size: 15px; color: var(--ink); padding: 12px 14px; border: 1px solid var(--line); border-radius: 9px;
-    background: #fff; outline: none; transition: border-color .2s, box-shadow .2s; }
-  .f textarea { resize: vertical; min-height: 110px; line-height: 1.5; }
-  .f input:focus, .f textarea:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(31,95,158,.14); }
-  .f .bad input, .f .bad textarea { border-color: var(--warn); }
-  .chips { display: flex; flex-wrap: wrap; gap: 8px; }
-  .chips button { font: 14px 'DM Sans', sans-serif; padding: 7px 14px; border-radius: 999px; border: 1px solid var(--line); background: #fff; color: var(--ink); cursor: pointer;
-                  transition: border-color .2s, background .2s, color .2s; }
-  .chips button:hover { border-color: var(--ink); }
-  .chips button[aria-pressed="true"] { background: var(--navy); color: #fff; border-color: var(--navy); }
-  .msg-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 6px; }
-  .msg-head label { margin: 0; }
-  .help-open { display: inline-flex; align-items: center; gap: 6px; font: 600 13px 'DM Sans', sans-serif; color: var(--blue); background: none; border: 0; padding: 2px 0; cursor: pointer; }
-  .help-open svg { width: 15px; height: 15px; fill: currentColor; }
-  .help-box { margin-bottom: 10px; padding: 14px; border-radius: 10px; background: var(--paper); border: 1px solid var(--line); }
-  .help-box p { margin: 0 0 10px; font-size: 13.5px; line-height: 1.5; color: var(--muted); }
-  .help-row { display: flex; gap: 8px; }
-  .help-row input { flex: 1; min-width: 0; }
-  .help-row button { font: 600 14px 'DM Sans', sans-serif; color: #fff; background: var(--blue); border: 0; border-radius: 9px; padding: 0 16px; cursor: pointer; }
-  .help-msg { margin: 8px 0 0 !important; } .help-msg:empty { display: none; }
-  .foot { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; margin-top: 22px; }
-  .send { background: var(--navy); color: #fff; box-shadow: 0 8px 20px rgba(14,34,54,.25); padding: 13px 24px; font-size: 15px; border-radius: 10px; }
+  /* ---- the middle: a pale band, the form in one framed box on it ---- */
+  .band { margin-top: 110px; padding: 88px 0; background: var(--paper); }
+  .box { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 72px; padding: 64px; background: #fff; border: 1px solid rgba(18,38,58,.12);
+         border-radius: 6px; box-shadow: 0 24px 60px -36px rgba(14,34,54,.35); scroll-margin-top: 90px; }
+  .box h2 { margin: 0; font: 500 44px/1.08 var(--head); letter-spacing: -.035em; color: var(--navy); }
+  .box .intro { margin: 18px 0 0; font-size: 17px; line-height: 1.65; color: var(--muted); }
+  .facts { margin-top: 40px; padding-top: 24px; border-top: 1px solid var(--line); font-size: 15.5px; line-height: 1.8; color: var(--muted); }
+  .facts b { font-weight: 400; color: var(--ink); }
+  form { display: flex; flex-direction: column; gap: 30px; }
+  .tabs { display: flex; gap: 28px; }
+  .tabs button { font: inherit; font-size: 16px; color: var(--faint); background: none; border: 0; padding: 0 0 6px; border-bottom: 2px solid transparent; cursor: pointer; }
+  .tabs button[aria-selected="true"] { color: var(--ink); font-weight: 500; border-bottom-color: var(--navy); }
+  .fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 30px 36px; }
+  label, .lab { display: block; font-size: 14px; color: var(--muted); }
+  label i { font-style: normal; color: #8a9bab; }
+  input[type=text], input[type=email], textarea { display: block; width: 100%; margin-top: 6px; font: inherit; font-size: 18px; line-height: 1.4; color: var(--ink); padding: 8px 0;
+    border: 0; border-bottom: 1px solid rgba(18,38,58,.3); border-radius: 0; background: transparent; outline: none; transition: border-color .2s; }
+  input::placeholder, textarea::placeholder { color: #9aa9b7; }
+  input:focus, textarea:focus { border-bottom-color: var(--navy); }
+  textarea { resize: vertical; min-height: 110px; }
+  .bad input { border-bottom-color: var(--warn); }
+  .err { margin: 6px 0 0; font-size: 13.5px; color: var(--warn); }
+  /* topics: a row of plain words; the chosen ones get the ink and an underline */
+  .picks { display: flex; flex-wrap: wrap; gap: 6px 18px; margin-top: 10px; }
+  .picks label { position: relative; font-size: 16px; color: var(--muted); cursor: pointer; padding-bottom: 3px; border-bottom: 1px solid transparent; }
+  .picks input { position: absolute; opacity: 0; pointer-events: none; }
+  .picks label:has(input:checked) { color: var(--ink); border-bottom-color: var(--navy); }
+  .picks label:has(input:focus-visible) { outline: 2px solid var(--blue); outline-offset: 3px; }
+  .msg-head { display: flex; justify-content: space-between; align-items: baseline; }
+  .help-open { font: inherit; font-size: 14px; color: var(--blue); background: none; border: 0; padding: 0; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
+  .help-box { margin-top: 12px; padding: 16px; background: var(--paper); border: 1px solid var(--line); border-radius: 4px; }
+  .help-box p { margin: 0 0 10px; font-size: 14.5px; line-height: 1.5; color: var(--muted); }
+  .help-row { display: flex; gap: 10px; align-items: flex-end; }
+  .help-row input { margin-top: 0; font-size: 16px; }
+  .help-row button { flex: none; font: 500 15px Jost, sans-serif; color: #fff; background: var(--blue); border: 0; padding: 10px 16px; cursor: pointer; }
+  .help-msg { margin: 10px 0 0 !important; } .help-msg:empty { display: none; }
+  .only-inv, .door-inv .only-farm { display: none; }
+  .door-inv .only-inv { display: block; } .door-inv span.only-inv { display: inline; }
+  .door-inv .only-inv.fieldwrap, .fieldwrap { display: contents; }
+  .door-inv .fieldwrap.only-farm { display: none; }
+  .fieldwrap.only-inv { display: none; } .door-inv .fieldwrap.only-inv { display: contents; }
+  .send-row { display: flex; align-items: center; gap: 22px; flex-wrap: wrap; }
+  .send { font: 500 16px Jost, sans-serif; color: #fff; background: var(--navy); border: 0; padding: 16px 34px; cursor: pointer; transition: background .2s; }
   .send:hover { background: #1b3550; }
-  .foot .quiet { font-size: 13.5px; color: var(--muted); } .foot .quiet a { color: var(--blue); border-bottom: 1px solid rgba(31,95,158,.35); }
-  .status { margin: 12px 0 0; font-size: 14px; color: var(--warn); } .status:empty { display: none; }
-  .sent { position: absolute; inset: 0; z-index: 3; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; text-align: center;
-          padding: 30px; background: #fff; opacity: 0; pointer-events: none; transition: opacity .5s; }
-  .card.done .sent { opacity: 1; pointer-events: auto; }
-  .sent svg { width: 60px; height: 60px; } .sent circle { fill: none; stroke: rgba(31,95,158,.25); stroke-width: 2; }
-  .sent path { fill: none; stroke: var(--blue); stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 40; stroke-dashoffset: 40; }
-  .card.done .sent path { transition: stroke-dashoffset .7s .25s ease; stroke-dashoffset: 0; }
-  .sent h3 { margin: 0; font: 600 22px var(--head); } .sent p { margin: 0; max-width: 340px; color: var(--muted); font-size: 14.5px; line-height: 1.6; }
-  .sent button { font: 600 13px 'DM Sans', sans-serif; color: var(--blue); background: none; border: 0; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
+  .send-row span { font-size: 14px; color: var(--faint); }
+  .done { padding: 20px 0; } .done h3 { margin: 0; font: 500 28px var(--head); letter-spacing: -.03em; color: var(--navy); }
+  .done p { margin: 12px 0 0; max-width: 440px; font-size: 16.5px; line-height: 1.6; color: var(--muted); }
+  .done button { margin-top: 16px; font: inherit; font-size: 15px; color: var(--blue); background: none; border: 0; padding: 0; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
 
-  /* the live card: the dashboard's way of showing a tank, with an honest label that the numbers are an example */
-  .dash { margin-top: 130px; background: var(--navy); color: #e8f2fb; border-radius: 16px; padding: 22px; box-shadow: 0 24px 60px rgba(14,34,54,.22); }
-  .dash .top { display: flex; justify-content: space-between; align-items: center; font-size: 13px; color: #9db3c7; margin-bottom: 16px; }
-  .dash .live { display: inline-flex; align-items: center; gap: 6px; color: #7fe0b5; }
-  .dash .live i { position: relative; width: 7px; height: 7px; border-radius: 50%; background: var(--ok); }
-  .dash .live i::after { content: ""; position: absolute; inset: 0; border-radius: 50%; border: 1.5px solid var(--ok); animation: ping 2.4s ease-out infinite; }
-  .kpis { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
-  .kpi { background: rgba(255,255,255,.05); border: 1px solid rgba(159,208,247,.14); border-radius: 10px; padding: 11px 12px; }
-  .kpi small { display: block; font-size: 12px; color: #9db3c7; margin-bottom: 2px; }
-  .kpi b { font: 600 23px var(--head); } .kpi span { font-size: 12px; color: #9db3c7; margin-left: 3px; }
-  .dash svg { width: 100%; height: 104px; margin-top: 14px; display: block; overflow: visible; }
-  .dash .alert { margin-top: 12px; display: flex; gap: 10px; align-items: center; font-size: 13.5px; padding: 11px 12px; border-radius: 10px;
-                 background: rgba(57,211,154,.1); border: 1px solid rgba(57,211,154,.3); color: #bff0da; }
-  .dash .note { margin: 12px 0 0; font-size: 12px; color: #7d93a8; }
+  /* the trout strip sits in the same column, still on the pale band */
+  .strip { position: relative; height: 460px; margin-top: 88px; overflow: hidden; background: var(--navy); }
+  .strip video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  .strip::after { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, rgba(14,34,54,.72), rgba(14,34,54,.1) 60%); }
+  .strip p { position: absolute; z-index: 1; left: 64px; top: 50%; transform: translateY(-50%); margin: 0; max-width: 560px;
+             font: 500 clamp(28px, 3vw, 40px)/1.15 var(--head); letter-spacing: -.03em; color: #fff; }
 
-  /* by when: three short promises, the time is the headline of each */
-  .when { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 56px; }
-  .when div { padding: 20px; border-radius: 14px; background: var(--paper); }
-  .when b { display: block; font: 600 26px var(--head); color: var(--blue); letter-spacing: -.005em; margin-bottom: 6px; }
-  .when strong { display: block; font-size: 15px; margin-bottom: 4px; }
-  .when span { font-size: 14px; line-height: 1.55; color: var(--muted); }
+  /* what happens next: the time leads each step, in plain text */
+  .next { padding-top: 110px; padding-bottom: 110px; }
+  .next h2 { margin: 0; font: 500 32px var(--head); letter-spacing: -.03em; color: var(--navy); }
+  .steps { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 48px; margin: 36px 0 0; padding: 0; list-style: none; }
+  .steps span { font-size: 15px; color: var(--blue); }
+  .steps p { margin: 8px 0 0; font-size: 18px; line-height: 1.5; }
 
-  /* the company, plainly: who you are writing to */
-  .trust { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 16px 40px; margin: 56px auto 0; padding-top: 26px; padding-bottom: 80px;
-           border-top: 1px solid var(--line); font-size: 13.5px; color: var(--muted); }
-  .trust b { display: block; color: var(--ink); font-weight: 600; font-size: 14px; margin-bottom: 2px; }
+  /* the landing page's footer, as on index.html */
+  footer { padding: 72px 6vw 30px; border-top: 1px solid rgba(170,210,255,.12); color: #9fb4c8; font-size: 14px; line-height: 1.6;
+           background: linear-gradient(180deg, rgba(4,12,22,.96), #03080f 65%); }
+  .ft { display: grid; grid-template-columns: 1.5fr 1fr 1.1fr 1.3fr; gap: 40px; max-width: 1140px; margin: 0 auto; }
+  .ft h4 { margin: 0 0 16px; font-size: 12px; font-weight: 600; letter-spacing: .16em; text-transform: uppercase; color: var(--ice); }
+  .ft-col { display: flex; flex-direction: column; gap: 8px; }
+  .ft-col a { width: fit-content; text-decoration: none; transition: color .2s; } .ft-col a:hover { color: #fff; }
+  .ft-brand .logo { margin-bottom: 16px; color: #f2f7fc; } .ft-brand .logo img { width: 40px; height: 40px; }
+  .ft-brand p { margin: 0 0 18px; max-width: 280px; }
+  .ft-mail { display: inline-flex; color: #fff; font-weight: 500; padding-bottom: 3px; border-bottom: 1px solid rgba(159,208,247,.45); text-decoration: none; transition: border-color .2s; }
+  .ft-mail:hover { border-color: #fff; }
+  .ft-bottom { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 10px 24px; max-width: 1140px; margin: 56px auto 0; padding-top: 22px;
+               border-top: 1px solid rgba(170,210,255,.12); font-size: 12.5px; color: #6f879e; }
 
-  @media (max-width: 960px) { .desk { grid-template-columns: minmax(0, 1fr); max-width: 680px; margin-left: auto; margin-right: auto; } .dash { margin-top: 0; }
-    .when { grid-template-columns: 1fr; max-width: 680px; margin-left: auto; margin-right: auto; } }
-  @media (max-width: 560px) { .f { grid-template-columns: 1fr; } .hero .copy { bottom: 130px; } .hero p { font-size: 15.5px; } .desk { margin-top: -90px; } }
-
-  footer { background: var(--navy); color: #9fb4c8; font-size: 14px; line-height: 1.6; padding: 64px 0 28px; }
-  .ft { display: grid; grid-template-columns: 1.5fr 1fr 1.1fr 1.3fr; gap: 36px; }
-  .ft h4 { margin: 0 0 14px; font-size: 12px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: var(--ice); }
-  .ft-col { display: flex; flex-direction: column; gap: 6px; } .ft-col a:hover { color: #fff; }
-  .ft .logo { color: #fff; margin-bottom: 14px; } .ft p { margin: 0 0 14px; }
-  .ft-mail { color: #fff; border-bottom: 1px solid rgba(159,208,247,.45); width: fit-content; }
-  .ft-bottom { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px 24px; margin-top: 48px; padding-top: 20px; border-top: 1px solid rgba(159,208,247,.14); font-size: 12.5px; color: #6f879e; }
-  @media (max-width: 900px) { .ft { grid-template-columns: 1fr 1fr; } } @media (max-width: 520px) { .ft-brand { grid-column: 1 / -1; } }
-
-  .reveal { opacity: 0; transform: translateY(22px); transition: opacity .8s cubic-bezier(.22,.61,.36,1), transform .8s cubic-bezier(.22,.61,.36,1); }
-  .reveal.in { opacity: 1; transform: none; }
-  :focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
-  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } .reveal { opacity: 1; transform: none; transition: none; }
-    .tag i + i, .dash .live i::after { animation: none; opacity: 0; } header, .nav-lens { transition: none; } }
+  /* ---- narrower screens ---- */
+  @media (max-width: 1100px) { .box { grid-template-columns: minmax(0, 1fr); gap: 40px; padding: 48px; } }
+  @media (max-width: 900px) { .ft { grid-template-columns: 1fr 1fr; } .steps { grid-template-columns: minmax(0, 1fr); gap: 26px; } }
+  @media (max-width: 640px) {
+    :root { --gut: 20px; }
+    header { padding-top: 12px; padding-bottom: 12px; }
+    .open { padding-top: 92px; }
+    .open-head p { font-size: 16px; margin: 0; }
+    /* on a phone both doors are seen at once: two tall tiles, the title and the link only */
+    .doors { gap: 10px; margin-top: 24px; }
+    .door { height: 300px; }
+    .door .cap { left: 14px; right: 14px; bottom: 16px; }
+    .door b { font-size: 22px; } .door p { display: none; } .door .go { margin-top: 10px; font-size: 14px; }
+    .band { margin-top: 40px; padding: 28px 0; }
+    .box { padding: 28px 20px; gap: 24px; }
+    .box h2 { font-size: 30px; } .box .intro, .facts { display: none; }
+    form { gap: 22px; }
+    .fields { grid-template-columns: minmax(0, 1fr); gap: 22px; }
+    input[type=text], input[type=email], textarea { font-size: 17px; }
+    .send { width: 100%; padding: 17px; } .send-row { gap: 10px; } .send-row span { width: 100%; text-align: center; }
+    .strip { display: none; }
+    .next { padding-top: 48px; padding-bottom: 52px; } .next h2 { font-size: 22px; }
+    .steps { gap: 14px; margin-top: 18px; } .steps li { display: grid; grid-template-columns: 118px 1fr; gap: 14px; } .steps span { font-size: 14px; }
+    .steps p { margin: 0; font-size: 15.5px; }
+  }
+  @media (max-width: 540px) { footer { padding: 52px 16px 24px; font-size: 13px; } .ft { grid-template-columns: 1fr 1fr; gap: 28px 18px; } .ft-brand { grid-column: 1 / -1; } }
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } *, *::before, *::after { transition: none !important; } }
 </style>
-<script src="assets/whole-video.js?v=71"></script>
 </head>
-<body>
+<body class="door-farm">
 
 <header role="banner">
-  <a class="logo" href="./" aria-label="RoySync Gen2 home"><img src="assets/logo.png" alt="" width="38" height="38"><b>RoySync</b><i>Gen2</i></a>
+  <a class="logo" href="./" aria-label="RoySync home"><img src="assets/logo.png" alt="" width="34" height="34">RoySync</a>
   <nav class="navlinks" aria-label="Main">
     <span class="nav-lens" aria-hidden="true"></span>
-    <a class="home" href="./">The dive</a><a href="./#alerts">Solution</a><a href="./#trust">Capabilities</a>
+    <a href="./">The dive</a><a href="./#solution">Solution</a><a href="./#trust">Capabilities</a>
   </nav>
-  <a class="btn" href="mailto:info@roysync.com"><span>Email us</span></a>
+  <a class="mail" href="mailto:info@roysync.com">info@roysync.com</a>
   <i class="nav-progress" aria-hidden="true"></i>
 </header>
 
-<section class="hero" aria-label="Contact RoySync">
-  <video autoplay muted playsinline preload="auto" poster="media/contact-farm.jpg?v=59" aria-hidden="true"></video>
-  <script>(v => { loadWholeVideo(v, 'media/contact-farm-' + (innerWidth >= 900 ? '1080' : '720') + '.mp4?v=59'); })(document.currentScript.previousElementSibling);</script>
-  <div class="shade"></div>
-  <div class="tag" id="cv-tag" aria-hidden="true">
-    <i></i><i></i>
-    <svg viewBox="0 0 104 40" preserveAspectRatio="none"><polyline points="0,40 34,6 100,6" vector-effect="non-scaling-stroke"/><circle cx="100" cy="6" r="2.6"/></svg>
-    <div class="chip"><b>AquaRoy Device</b><span>Autonomous Water Guardian</span></div>
-  </div>
-  <div class="copy"><div class="wrap">
-    <h1>Tell us about your <em>water.</em></h1>
-    <p>Ponds, species, tank count — or just the thing that keeps you up at night.</p>
-  </div></div>
-</section>
+<main>
+  <section class="open col" aria-label="Contact RoySync">
+    <div class="open-head">
+      <h1>Every farm has a story under the surface.</h1>
+      <p>Tell us yours. Choose the door that fits, and a person at RoySync will answer within one working day.</p>
+    </div>
+    <div class="doors">
+      <a class="door" href="#write" data-door="farm" aria-current="true">
+        <video muted loop playsinline preload="metadata" poster="media/contact-feed.jpg" aria-hidden="true" data-src="media/contact-feed.mp4"></video>
+        <span class="cap"><b>I run a farm</b><p>Ponds, tanks or sea cages. Tell us about your water and we'll plan a pilot with you.</p><span class="go">Plan a pilot →</span></span>
+      </a>
+      <a class="door" href="#write" data-door="inv" aria-current="false">
+        <video muted loop playsinline preload="metadata" poster="media/contact-farms.jpg" aria-hidden="true" data-src="media/contact-farms.mp4"></video>
+        <span class="cap"><b>I invest or partner</b><p>Distribution, technology partnerships and investment. A UK company with a registered design.</p><span class="go">Talk to the founders →</span></span>
+      </a>
+    </div>
+  </section>
 
-<main class="wrap">
-  <div class="desk" id="desk">
-    <form class="card reveal" id="inquiry-form" novalidate>
-      <h2>Request a pilot or ask us anything</h2>
-      <p class="sub">A person reads every note and answers within one working day.</p>
-      <div class="f">
-        <div><label for="f-name">Name</label><input id="f-name" name="name" type="text" autocomplete="name" required></div>
-        <div><label for="f-email">Email</label><input id="f-email" name="email" type="email" autocomplete="email" required></div>
-        <div><label for="f-org">Farm or company <i>(optional)</i></label><input id="f-org" name="org" type="text" autocomplete="organization"></div>
-        <div><label for="f-site">Ponds, tanks or cages <i>(optional)</i></label><input id="f-site" name="site" type="text" placeholder="e.g. 12 tanks of trout"></div>
-        <div class="w"><span class="lab" id="topic-lab">Topic</span>
-          <input type="hidden" name="topic" value="A pilot">
-          <div class="chips" role="group" aria-labelledby="topic-lab"><button type="button" aria-pressed="true">A pilot</button><button type="button" aria-pressed="false">Pricing</button><button type="button" aria-pressed="false">A technical question</button><button type="button" aria-pressed="false">A partnership</button></div></div>
-        <div class="w">
-          <div class="msg-head"><label for="f-msg">Message</label>
-            <button type="button" class="help-open" id="help-open" aria-expanded="false" aria-controls="help-box"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l1.8 4.6L18 9.4l-4.2 1.8L12 16l-1.8-4.8L6 9.4l4.2-1.8z"/><path d="M19 15l.8 2 2 .8-2 .8-.8 2-.8-2-2-.8 2-.8z"/></svg>Help me write</button></div>
-          <div class="help-box" id="help-box" hidden>
-            <p>Say it in a few words, in any language. We'll turn it into a message you can edit.</p>
-            <div class="help-row"><input id="help-in" type="text" maxlength="300" aria-label="A few words" placeholder="e.g. oxygen drops at night in summer"><button type="button" id="help-go">Draft it</button></div>
-            <p class="help-msg" id="help-msg" role="status" aria-live="polite"></p>
+  <div class="band">
+    <div class="col">
+      <section class="box" id="write" aria-labelledby="write-h">
+        <div>
+          <h2 id="write-h">Write to us.</h2>
+          <p class="intro">A few lines are plenty: where the farm is, what you keep, and what you'd like to keep an eye on. Not sure how to put it? Use <i>Help me write</i> and edit what comes back.</p>
+          <div class="facts">
+            <div><b>Email</b> — <a href="mailto:info@roysync.com">info@roysync.com</a></div>
+            <div><b>Answer</b> — within one working day</div>
+            <div><b>Office</b> — Cambridge, United Kingdom</div>
           </div>
-          <textarea id="f-msg" name="message" rows="4" placeholder="Species, what you'd like to keep an eye on, anything that worries you…"></textarea>
         </div>
-      </div>
-      <div class="foot">
-        <button class="btn send" type="submit"><span>Send message</span></button>
-        <span class="quiet">or email <a href="mailto:info@roysync.com">info@roysync.com</a></span>
-      </div>
-      <p class="status" id="form-status" role="alert"></p>
-      <div class="sent" aria-hidden="true">
-        <svg viewBox="0 0 64 64"><circle cx="32" cy="32" r="29"/><path d="M20 33 l8 8 l16 -18"/></svg>
-        <h3>Your message is ready</h3>
-        <p>Your mail app should have opened with everything filled in. If it didn't, write to info@roysync.com.</p>
-        <button type="button" id="sent-back">Write another</button>
-      </div>
-    </form>
 
-    <aside class="dash reveal" aria-label="What the AquaRoy dashboard shows">
-      <div class="top"><span>AquaRoy · Tank 3</span><span class="live"><i></i>Live</span></div>
-      <div class="kpis">
-        <div class="kpi"><small>Dissolved O₂</small><b>7.4</b><span>mg/L</span></div>
-        <div class="kpi"><small>Temperature</small><b>18.2</b><span>°C</span></div>
-        <div class="kpi"><small>pH</small><b>7.6</b></div>
+        <div>
+          <form id="form" novalidate>
+            <div class="tabs" role="tablist" aria-label="Who are you?">
+              <button type="button" role="tab" data-door="farm" aria-selected="true">I run a farm</button>
+              <button type="button" role="tab" data-door="inv" aria-selected="false">I invest or partner</button>
+            </div>
+            <div class="fields">
+              <div id="w-name"><label for="f-name">Name</label><input type="text" id="f-name" name="name" autocomplete="name" maxlength="100"><p class="err" id="e-name" hidden>Add your name so we know who to answer.</p></div>
+              <div id="w-email"><label for="f-email">Email</label><input type="email" id="f-email" name="email" autocomplete="email" maxlength="200"><p class="err" id="e-email" hidden>That email doesn't look right. Check it and send again.</p></div>
+              <div><label for="f-org"><span class="only-farm">Farm or company</span><span class="only-inv">Organisation</span> <i>(optional)</i></label><input type="text" id="f-org" name="org" autocomplete="organization" maxlength="120"></div>
+              <div class="fieldwrap only-farm"><div><label for="f-keep">What you keep, and how many <i>(optional)</i></label><input type="text" id="f-keep" name="keep" maxlength="160" placeholder="12 tanks of trout"></div></div>
+              <div class="fieldwrap only-inv"><div><label for="f-region">Region <i>(optional)</i></label><input type="text" id="f-region" name="region" maxlength="80" placeholder="UK, Gulf, Europe"></div></div>
+            </div>
+            <fieldset class="only-farm" style="border:0;margin:0;padding:0">
+              <legend class="lab" style="padding:0">What worries you most <i style="font-style:normal;color:#8a9bab">(pick any)</i></legend>
+              <div class="picks">
+                <label><input type="checkbox" name="worry" value="Oxygen at night">Oxygen at night</label><label><input type="checkbox" name="worry" value="Temperature swings">Temperature swings</label>
+                <label><input type="checkbox" name="worry" value="pH">pH</label><label><input type="checkbox" name="worry" value="Alerts when I'm away">Alerts when I'm away</label>
+              </div>
+            </fieldset>
+            <fieldset class="only-inv" style="border:0;margin:0;padding:0">
+              <legend class="lab" style="padding:0">Interested in <i style="font-style:normal;color:#8a9bab">(pick any)</i></legend>
+              <div class="picks">
+                <label><input type="checkbox" name="interest" value="Investment">Investment</label><label><input type="checkbox" name="interest" value="Distribution">Distribution</label>
+                <label><input type="checkbox" name="interest" value="Technology partnership">Technology partnership</label><label><input type="checkbox" name="interest" value="Press">Press</label>
+              </div>
+            </fieldset>
+            <div>
+              <div class="msg-head"><label for="f-msg">Message</label><button type="button" class="help-open" id="help-open" aria-expanded="false" aria-controls="help-box">Help me write</button></div>
+              <div class="help-box" id="help-box" hidden>
+                <p>Say it in a few words, in any language. We'll turn it into a clear message you can edit before sending.</p>
+                <div class="help-row"><input type="text" id="help-in" maxlength="300" aria-label="A few words"><button type="button" id="help-go">Draft it</button></div>
+                <p class="help-msg" id="help-msg" role="status" aria-live="polite"></p>
+              </div>
+              <textarea id="f-msg" name="message" rows="4" maxlength="2000" placeholder="Oxygen drops in the small hours in summer, and I'm not always there…"></textarea>
+            </div>
+            <div class="send-row"><button class="send" type="submit">Send message</button><span>Opens your mail app with everything filled in.</span></div>
+          </form>
+          <div class="done" id="done" role="status" hidden>
+            <h3>Your message is ready.</h3>
+            <p>Your mail app should have opened with everything filled in; press send there. If nothing opened, write to <a href="mailto:info@roysync.com">info@roysync.com</a>.</p>
+            <button type="button" id="edit">Edit the message</button>
+          </div>
+        </div>
+      </section>
+
+      <div class="strip">
+        <video muted loop playsinline preload="none" poster="media/contact-trout.jpg" aria-hidden="true" data-src="media/contact-trout.mp4"></video>
+        <p>Oxygen falls while you sleep. The float doesn't.</p>
       </div>
-      <svg viewBox="0 0 300 104" preserveAspectRatio="none" aria-hidden="true">
-        <line x1="0" y1="72" x2="300" y2="72" stroke="rgba(251,191,36,.5)" stroke-dasharray="4 4"/>
-        <text x="298" y="67" fill="#d9b25a" font-size="9" text-anchor="end">alert 5.0</text>
-        <path id="spark" fill="none" stroke="#9fd0f7" stroke-width="2"/>
-      </svg>
-      <div class="alert">✓ Oxygen back above 5.0 mg/L — aerator stood down</div>
-      <p class="note">An example of a night in a tank, the way the dashboard shows it.</p>
-    </aside>
+    </div>
   </div>
 
-  <div class="when reveal" aria-label="What happens next">
-    <div><b>1 day</b><strong>We read your note</strong><span>A person, not a queue. If we need more detail, we ask one short question.</span></div>
-    <div><b>1 week</b><strong>A pilot plan</strong><span>Device count, placement, connectivity options and a clear price — nothing hidden.</span></div>
-    <div><b>Then</b><strong>It watches your water</strong><span>Drop the float in, it reports. You follow your pond from the dashboard.</span></div>
-  </div>
-
-  <div class="trust" aria-label="Company details">
-    <span><b>ROYSYNC LTD</b>Registered in England and Wales</span>
-    <span><b>Company No. 17360256</b>Companies House</span>
-    <span><b>Registered design No. 6535677</b>The AquaRoy float</span>
-    <span><b>Cambridge, United Kingdom</b>35 Peacock Drive, Highfields Caldecote</span>
-  </div>
+  <section class="next col" aria-labelledby="next-h">
+    <h2 id="next-h">What happens next</h2>
+    <ol class="steps">
+      <li><span>Within a working day</span><p class="only-farm">We read your note and answer it ourselves. If we need more, we ask one short question.</p><p class="only-inv">A reply from the people who build AquaRoy.</p></li>
+      <li><span>Within a week</span><p class="only-farm">A pilot plan: how many floats, where they go, how they connect, and a clear price.</p><p class="only-inv">A call, and the details you ask for.</p></li>
+      <li><span>Then</span><p class="only-farm">The float goes in the water and your pond reports to the dashboard, day and night.</p><p class="only-inv">The next step we agree on together.</p></li>
+    </ol>
+  </section>
 </main>
 
 <footer>
-  <div class="wrap">
-    <div class="ft">
-      <div class="ft-brand"><a class="logo" href="./"><img src="assets/logo.png" alt="" width="38" height="38" loading="lazy"><b>RoySync</b></a>
-        <p>Water-quality monitoring for fish farms.</p><a class="ft-mail" href="mailto:info@roysync.com">info@roysync.com</a></div>
-      <nav class="ft-col" aria-label="Footer"><h4>Pages</h4><a href="./">Home</a><a href="./#alerts">Solution</a><a href="#desk">Contact us</a></nav>
-      <div class="ft-col"><h4>Company</h4><span>ROYSYNC LTD</span><span>Company No. 17360256</span><span>Registered in England and Wales</span></div>
-      <div class="ft-col"><h4>Registered office</h4><span>35 Peacock Drive</span><span>Highfields Caldecote</span><span>Cambridge CB23 7FE, United Kingdom</span></div>
+  <div class="ft">
+    <div class="ft-brand">
+      <a class="logo" href="./"><img src="assets/logo.png" alt="" width="40" height="40" loading="lazy">RoySync</a>
+      <p>Water-quality monitoring for fish farms.</p>
+      <a class="ft-mail" href="mailto:info@roysync.com">info@roysync.com</a>
     </div>
-    <div class="ft-bottom"><span>© 2026 ROYSYNC LTD. All rights reserved.</span><span>Registered design No. 6535677</span></div>
+    <nav class="ft-col" aria-label="Footer">
+      <h4>Pages</h4>
+      <a href="./">Home</a>
+      <a href="./#trust">Capabilities</a>
+      <a href="#write">Contact us</a>
+    </nav>
+    <div class="ft-col">
+      <h4>Company</h4>
+      <span>ROYSYNC LTD</span>
+      <span>Company No. 17360256</span>
+      <span>Registered in England and Wales</span>
+    </div>
+    <div class="ft-col">
+      <h4>Registered office</h4>
+      <span>35 Peacock Drive</span>
+      <span>Highfields Caldecote</span>
+      <span>Cambridge CB23 7FE, United Kingdom</span>
+    </div>
+  </div>
+  <div class="ft-bottom">
+    <span>© 2026 ROYSYNC LTD. All rights reserved.</span>
+    <span>Registered design No. 6535677</span>
   </div>
 </footer>
 
 <script>
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } }), { threshold: 0.12 });
-  document.querySelectorAll('.reveal').forEach(el => io.observe(el));
 
   // header: capsule once scrolled, a lens under the hovered link, the progress line along its foot
   const hdr = document.querySelector('header'), nav = document.querySelector('.navlinks'), lens = nav.querySelector('.nav-lens'), bar = document.querySelector('.nav-progress');
@@ -298,85 +324,76 @@
   };
   addEventListener('scroll', onScroll, { passive: true }); onScroll();
 
-  // ripples on the bright buttons, wherever the pointer touches them
-  if (!reduce) document.querySelectorAll('.btn').forEach(b => {
-    let last = 0;
-    const rip = e => { const now = performance.now(); if (now - last < 160) return; last = now;
-      const r = b.getBoundingClientRect(), i = document.createElement('i'); i.className = 'rip';
-      i.style.left = (e.clientX - r.left) + 'px'; i.style.top = (e.clientY - r.top) + 'px'; b.appendChild(i); setTimeout(() => i.remove(), 950); };
-    b.addEventListener('pointerenter', rip); b.addEventListener('pointermove', rip); b.addEventListener('pointerdown', e => { last = 0; rip(e); });
+  // the films load only when they come near the screen and play only while seen; a still stays for reduced motion
+  document.querySelectorAll('video[data-src]').forEach(v => {
+    new IntersectionObserver(([e]) => {
+      if (e.isIntersecting) { if (!v.src) v.src = v.dataset.src; if (!reduce) v.play().catch(() => {}); } else v.pause();
+    }, { rootMargin: '200px 0px' }).observe(v);
   });
 
-  // opening clip: plays through, fades through blue and starts again; pauses off screen
-  const cv = document.querySelector('.hero video');
-  cv.addEventListener('ended', () => { cv.style.opacity = 0; setTimeout(() => { cv.currentTime = 0; cv.play().catch(() => {}); cv.style.opacity = 1; }, 900); });
-  new IntersectionObserver(([e]) => { if (e.isIntersecting) cv.play().catch(() => {}); else cv.pause(); }, { threshold: 0 }).observe(cv.parentElement);
-  // the callout follows the AquaRoy head from the tracking the clip was made with, mapped through object-fit: cover
-  (async () => {
-    const v = cv, tag = document.getElementById('cv-tag');
-    let P; try { P = await fetch('media/contact-farm.json?v=59').then(r => r.json()); } catch (e) { return; }
-    let posX = -1;
-    const place = time => {
-      const n = P.p.length, f = Math.min(Math.max(time * P.fps, 0), n - 1), i = Math.floor(f), k = f - i;
-      const a = P.p[i], b = P.p[Math.min(i + 1, n - 1)], nx = a[0] + (b[0] - a[0]) * k, ny = a[1] + (b[1] - a[1]) * k, ns = a[2] + (b[2] - a[2]) * k;
-      const cw = v.clientWidth, ch = v.clientHeight, s = Math.max(cw / P.w, ch / P.h), dw = P.w * s, dh = P.h * s;
-      let ox = (cw - dw) / 2;
-      if (dw > cw + 1) { const want = Math.min(Math.max((nx * dw - cw * 0.6) / (dw - cw), 0), 1);
-        posX = posX < 0 ? want : posX + (want - posX) * 0.12; v.style.objectPosition = (posX * 100).toFixed(2) + '% 50%'; ox = (cw - dw) * posX; }
-      const x = ox + nx * dw, y = (ch - dh) / 2 + ny * dh;
-      tag.style.setProperty('--r', Math.max(13, ns * dw * 0.8).toFixed(1) + 'px');
-      tag.style.transform = `translate3d(${x.toFixed(1)}px, ${y.toFixed(1)}px, 0)`;
-      const fl = tag.classList.contains('flip');
-      if (!fl && x > cw - 300) tag.classList.add('flip'); else if (fl && x < cw - 380) tag.classList.remove('flip');
-      tag.classList.toggle('on', !v.paused && time > 1 && time < P.dur - 0.7 && v.style.opacity !== '0' && y < ch - 190);
-    };
-    if ('requestVideoFrameCallback' in v) { const onFrame = (now, md) => { place(md.mediaTime); v.requestVideoFrameCallback(onFrame); }; v.requestVideoFrameCallback(onFrame); }
-    else { let raf = 0; const step = () => { raf = requestAnimationFrame(step); place(v.currentTime || 0); };
-      v.addEventListener('playing', () => { if (!raf) step(); }); v.addEventListener('pause', () => { cancelAnimationFrame(raf); raf = 0; }); }
-    v.addEventListener('pause', () => tag.classList.remove('on'));
-  })();
+  // the two doors: a door (in the pictures or the form's tabs) switches the form's fields, the words beside it and the steps
+  const form = document.getElementById('form'), done = document.getElementById('done');
+  let door = 'farm';
+  const setDoor = d => {
+    door = d;
+    document.body.classList.toggle('door-farm', d === 'farm'); document.body.classList.toggle('door-inv', d === 'inv');
+    document.querySelectorAll('.tabs button').forEach(b => b.setAttribute('aria-selected', b.dataset.door === d));
+    document.querySelectorAll('.door').forEach(b => b.setAttribute('aria-current', b.dataset.door === d));
+    form['message'].placeholder = d === 'farm' ? "Oxygen drops in the small hours in summer, and I'm not always there…" : "What you're looking for, and where.";
+    form.hidden = false; done.hidden = true;
+  };
+  document.querySelectorAll('.tabs button').forEach(b => b.addEventListener('click', () => setDoor(b.dataset.door)));
+  document.querySelectorAll('.door').forEach(a => a.addEventListener('click', e => {
+    e.preventDefault(); setDoor(a.dataset.door);
+    document.getElementById('write').scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' });
+    setTimeout(() => document.getElementById('f-name').focus({ preventScroll: true }), reduce ? 0 : 700);
+  }));
 
-  // the example oxygen line: steady, a dip in the small hours, the aerator brings it back
-  const pts = Array.from({ length: 60 }, (_, i) => { const t = i / 59; return 7.4 - 2.9 * Math.exp(-((t - .55) ** 2) / .012) + Math.sin(i * 1.7) * .08; });
-  document.getElementById('spark').setAttribute('d', pts.map((v, i) => (i ? 'L' : 'M') + (i * 300 / 59).toFixed(1) + ' ' + (104 - (v - 3) * 18).toFixed(1)).join(' '));
+  const clip = (s, n) => s.trim().slice(0, n);
+  const picked = n => [...form.querySelectorAll(`input[name="${n}"]:checked`)].map(i => i.value);
 
-  // the form
-  const card = document.getElementById('inquiry-form'), statusEl = document.getElementById('form-status');
-  const chips = card.querySelectorAll('.chips button');
-  chips.forEach(b => b.addEventListener('click', () => { chips.forEach(o => o.setAttribute('aria-pressed', o === b)); card.topic.value = b.textContent; }));
-  document.getElementById('sent-back').addEventListener('click', () => card.classList.remove('done'));
-
-  // help me write: a few words go to the drafting service, the draft lands in the message for the visitor to edit.
-  // HELP_URL stays empty until the AWS endpoint exists; until then the box says so instead of pretending
+  // help me write: a few words go to the drafting service and come back as a message the visitor edits.
+  // HELP_URL stays empty until that service exists; until then the box says so instead of pretending
   const HELP_URL = '';
-  const helpOpen = document.getElementById('help-open'), helpBox = document.getElementById('help-box'), helpMsg = document.getElementById('help-msg');
-  helpOpen.addEventListener('click', () => { const o = helpBox.hidden; helpBox.hidden = !o; helpOpen.setAttribute('aria-expanded', o); if (o) document.getElementById('help-in').focus(); });
+  const helpOpen = document.getElementById('help-open'), helpBox = document.getElementById('help-box'), helpIn = document.getElementById('help-in'), helpMsg = document.getElementById('help-msg');
+  helpOpen.addEventListener('click', () => {
+    const o = helpBox.hidden; helpBox.hidden = !o; helpOpen.setAttribute('aria-expanded', o);
+    helpIn.placeholder = door === 'farm' ? '12 trout tanks, oxygen drops at night in summer' : 'we distribute farm equipment in the Gulf';
+    if (o) helpIn.focus();
+  });
   document.getElementById('help-go').addEventListener('click', async () => {
-    const words = document.getElementById('help-in').value.trim();
+    const words = helpIn.value.trim();
     if (!words) { helpMsg.textContent = 'Write a few words first.'; return; }
     if (!HELP_URL) { helpMsg.textContent = 'The writing helper is not switched on yet. A few lines in your own words are plenty.'; return; }
     helpMsg.textContent = 'Drafting…';
     try {
-      const r = await fetch(HELP_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ words, topic: card.topic.value }) });
+      const r = await fetch(HELP_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ words, door, worries: picked('worry'), interest: picked('interest') }) });
       if (!r.ok) throw new Error(r.status === 429 ? 'The helper is busy. Try again in a minute.' : 'The helper could not draft that.');
-      card.message.value = (await r.json()).draft || ''; helpMsg.textContent = 'Drafted. Change anything you like.';
-    } catch (e) { helpMsg.textContent = e.message + ' You can still write it yourself.'; }
+      form['message'].value = (await r.json()).draft || ''; helpMsg.textContent = 'Drafted. Change anything you like.';
+    } catch (err) { helpMsg.textContent = err.message + ' You can still write it yourself.'; }
   });
 
-  // no backend on the static site yet: validate, then hand everything to the visitor's mail app
-  card.addEventListener('submit', e => {
+  // no backend on the static site: check the two fields that matter, then hand the message to the visitor's mail app
+  const showErr = (k, on) => { document.getElementById('w-' + k).classList.toggle('bad', on); document.getElementById('e-' + k).hidden = !on; };
+  form.addEventListener('submit', e => {
     e.preventDefault();
-    const v = k => card[k].value.trim(), name = v('name'), email = v('email'), org = v('org');
-    card.querySelectorAll('.bad').forEach(f => f.classList.remove('bad'));
-    const bad = !name ? card.name : !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email) ? card.email : null;
-    if (bad) { bad.parentElement.classList.add('bad'); bad.focus();
-      statusEl.textContent = bad === card.email ? 'That email doesn’t look right. Check it and send again.' : 'Add your name so we know who to answer.'; return; }
-    statusEl.textContent = '';
-    const body = ['Topic: ' + v('topic'), 'Name: ' + name, 'Email: ' + email, org && 'Farm: ' + org, v('site') && 'Site: ' + v('site'), v('message') && '\n' + v('message')].filter(Boolean).join('\n');
-    location.href = 'mailto:info@roysync.com?subject=' + encodeURIComponent('RoySync — ' + v('topic') + (org ? ' — ' + org : '')) + '&body=' + encodeURIComponent(body);
-    card.classList.add('done'); card.reset(); chips.forEach((o, i) => o.setAttribute('aria-pressed', i === 0));
+    const name = form['name'].value, email = form['email'].value, org = form['org'].value;
+    const badName = !name.trim(), badMail = !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email.trim());
+    showErr('name', badName); showErr('email', badMail);
+    if (badName || badMail) { (badName ? form['name'] : form['email']).focus(); return; }
+    const who = clip(org, 100) || clip(name, 100);
+    const lines = door === 'farm'
+      ? [org.trim() && 'Farm or company: ' + clip(org, 120), form['keep'].value.trim() && 'Keeps: ' + clip(form['keep'].value, 160),
+         picked('worry').length && 'Worried about: ' + picked('worry').join(', ')]
+      : [org.trim() && 'Organisation: ' + clip(org, 120), form['region'].value.trim() && 'Region: ' + clip(form['region'].value, 80),
+         picked('interest').length && 'Interested in: ' + picked('interest').join(', ')];
+    const body = ['Name: ' + clip(name, 100), 'Email: ' + clip(email, 200), ...lines.filter(Boolean), '', clip(form['message'].value, 2000)].join('\n');
+    location.href = 'mailto:info@roysync.com?subject=' + encodeURIComponent((door === 'farm' ? 'Pilot request — ' : 'Partnership — ') + who) + '&body=' + encodeURIComponent(body);
+    form.hidden = true; done.hidden = false;
   });
-  card.querySelectorAll('input, textarea').forEach(i => i.addEventListener('input', () => i.parentElement.classList.remove('bad')));
+  ['name', 'email'].forEach(k => form[k].addEventListener('input', () => showErr(k, false)));
+  document.getElementById('edit').addEventListener('click', () => { form.hidden = false; done.hidden = true; });
 </script>
 </body>
 </html>
