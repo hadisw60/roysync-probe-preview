@@ -69,7 +69,6 @@
   .navlinks a:hover { color: #fff; }
   .navlinks a, header .btn.cta { white-space: nowrap; }
   @media (max-width: 720px) { .navlinks { gap: 14px; margin-right: 14px; } header:not(.scrolled) .navlinks { display: none; } .navlinks a { font-size: 13px; }
-    .navlinks a[data-dive] { display: none; }   /* three links and the button don't fit a phone's capsule: the dive is a scroll away anyway */
     .navlinks { gap: 2px; margin-right: 8px; } .navlinks a { padding: 7px 8px; } header.scrolled .logo b, header.scrolled .logo i { display: none; } header .btn.cta { padding: 8px 14px; font-size: 13px; } }
   header.scrolled { background: rgba(5, 14, 26, .6); backdrop-filter: blur(14px); padding-top: 14px; padding-bottom: 14px; }
   .logo { display: flex; align-items: center; gap: 12px; font-weight: 600; font-size: 19px; letter-spacing: -.01em; }
@@ -905,9 +904,7 @@
   </a>
   <div class="navlinks">
     <span class="nav-lens" aria-hidden="true"></span>
-    <a href="#top" data-dive="0.28">The dive</a>
-    <a href="#trust" data-sec="trust">Capabilities</a>
-    <a href="contact.html">Investors</a>
+    <a href="#trust" data-sec="trust">Solution</a>
   </div>
   <a class="btn cta" href="contact.html"><span>Contact us</span></a>
   </nav>
@@ -3781,10 +3778,9 @@ if (REDUCED) {
     lens.style.opacity = '1'; lens.style.width = a.offsetWidth + 'px'; lens.style.transform = `translateX(${a.offsetLeft}px)`;
   };
   const current = () => {
-    const y = scrollY, h = innerHeight, sol = document.getElementById('scroller'), tr = document.getElementById('trust');
-    if (tr && tr.getBoundingClientRect().top < h * 0.5) return links[1];
-    if (sol && y > h * 0.6) return links[0];
-    return null;
+    // one link now, Solution: it lights once the float's section is half way up the screen
+    const tr = document.getElementById('trust');
+    return tr && tr.getBoundingClientRect().top < innerHeight * 0.5 ? links[0] : null;
   };
   links.forEach(a => { a.addEventListener('mouseenter', () => { hover = a; place(a); }); });
   nav.addEventListener('mouseleave', () => { hover = null; place(current()); });
