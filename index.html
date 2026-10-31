@@ -171,7 +171,7 @@
   #drag-cursor .pin { position: absolute; top: -9px; left: 50%; translate: -50% 0; border: 6px solid transparent; border-top: 9px solid #ffbf8f; border-bottom: 0;
                       filter: drop-shadow(0 0 6px rgba(255, 170, 120, .8)); }
   #drag-cursor b { font: italic 400 34px/1 'Instrument Serif', Georgia, serif; }
-  #drag-cursor small { margin-top: 6px; font: 600 8.5px/1 Inter, system-ui, sans-serif; letter-spacing: .26em; padding-left: .26em; color: #cfe9ff; }
+  #drag-cursor small { margin-top: 6px; font: 600 10px/1 Inter, system-ui, sans-serif; letter-spacing: .24em; padding-left: .24em; color: #cfe9ff; }
   @keyframes sway { 0%, 100% { rotate: -24deg; } 50% { rotate: 28deg; } }
   /* depth rail: a dot travels down as the camera dives; the tick marks the waterline */
   #dive { position: absolute; right: max(18px, 2vw); top: 28vh; bottom: 28vh; width: 2px; z-index: 5; pointer-events: none;
@@ -179,7 +179,7 @@
   #dive i { position: absolute; left: -1px; top: 0; width: 4px; height: 4px; border-radius: 50%; background: var(--accent-2);
             box-shadow: 0 0 10px var(--accent-2); transform: translateY(-2px); }
   #dive u { position: absolute; left: -7px; right: -7px; top: 22%; height: 1px; background: rgba(255,255,255,.35); }
-  #dive span { position: absolute; right: 12px; top: calc(22% - 7px); font-size: 10px; letter-spacing: .18em;
+  #dive span { position: absolute; right: 12px; top: calc(22% - 7px); font-size: 11px; letter-spacing: .16em;
                text-transform: uppercase; color: var(--faint); white-space: nowrap; }
   @media (max-width: 760px) { #dive { display: none; } }
   /* a thin brand-blue line along the top while the probe loads, instead of a LOADING label over the scene */
@@ -293,12 +293,12 @@
                     font: 600 44px/1 var(--head); letter-spacing: -.015em; transition: opacity .4s, color .4s; }
   #intro .in-mark img { width: 88px; height: 88px; border-radius: 50%; display: block; }
   #intro .in-mark.under { opacity: .78; color: #cfeaff; }   /* the water has risen over it */
-  #intro .in-note { position: absolute; left: 0; right: 0; bottom: 52px; text-align: center; font: 600 11px/1 Inter, system-ui, sans-serif;
-                    letter-spacing: .3em; text-transform: uppercase; color: rgba(191, 228, 255, .72); }
+  #intro .in-note { position: absolute; left: 0; right: 0; bottom: 52px; text-align: center; font: 600 12px/1 Inter, system-ui, sans-serif;
+                    letter-spacing: .28em; text-transform: uppercase; color: rgba(191, 228, 255, .72); }
   @media (max-width: 760px) {
     #intro .in-mark { top: 64px; flex-direction: column; gap: 14px; font-size: 28px; }
     #intro .in-mark img { width: 64px; height: 64px; }
-    #intro .in-note { bottom: 44px; font-size: 10px; letter-spacing: .28em; }
+    #intro .in-note { bottom: 44px; font-size: 11.5px; letter-spacing: .22em; }
   }
   /* the oxygen line (after lusion.co's thread through its sections): a ribbon of thin strands that draws itself on along
      its course as the page scrolls, its tip two thirds down the screen; the sections stack above it, so it runs behind the
@@ -351,7 +351,7 @@
                   transition: top .25s linear; }
   #depth-rail u { position: absolute; left: -7px; right: -7px; top: 0; height: 1px; background: rgba(255,255,255,.35);
                   transition: top .25s linear; }
-  #depth-rail span { position: absolute; right: 12px; top: -4px; font-size: 10px; letter-spacing: .18em;
+  #depth-rail span { position: absolute; right: 12px; top: -4px; font-size: 11px; letter-spacing: .16em;
                      text-transform: uppercase; color: var(--faint); white-space: nowrap; transition: top .25s linear; }
   @media (max-width: 760px) { #depth-rail { display: none; } }
 
@@ -525,7 +525,7 @@
     #story .ed-head { grid-template-columns: 1fr; }
     #story .ed-note, #trust.ed .ed-note { text-align: left; margin: 0; }
     #o2line { opacity: .75; }   /* the words fill a phone's width, so the ribbon goes quieter behind them */
-    #o2label { font-size: 10px; letter-spacing: .16em; }
+    #o2label { font-size: 11px; letter-spacing: .14em; }
     #story .marks { margin-bottom: 6vh; }
   }
   /* how it reaches you: one step at a time, held on screen while the scroll moves through them */
@@ -687,20 +687,20 @@
   #story .proof.night .scr { position: absolute; inset: 0; padding: 12.6cqw 5cqw 0; opacity: 0; transform: scale(.98); transition: opacity .5s ease, transform .5s ease; }
   #story .proof.night .scr.on { opacity: 1; transform: none; }
   #story .proof.night .lock .clock { margin-top: 5cqw; text-align: center; font: 300 22cqw/1 -apple-system, "SF Pro Display", Inter, sans-serif; letter-spacing: -.02em; }
-  #story .proof.night .lock .day { margin-top: 1.5cqw; text-align: center; font-size: 4.2cqw; color: rgba(255,255,255,.75); }
+  #story .proof.night .lock .day { margin-top: 1.5cqw; text-align: center; font-size: 4.8cqw; color: rgba(255,255,255,.75); }
   #story .proof.night .lock .note { display: flex; gap: 3cqw; margin-top: 3cqw; padding: 3.4cqw; border-radius: 5cqw; background: rgba(255,255,255,.14); }
   #story .proof.night .lock .day + .note { margin-top: 16cqw; }
   #story .proof.night .lock .note > div { flex: 1; min-width: 0; }
   #story .proof.night .lock .ic { flex: none; width: 8.5cqw; height: 8.5cqw; border-radius: 2.2cqw; }
   #story .proof.night .lock .ic.sms { background: linear-gradient(#5ff777, #10b931); }
   #story .proof.night .lock .ic.mail { background: linear-gradient(#55b9ff, #1771e6); }
-  #story .proof.night .lock .note b { display: flex; justify-content: space-between; font-size: 3.3cqw; font-weight: 600; }
+  #story .proof.night .lock .note b { display: flex; justify-content: space-between; font-size: 4cqw; font-weight: 600; }
   #story .proof.night .lock .note b u { text-decoration: none; font-weight: 400; color: rgba(255,255,255,.6); }
-  #story .proof.night .lock .note span { display: block; margin-top: .8cqw; font-size: 3.3cqw; line-height: 1.3; color: rgba(255,255,255,.92); }
+  #story .proof.night .lock .note span { display: block; margin-top: .8cqw; font-size: 4cqw; line-height: 1.3; color: rgba(255,255,255,.92); }
   #story .proof.night .call .who { margin-top: 16cqw; text-align: center; }
   #story .proof.night .call .who img { width: 22cqw; height: 22cqw; border-radius: 50%; box-shadow: 0 0 0 1.5cqw rgba(255,255,255,.08); }
   #story .proof.night .call .who b { display: block; margin-top: 6cqw; font: 500 8cqw/1.1 -apple-system, Inter, sans-serif; }
-  #story .proof.night .call .who span { display: block; margin-top: 2cqw; font-size: 4cqw; color: rgba(255,255,255,.7); }
+  #story .proof.night .call .who span { display: block; margin-top: 2cqw; font-size: 4.6cqw; color: rgba(255,255,255,.7); }
   #story .proof.night .call .act { position: absolute; left: 12cqw; right: 12cqw; bottom: 22cqw; display: flex; justify-content: space-between; }
   #story .proof.night .call .act i { width: 17cqw; height: 17cqw; border-radius: 50%; }
   #story .proof.night .call .act .no { background: #ff3b30; }
@@ -710,19 +710,26 @@
                                                animation: ring 1.4s ease-out infinite; }
   @keyframes ring { from { transform: scale(1); opacity: .7; } to { transform: scale(1.55); opacity: 0; } }
   #story .proof.night .aer .do { margin-top: 12cqw; padding: 5cqw; border-radius: 5cqw; background: rgba(239,68,68,.1); border: .3cqw solid rgba(239,68,68,.35); }
-  #story .proof.night .aer .do span { font-size: 3.4cqw; color: rgba(255,255,255,.75); }
+  #story .proof.night .aer .do span { font-size: 4.2cqw; color: rgba(255,255,255,.75); }
   #story .proof.night .aer .do b { display: block; margin-top: 2cqw; font: 700 13cqw/1 Inter, sans-serif; letter-spacing: -.02em; }
   #story .proof.night .aer .do b small { margin-left: 1.5cqw; font-size: 4cqw; font-weight: 500; color: rgba(255,255,255,.7); }
-  #story .proof.night .aer .do s { display: inline-block; margin-top: 3cqw; padding: 1cqw 2.4cqw; border-radius: 2cqw; text-decoration: none; font-size: 3cqw; font-weight: 600;
+  #story .proof.night .aer .do s { display: inline-block; margin-top: 3cqw; padding: 1cqw 2.4cqw; border-radius: 2cqw; text-decoration: none; font-size: 3.8cqw; font-weight: 600;
                                    color: #fca5a5; background: rgba(239,68,68,.18); }
   #story .proof.night .aer .sw { display: flex; align-items: center; gap: 3cqw; margin-top: 4cqw; padding: 5cqw; border-radius: 5cqw;
                                  background: rgba(34,197,94,.1); border: .3cqw solid rgba(34,197,94,.35); }
-  #story .proof.night .aer .sw b { display: block; font-size: 4.2cqw; font-weight: 600; }
-  #story .proof.night .aer .sw span { display: block; margin-top: 1cqw; font-size: 3.2cqw; color: #86efac; }
+  #story .proof.night .aer .sw b { display: block; font-size: 4.6cqw; font-weight: 600; }
+  #story .proof.night .aer .sw span { display: block; margin-top: 1cqw; font-size: 3.8cqw; color: #86efac; }
   #story .proof.night .aer .sw u { margin-left: auto; position: relative; flex: none; width: 13cqw; height: 7.6cqw; border-radius: 99px; background: #22c55e; }
   #story .proof.night .aer .sw u::after { content: ""; position: absolute; right: .9cqw; top: .9cqw; width: 5.8cqw; height: 5.8cqw; border-radius: 50%; background: #fff; }
+  /* the night so far on the aerator screen: oxygen sliding under the 4.0 line, up to now */
+  #story .proof.night .aer .chart { margin-top: 4cqw; padding: 4.5cqw 5cqw 4cqw; border-radius: 5cqw; background: rgba(255,255,255,.06);
+                                    border: .3cqw solid rgba(255,255,255,.12); }
+  #story .proof.night .aer .ch-h { display: flex; justify-content: space-between; font-size: 4cqw; color: rgba(255,255,255,.75); }
+  #story .proof.night .aer .ch-h i { font-style: normal; color: #fca5a5; }
+  #story .proof.night .aer .chart svg { display: block; width: 100%; height: 28cqw; margin-top: 3cqw; overflow: visible; }
+  #story .proof.night .aer .ch-x { display: flex; justify-content: space-between; margin-top: 2cqw; font-size: 3.4cqw; color: rgba(255,255,255,.5); }
   #alerts .proof { width: clamp(180px, min(20vw, 32vh), 260px); }   /* a little smaller than the app's: it clears the header */
-  @media (max-width: 760px) { #alerts .split2 { gap: 26px; } #alerts .proof { width: min(180px, 27vh); } .ladder { height: 150px; } }
+  @media (max-width: 760px) { #alerts .split2 { gap: 26px; } #alerts .proof { width: min(204px, 28vh); } .ladder { height: 150px; } }
   @media (prefers-reduced-motion: reduce) { #story .proof.night .scr { transition: none; } #story .proof.night .call .act .yes::after { animation: none; } }
   #contact .btn:not(.ghost) { animation: none; background: var(--ink); color: #fff; box-shadow: none; }
   #contact .btn:not(.ghost):hover { box-shadow: 0 10px 24px rgba(13, 27, 42, .18); }
@@ -767,7 +774,7 @@
     #hero-copy p, #solid-copy p { margin-left: auto; margin-right: auto; font-size: 15px; }
     #hero-copy { bottom: calc(3vh + 128px); max-width: none; }   /* clear of the scroll cue below it */
     #hero-copy h1 { font-size: clamp(38px, 12.5vw, 56px); }
-    #hero-copy .eyebrow { font-size: 10.5px; letter-spacing: .13em; text-wrap: balance; }
+    #hero-copy .eyebrow { font-size: 12px; letter-spacing: .1em; text-wrap: balance; }
     #hero-copy .eyebrow::before { display: none; }
     #stage::before { background: linear-gradient(0deg, rgba(4,22,38,.75) 0%, rgba(4,22,38,.35) 38%, rgba(4,22,38,0) 58%),
                 linear-gradient(180deg, rgba(4,22,38,.45) 0%, rgba(4,22,38,0) 14%); }
@@ -1010,7 +1017,16 @@
               <div class="act"><i class="no"></i><i class="yes"></i></div></div>
             <!-- below 4 mg/L: the aerator is on, in the app -->
             <div class="scr aer"><div class="do"><span>Dissolved oxygen</span><b>3.9<small>mg/L</small></b><s>Below 4.0</s></div>
-              <div class="sw"><div><b>Main Aerator</b><span>On · started automatically</span></div><u></u></div></div>
+              <div class="sw"><div><b>Main Aerator</b><span>On · started automatically</span></div><u></u></div>
+              <div class="chart"><div class="ch-h"><span>Oxygen · tonight</span><i>- - 4.0 mg/L</i></div>
+                <svg viewBox="0 0 100 40" preserveAspectRatio="none">
+                  <defs><linearGradient id="o2fill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#60a5fa" stop-opacity=".35"/><stop offset="1" stop-color="#60a5fa" stop-opacity="0"/></linearGradient></defs>
+                  <path d="M0 10 C12 7 22 7 32 10 S52 17 62 20 S80 25 88 27.6 L100 28.3 V40 H0Z" fill="url(#o2fill)"/>
+                  <line x1="0" y1="27.7" x2="100" y2="27.7" stroke="#fca5a5" stroke-opacity=".7" stroke-width="1" stroke-dasharray="3 2.5" vector-effect="non-scaling-stroke"/>
+                  <path d="M0 10 C12 7 22 7 32 10 S52 17 62 20 S80 25 88 27.6 L100 28.3" fill="none" stroke="#93c5fd" stroke-width="1.6" stroke-linecap="round" vector-effect="non-scaling-stroke"/>
+                  <circle cx="100" cy="28.3" r="1.6" fill="#ef4444" stroke="#fff" stroke-width=".5"/>
+                </svg>
+                <div class="ch-x"><span>18:00</span><span>23:00</span><span>now</span></div></div></div>
             <span class="island"></span>
             <span class="home"></span>
           </div></div>

@@ -224,11 +224,11 @@
     </div>
     <div class="doors">
       <a class="door" href="#write" data-door="farm" aria-current="true">
-        <video muted loop playsinline preload="metadata" poster="media/contact-feed.jpg" aria-hidden="true" data-src="media/contact-feed.mp4"></video>
+        <video muted loop playsinline preload="metadata" poster="media/contact-feed.jpg" aria-hidden="true" data-src="media/contact-feed.mp4" data-src-sm="media/contact-feed-sm.mp4"></video>
         <span class="cap"><b>I run a farm</b><p>Ponds, tanks or sea cages. Tell us about your water and we'll plan a pilot with you.</p><span class="go">Plan a pilot →</span></span>
       </a>
       <a class="door" href="#write" data-door="inv" aria-current="false">
-        <video muted loop playsinline preload="metadata" poster="media/contact-farms.jpg" aria-hidden="true" data-src="media/contact-farms.mp4"></video>
+        <video muted loop playsinline preload="metadata" poster="media/contact-farms.jpg" aria-hidden="true" data-src="media/contact-farms.mp4" data-src-sm="media/contact-farms-sm.mp4"></video>
         <span class="cap"><b>I invest or partner</b><p>Distribution, technology partnerships and investment. A UK company with a registered design.</p><span class="go">Talk to the founders →</span></span>
       </a>
     </div>
@@ -294,7 +294,7 @@
       </section>
 
       <div class="strip">
-        <video muted loop playsinline preload="none" poster="media/contact-trout.jpg" aria-hidden="true" data-src="media/contact-trout.mp4"></video>
+        <video muted loop playsinline preload="none" poster="media/contact-trout.jpg" aria-hidden="true" data-src="media/contact-trout.mp4" data-src-sm="media/contact-trout-sm.mp4"></video>
         <p>Oxygen falls while you sleep. The float doesn't.</p>
       </div>
     </div>
@@ -362,9 +362,11 @@
   })();
 
   // the films load only when they come near the screen and play only while seen; a still stays for reduced motion
+  // A phone gets the small copies (about 1.6 MB for all three, not 7.9 MB): the doors are 170 px wide there.
+  const smallFilms = matchMedia('(max-width: 760px)').matches;
   document.querySelectorAll('video[data-src]').forEach(v => {
     new IntersectionObserver(([e]) => {
-      if (e.isIntersecting) { if (!v.src) v.src = v.dataset.src; if (!reduce) v.play().catch(() => {}); } else v.pause();
+      if (e.isIntersecting) { if (!v.src) v.src = (smallFilms && v.dataset.srcSm) || v.dataset.src; if (!reduce) v.play().catch(() => {}); } else v.pause();
     }, { rootMargin: '200px 0px' }).observe(v);
   });
 
