@@ -159,6 +159,15 @@
   .ft-brand p { margin: 0 0 18px; max-width: 280px; }
   .ft-mail { display: inline-flex; color: #fff; font-weight: 500; padding-bottom: 3px; border-bottom: 1px solid rgba(159,208,247,.45); text-decoration: none; transition: border-color .2s; }
   .ft-mail:hover { border-color: #fff; }
+
+  /* finger-sized tap areas, invisible: the links stay the size they look */
+  .navlinks a::before, .ft-col a::before, .ft-mail::before, .tabs button::before, .help-open::before { content: ""; position: absolute; }
+  .ft-col a, .ft-mail, .tabs button, .help-open { position: relative; }
+  .navlinks a::before { inset: -7px -2px; }
+  .ft-col a::before { inset: -4px -6px; }
+  .ft-mail::before { inset: -10px -4px; }
+  .tabs button::before { inset: -7px -8px -9px; z-index: 1; }   /* above the form card that starts just under the tabs */
+  .help-open::before { inset: -10px -8px; }
   .ft-bottom { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 10px 24px; max-width: 1140px; margin: 56px auto 0; padding-top: 22px;
                border-top: 1px solid rgba(170,210,255,.12); font-size: 12.5px; color: #6f879e; }
 
