@@ -267,39 +267,28 @@
 
   /* ---------- scroll-driven motion for the story sections ---------- */
   #story { position: relative; }
-  /* the opening screen, "rising water" (designed and approved on the canvas, 2026-10-27): the screen fills like a tank
-     as the float loads; the number rides the waterline, white above it and refracted pale blue below; the mark sits
-     large at the top and goes under at the end, then the screen fades into the dive. Only two layers move (transforms). */
-  #intro { position: fixed; inset: 0; z-index: 100; overflow: hidden; color: #eef6fc; background: linear-gradient(180deg, #03070d 0%, #071526 100%);
-           transition: opacity .8s ease; }
+  /* the opening screen, "the school" (approved 2026-10-29): looking straight up from inside a school of fish that
+     circles the lens, the sun through the surface in the middle and the mark on it, the load as a thin line and a number;
+     the school is the dive's own fish model (assets/fish.glb), shared with the scene through THREE.Cache */
+  #intro { position: fixed; inset: 0; z-index: 100; overflow: hidden; color: #0b2a47; transition: opacity .8s ease;
+           background: radial-gradient(closest-side at 50% 46%, #f3f9ff 0%, #bfe0f7 14%, #5fa4d6 34%, #1f5f94 58%, #0b2f52 82%, #061c33 100%); }
   #intro.gone { opacity: 0; }
-  #intro .in-water { position: absolute; left: 0; right: 0; top: 0; height: 100%; will-change: transform;
-                     background: linear-gradient(180deg, #154d78 0%, #0b3354 34%, #041729 100%); }
-  #intro .in-water::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 90px;   /* the light just under the surface */
-                             background: linear-gradient(180deg, rgba(207, 234, 255, .16), rgba(207, 234, 255, 0)); }
-  #intro .in-water::after { content: ""; position: absolute; left: 57%; top: 70px; width: 700px; height: 420px; border-radius: 50%;
-                            background: radial-gradient(closest-side, rgba(159, 208, 247, .12), rgba(159, 208, 247, 0)); }
-  #intro .in-line { position: absolute; left: 0; top: -20px; width: 100%; height: 40px; overflow: visible; }
-  #intro .in-line path { fill: none; stroke: #d8efff; stroke-width: 1.5; stroke-opacity: .9; vector-effect: non-scaling-stroke; }
-  #intro .in-line path + path { stroke: #9fd0f7; stroke-width: 1; stroke-opacity: .25; }
-  #intro .in-bub { position: absolute; left: 33%; top: 70px; width: 40px; height: 160px; }
-  #intro .in-ride { position: absolute; left: 0; right: 0; top: 0; will-change: transform; }
-  #intro .in-num { position: absolute; left: max(24px, 5.3vw); top: -.625em; font: 400 clamp(140px, 16.7vw, 240px)/1 'Instrument Serif', Georgia, serif;
-                   letter-spacing: -.02em; }
-  #intro .in-num .dry { display: block; clip-path: inset(0 0 .375em 0); }
-  #intro .in-num .wet { position: absolute; left: .017em; top: .008em; color: #8fc9f2; opacity: .85; clip-path: inset(.615em 0 0 0); }
-  #intro .in-num i { position: absolute; left: 100%; top: .146em; margin-left: .06em; font-size: .27em; font-style: italic; color: #8fc1e8; }
-  #intro .in-mark { position: absolute; left: 0; right: 0; top: 56px; display: flex; justify-content: center; align-items: center; gap: 22px;
-                    font: 600 44px/1 var(--head); letter-spacing: -.015em; transition: opacity .4s, color .4s; }
-  #intro .in-mark img { width: 88px; height: 88px; border-radius: 50%; display: block; }
-  #intro .in-mark.under { opacity: .78; color: #cfeaff; }   /* the water has risen over it */
-  #intro .in-note { position: absolute; left: 0; right: 0; bottom: 52px; text-align: center; font: 600 12px/1 Inter, system-ui, sans-serif;
-                    letter-spacing: .28em; text-transform: uppercase; color: rgba(191, 228, 255, .72); }
-  @media (max-width: 760px) {
-    #intro .in-mark { top: 64px; flex-direction: column; gap: 14px; font-size: 28px; }
-    #intro .in-mark img { width: 64px; height: 64px; }
-    #intro .in-note { bottom: 44px; font-size: 11.5px; letter-spacing: .22em; }
+  #intro::before { content: ""; position: absolute; inset: -20%; pointer-events: none; opacity: .55; mix-blend-mode: screen;
+    background: repeating-conic-gradient(from 0deg at 50% 46%, rgba(255,255,255,0) 0deg 7deg, rgba(220,240,255,.16) 9deg 11deg, rgba(255,255,255,0) 13deg 21deg);
+    mask-image: radial-gradient(closest-side at 50% 46%, #000 10%, transparent 75%); animation: in-turn 60s linear infinite; }
+  @keyframes in-turn { to { transform: rotate(360deg); } }
+  #intro canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+  #intro .in-mid { position: absolute; left: 50%; top: 46%; transform: translate(-50%, -50%); text-align: center; z-index: 2; }
+  #intro .in-mark { display: flex; align-items: center; gap: 16px; font: 600 40px/1 var(--head); letter-spacing: -.015em; }
+  #intro .in-mark img { width: 72px; height: 72px; border-radius: 50%; display: block; box-shadow: 0 6px 30px rgba(6,28,51,.35); }
+  #intro .in-bar { width: 220px; height: 2px; margin: 24px auto 0; background: rgba(11,42,71,.18); border-radius: 2px; overflow: hidden; }
+  #intro .in-bar i { display: block; height: 100%; background: #0b2a47; transform-origin: 0 50%; transform: scaleX(0); }
+  #intro .in-num { margin-top: 13px; font: 600 12px/1 Inter, system-ui, sans-serif; letter-spacing: .32em; color: #123a5e;
+                   font-variant-numeric: tabular-nums; }
+  @media (max-width: 600px) {
+    #intro .in-mark { font-size: 28px; gap: 12px; } #intro .in-mark img { width: 52px; height: 52px; } #intro .in-bar { width: 170px; }
   }
+  @media (prefers-reduced-motion: reduce) { #intro::before { animation: none; } }
   /* the oxygen line (after lusion.co's thread through its sections): a ribbon of thin strands that draws itself on along
      its course as the page scrolls, its tip two thirds down the screen; the sections stack above it, so it runs behind the
      words and the phones and goes under the film bands */
@@ -850,63 +839,121 @@
 <body>
 
 <div id="intro" aria-hidden="true">
-  <div class="in-water">
-    <svg class="in-line" viewBox="0 0 1440 40" preserveAspectRatio="none"><path d="M0 20C180 13 340 27 520 20S880 12 1060 19S1320 27 1440 19"/><path d="M0 27C200 21 360 33 540 27S900 20 1080 26S1330 32 1440 26"/></svg>
-    <svg class="in-bub" viewBox="0 0 40 160" fill="none" stroke="#cfeaff"><circle cx="20" cy="18" r="3" stroke-opacity=".55" stroke-width="1.2"/><circle cx="12" cy="74" r="4.5" stroke-opacity=".4" stroke-width="1.2"/><circle cx="24" cy="136" r="2.5" stroke-opacity=".3"/></svg>
+  <canvas class="in-school"></canvas>
+  <div class="in-mid">
+    <div class="in-mark"><img src="assets/logo.png" alt="" width="72" height="72"><span>RoySync</span></div>
+    <div class="in-bar"><i></i></div>
+    <div class="in-num">00%</div>
   </div>
-  <div class="in-mark"><img src="assets/logo.png" alt="" width="88" height="88"><span>RoySync</span></div>
-  <div class="in-ride"><div class="in-num"><span class="dry">00</span><span class="wet">00</span><i>%</i></div></div>
-  <div class="in-note">Autonomous water intelligence</div>
 </div>
 <script>
-// the opening screen: the water (and the number on it) rises while the float's model loads, to 86% at most until it is
-// in (and the fonts), then to the top; at least ~0.9 s so it never flashes, at most ~9 s whatever happens
+// the opening screen's load line: it runs on (as a compositor animation, so the 3D scene being built cannot stall it)
+// to 86% while the float's model and the fonts load, then to the end; at least ~0.9 s so it never flashes, at most ~9 s
 (() => {
   const el = document.getElementById('intro'); if (!el) return;
-  const water = el.querySelector('.in-water'), ride = el.querySelector('.in-ride'), mark = el.querySelector('.in-mark');
-  const digits = el.querySelectorAll('.in-num .dry, .in-num .wet'), t0 = performance.now();
-  let done = false, lastN = -1;
+  const bar = el.querySelector('.in-bar i'), num = el.querySelector('.in-num'), t0 = performance.now();
+  let done = false, lastN = -1, anim = null;
   const finish = () => { done = true; };
   addEventListener('probe-ready', () => (document.fonts ? document.fonts.ready : Promise.resolve()).then(finish));
   setTimeout(finish, 9000);
-  const lift = () => { el.classList.add('gone'); setTimeout(() => el.remove(), 900); };
-  // the waterline: near the foot of the screen empty (93.6% down), near its top full (7.1% down)
-  const yAt = f => innerHeight * (0.936 - 0.865 * f);
-  const go = f => { water.style.transform = ride.style.transform = `translateY(${yAt(f).toFixed(1)}px)`; };
-  // the rise as an explicit animation (Web Animations, run by the compositor): a CSS transition set while the page is
-  // still loading never starts (the browser takes the end value at once), so the water jumped straight to 86%
-  let anims = [];
-  const rise = (yFrom, yTo, ms, easing) => {
-    anims.forEach(a => a.cancel());
-    anims = [water, ride].map(e => e.animate([{ transform: `translateY(${yFrom}px)` }, { transform: `translateY(${yTo}px)` }], { duration: ms, easing, fill: 'forwards' }));
+  const lift = () => { el.classList.add('gone'); setTimeout(() => { el.dispatchEvent(new Event('intro-gone')); el.remove(); }, 900); };
+  const run = (from, to, ms, easing) => {
+    if (anim) anim.cancel();
+    anim = bar.animate([{ transform: `scaleX(${from})` }, { transform: `scaleX(${to})` }], { duration: ms, easing, fill: 'forwards' });
   };
-  // the number and the mark follow the water where it actually is (read off its transform), not where the script hoped
+  // the number follows the line where it actually is (read off its transform)
   const show = () => {
-    const y = new DOMMatrixReadOnly(getComputedStyle(water).transform).m42;
-    const f = Math.min(Math.max((0.936 - y / innerHeight) / 0.865, 0), 1);
-    mark.classList.toggle('under', y < mark.offsetTop + mark.offsetHeight);
+    const f = new DOMMatrixReadOnly(getComputedStyle(bar).transform).a;
     const n = Math.round(f * 100);
-    if (n !== lastN) { lastN = n; const s = String(n).padStart(2, '0'); digits.forEach(d => (d.textContent = s)); }
+    if (n !== lastN) { lastN = n; num.textContent = String(n).padStart(2, '0') + '%'; }
     return f;
   };
-  if (matchMedia('(prefers-reduced-motion: reduce)').matches) {   // no rising: the tank as it is, gone (a fade) when ready
-    go(0.5); show(); const wait = () => (done ? lift() : setTimeout(wait, 100)); wait(); return;
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    run(0.5, 0.5, 1); show(); const wait = () => (done ? lift() : setTimeout(wait, 100)); wait(); return;
   }
-  // the compositor keeps it rising while the page's own work (the 3D scene being built) holds the script up; a
-  // frame-by-frame script stalled there and then jumped
-  go(0); rise(yAt(0), yAt(0.86), 7000, 'cubic-bezier(.15, .6, .35, 1)');
+  run(0, 0.86, 7000, 'cubic-bezier(.15, .6, .35, 1)');
   let filling = false;
   const step = now => {
     const f = show();
-    if (done && !filling && now - t0 > 900) {
-      filling = true;
-      rise(new DOMMatrixReadOnly(getComputedStyle(water).transform).m42, yAt(1), 350 + 600 * (1 - f), 'ease-out');
-    }
+    if (done && !filling && now - t0 > 900) { filling = true; run(f, 1, 350 + 600 * (1 - f), 'ease-out'); }
     if (filling && f > 0.995) { setTimeout(lift, 260); return; }
     requestAnimationFrame(step);
   };
   requestAnimationFrame(step);
 })();
+</script>
+<script type="module">
+// the school on the opening screen: a hollow tube of the dive's fish circling the lens, which lies under it looking up
+import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/GLTFLoader.js';
+const el = document.getElementById('intro');
+if (el) {
+  THREE.Cache.enabled = true;   // the dive loads the same fish.glb: it is read from here, not fetched twice
+  const canvas = el.querySelector('.in-school');
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+  renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+  const scene = new THREE.Scene();
+  scene.fog = new THREE.FogExp2(0x2a6ea3, 0.035);   // the far fish fade into the blue
+  const camera = new THREE.PerspectiveCamera(70, 1, 0.1, 200);
+  camera.position.set(0, -6, 0); camera.up.set(0, 0, -1); camera.lookAt(0, 30, 0);
+  scene.add(new THREE.HemisphereLight(0xdff1ff, 0x0a2440, 1.4));
+  const sun = new THREE.DirectionalLight(0xffffff, 1.2); sun.position.set(0, 10, 2); scene.add(sun);
+  const size = () => { renderer.setSize(innerWidth, innerHeight, false); camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix(); };
+  size(); addEventListener('resize', size);
+  // a little wider as it rises; fewer fish on a phone
+  const N = innerWidth < 600 ? 520 : 900, F = [];
+  for (let i = 0; i < N; i++) {
+    const y = Math.random() ** 0.8 * 34;
+    F.push({ a: Math.random() * Math.PI * 2, y, r: 4.2 + y * 0.12 + (Math.random() - .5) * 3.2,
+             w: (0.34 + Math.random() * 0.1) * (1 - y / 90), s: 0.75 + Math.random() * 0.5, tilt: (Math.random() - .5) * 0.25 });
+  }
+  const uT = { value: 0 };
+  const mat = new THREE.MeshStandardMaterial({ color: 0x9fb3c2, roughness: 0.45, metalness: 0.35 });
+  mat.onBeforeCompile = sh => {
+    sh.uniforms.uT = uT;
+    sh.vertexShader = 'uniform float uT;\n' + sh.vertexShader.replace('#include <begin_vertex>', `#include <begin_vertex>
+      // the body swims: a wave runs from head to tail, growing toward the tail
+      float ph = float(gl_InstanceID) * 1.731;
+      float tail = smoothstep(0.25, -0.6, transformed.z);
+      transformed.x += sin(transformed.z * 5.0 - uT * 9.0 + ph) * 0.09 * (0.25 + tail);`);
+  };
+  let mesh = null, live = true;
+  new GLTFLoader().load('assets/fish.glb', gltf => {
+    let src = null; gltf.scene.traverse(o => { if (o.isMesh && !src) src = o; });
+    if (!src || !live) return;
+    const g = src.geometry.clone();
+    g.rotateY(Math.PI); g.translate(0, -0.1435, 0.0035); g.scale(0.8, 0.58, 1);
+    Object.assign(mat, { map: src.material.map, normalMap: src.material.normalMap }); mat.needsUpdate = true;
+    mesh = new THREE.InstancedMesh(g, mat, N);
+    mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage); mesh.frustumCulled = false;
+    scene.add(mesh);
+  });
+  const o = new THREE.Object3D(), ahead = new THREE.Vector3();
+  let last = performance.now();
+  const loop = now => {
+    if (!live) return;
+    const dt = Math.min((now - last) / 1000, 0.05); last = now; uT.value = now / 1000;
+    if (mesh) {
+      for (let i = 0; i < N; i++) {
+        const f = F[i]; f.a += f.w * dt;
+        const r = f.r + Math.sin(now / 1700 + i) * 0.25;
+        o.position.set(Math.cos(f.a) * r, f.y + Math.sin(now / 1300 + i * 0.7) * 0.15, Math.sin(f.a) * r);
+        ahead.set(Math.cos(f.a + 0.05) * r, o.position.y + f.tilt * 0.3, Math.sin(f.a + 0.05) * r);
+        o.lookAt(ahead); o.scale.setScalar(f.s); o.updateMatrix();
+        mesh.setMatrixAt(i, o.matrix);
+      }
+      mesh.instanceMatrix.needsUpdate = true;
+    }
+    renderer.render(scene, camera);
+    requestAnimationFrame(loop);
+  };
+  requestAnimationFrame(loop);
+  // once the screen has lifted, its GPU context is given back for the dive
+  el.addEventListener('intro-gone', () => {
+    live = false; removeEventListener('resize', size);
+    if (mesh) mesh.geometry.dispose(); mat.dispose(); renderer.dispose(); renderer.forceContextLoss();
+  });
+}
 </script>
 
 <a class="skip" href="#story">Skip to content</a>   <!-- the first stop for the keyboard: past the dive, to the page itself -->
