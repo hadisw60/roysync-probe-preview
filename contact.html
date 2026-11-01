@@ -17,7 +17,7 @@
     --navy: #0e2236; --ink: #12263a; --muted: #4a5f72; --faint: #6b7f91; --line: rgba(18,38,58,.14); --paper: #f3f6f9;
     --blue: #1f5f9e; --ice: #9fd0f7; --warn: #b0461f;
     --head: Sora, Jost, system-ui, sans-serif;
-    --col: 1240px; --gut: 32px;
+    --col: 1040px; --gut: 32px;   /* the header capsule's width, so the page shares its edges (at 1240 it felt spread out) */
   }
   * { box-sizing: border-box; }
   html { scroll-behavior: smooth; }
@@ -71,11 +71,11 @@
 
   /* ---- opening: the line, then the two doors as two real pictures ---- */
   .open { padding-top: 130px; }
-  .open-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 24px; }
-  .open h1 { margin: 0; max-width: 860px; font: 500 clamp(40px, 6vw, 84px)/1 var(--head); letter-spacing: -.045em; color: var(--navy); }
-  .open-head p { margin: 0 0 8px; max-width: 300px; font-size: 18px; line-height: 1.55; color: var(--muted); }
-  .doors { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin-top: 48px; }
-  .door { position: relative; display: block; height: clamp(420px, 46vw, 620px); overflow: hidden; color: #fff; text-decoration: none; background: var(--navy); }
+  .open h1 { margin: 0; max-width: 900px; font: 500 clamp(40px, 5.2vw, 72px)/1.02 var(--head); letter-spacing: -.045em; color: var(--navy);
+             text-wrap: balance; }   /* two even lines, never "surface." alone on the second */
+  .open-head p { margin: 22px 0 0; max-width: 520px; font-size: 18px; line-height: 1.55; color: var(--muted); }
+  .doors { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin-top: 44px; }
+  .door { position: relative; display: block; height: clamp(380px, 38vw, 520px); overflow: hidden; color: #fff; text-decoration: none; background: var(--navy); }
   .door video, .door img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transition: transform 1.2s cubic-bezier(.2,.7,.2,1); }
   .door:hover video, .door:hover img { transform: scale(1.04); }
   .door::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(14,34,54,0) 45%, rgba(14,34,54,.85) 100%); }
@@ -86,12 +86,15 @@
   .door[aria-current="true"] .go { border-bottom-width: 2px; }
 
   /* ---- the middle: a pale band, the form in one framed box on it ---- */
-  .band { margin-top: 110px; padding: 88px 0; background: var(--paper); }
-  .box { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 72px; padding: 64px; background: #fff; border: 1px solid rgba(18,38,58,.12);
+  .band { margin-top: 96px; padding: 80px 0; background: var(--paper); }
+  /* the box reads top to bottom (heading, a few words, the form, then the facts on one line): split in two, its
+     fields were squeezed into the right and the left stood half empty */
+  .box { padding: 60px 72px; background: #fff; border: 1px solid rgba(18,38,58,.12);
          border-radius: 6px; box-shadow: 0 24px 60px -36px rgba(14,34,54,.35); scroll-margin-top: 90px; }
+  .box-head { max-width: 620px; margin-bottom: 40px; }
   .box h2 { margin: 0; font: 500 44px/1.08 var(--head); letter-spacing: -.035em; color: var(--navy); }
-  .box .intro { margin: 18px 0 0; font-size: 17px; line-height: 1.65; color: var(--muted); }
-  .facts { margin-top: 40px; padding-top: 24px; border-top: 1px solid var(--line); font-size: 15.5px; line-height: 1.8; color: var(--muted); }
+  .box .intro { margin: 16px 0 0; font-size: 17px; line-height: 1.65; color: var(--muted); }
+  .facts { display: flex; flex-wrap: wrap; gap: 6px 36px; margin-top: 44px; padding-top: 22px; border-top: 1px solid var(--line); font-size: 15.5px; line-height: 1.6; color: var(--muted); }
   .facts b { font-weight: 400; color: var(--ink); }
   form { display: flex; flex-direction: column; gap: 30px; }
   .tabs { display: flex; gap: 28px; }
@@ -135,7 +138,7 @@
   .done button { margin-top: 16px; font: inherit; font-size: 15px; color: var(--blue); background: none; border: 0; padding: 0; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
 
   /* the trout strip sits in the same column, still on the pale band */
-  .strip { position: relative; height: 460px; margin-top: 88px; overflow: hidden; background: var(--navy); }
+  .strip { position: relative; height: 400px; margin-top: 80px; overflow: hidden; background: var(--navy); }
   .strip video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
   .strip::after { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, rgba(14,34,54,.72), rgba(14,34,54,.1) 60%); }
   .strip p { position: absolute; z-index: 1; left: 64px; top: 50%; transform: translateY(-50%); margin: 0; max-width: 560px;
@@ -151,7 +154,7 @@
   /* the landing page's footer, as on index.html */
   footer { padding: 72px 6vw 30px; border-top: 1px solid rgba(170,210,255,.12); color: #9fb4c8; font-size: 14px; line-height: 1.6;
            background: linear-gradient(180deg, rgba(4,12,22,.96), #03080f 65%); }
-  .ft { display: grid; grid-template-columns: 1.5fr 1fr 1.1fr 1.3fr; gap: 40px; max-width: 1140px; margin: 0 auto; }
+  .ft { display: grid; grid-template-columns: 1.5fr 1fr 1.1fr 1.3fr; gap: 40px; max-width: var(--col); margin: 0 auto; }   /* on the page's column */
   .ft h4 { margin: 0 0 16px; font-size: 12px; font-weight: 600; letter-spacing: .16em; text-transform: uppercase; color: var(--ice); }
   .ft-col { display: flex; flex-direction: column; gap: 8px; }
   .ft-col a { width: fit-content; text-decoration: none; transition: color .2s; } .ft-col a:hover { color: #fff; }
@@ -168,16 +171,16 @@
   .ft-mail::before { inset: -10px -4px; }
   .tabs button::before { inset: -7px -8px -9px; z-index: 1; }   /* above the form card that starts just under the tabs */
   .help-open::before { inset: -10px -8px; }
-  .ft-bottom { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 10px 24px; max-width: 1140px; margin: 56px auto 0; padding-top: 22px;
+  .ft-bottom { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 10px 24px; max-width: var(--col); margin: 56px auto 0; padding-top: 22px;
                border-top: 1px solid rgba(170,210,255,.12); font-size: 12.5px; color: #6f879e; }
 
   /* ---- narrower screens ---- */
-  @media (max-width: 1100px) { .box { grid-template-columns: minmax(0, 1fr); gap: 40px; padding: 48px; } }
+  @media (max-width: 1100px) { .box { padding: 48px; } }
   @media (max-width: 900px) { .ft { grid-template-columns: 1fr 1fr; } .steps { grid-template-columns: minmax(0, 1fr); gap: 26px; } }
   @media (max-width: 640px) {
     :root { --gut: 20px; }
     .open { padding-top: 92px; }
-    .open-head p { font-size: 16px; margin: 0; }
+    .open-head p { font-size: 16px; margin: 14px 0 0; }
     /* on a phone both doors are seen at once: two tall tiles, the title and the link only */
     .doors { gap: 10px; margin-top: 24px; }
     .door { height: 300px; }
@@ -237,14 +240,9 @@
   <div class="band">
     <div class="col">
       <section class="box" id="write" aria-labelledby="write-h">
-        <div>
+        <div class="box-head">
           <h2 id="write-h">Write to us.</h2>
           <p class="intro">A few lines are plenty: where the farm is, what you keep, and what you'd like to keep an eye on. Not sure how to put it? Use <i>Help me write</i> and edit what comes back.</p>
-          <div class="facts">
-            <div><b>Email</b> — <a href="mailto:info@roysync.com">info@roysync.com</a></div>
-            <div><b>Answer</b> — within one working day</div>
-            <div><b>Office</b> — Cambridge, United Kingdom</div>
-          </div>
         </div>
 
         <div>
@@ -290,6 +288,11 @@
             <p>Your mail app should have opened with everything filled in; press send there. If nothing opened, write to <a href="mailto:info@roysync.com">info@roysync.com</a>.</p>
             <button type="button" id="edit">Edit the message</button>
           </div>
+        </div>
+        <div class="facts">
+          <div><b>Email</b> — <a href="mailto:info@roysync.com">info@roysync.com</a></div>
+          <div><b>Answer</b> — within one working day</div>
+          <div><b>Office</b> — Cambridge, United Kingdom</div>
         </div>
       </section>
 
