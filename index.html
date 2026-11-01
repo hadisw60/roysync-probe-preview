@@ -41,7 +41,7 @@
      story section (about seven screens), then the fixed sea keeps flowing behind the panels all the way down.
      The "story" half of the scroll drives q — a slow deepen + pull-in that makes the panels feel like they are
      sinking past the float, not sliding over a paused film. */
-  #scroller { position: relative; height: 364vh; }   /* the 3D dive, up to DIVE_END at the old 700vh pace (600vh a unit of p), see diveP() */
+  #scroller { position: relative; height: 412vh; }   /* the 3D dive, up to DIVE_END at the old 700vh pace (600vh a unit of p) with its last stretch, the push-in, at 1080vh a unit, see diveP() */
   /* the story keeps flowing underwater: the 3D sea stays behind it, deepening with scroll */
   /* sticky, not fixed: it holds through the dive, then scrolls away with the page and the plain page follows it */
   #stage { position: sticky; top: 0; left: 0; width: 100%; height: 100vh; overflow: hidden; z-index: 0; }
@@ -482,6 +482,13 @@
   #story { --ink: #0d1b2a; --ink-2: #4f5f70; --blue: #1f6fb8; color: var(--ink);
            --paper: #dde7f1; --card: #edf3f8; --rule: #c8d6e4; --rule-2: #a9bccf; background: var(--paper); }
   #story > section::before { display: none; }
+  /* no hard seam where the scene hands over: the lens dives into the float's white shell until it fills the screen, and
+     the light page (same colour) rises out of that white */
+  #whiteout { position: absolute; inset: 0; z-index: 7;   /* over the veil, the snow and the dive's captions */
+              pointer-events: none; opacity: 0; --wx: 50%; --wy: 50%; --wr: 0px; --wp: 0;
+              /* a glow of the page's colour from where the lens is aimed, its solid middle widening at the end (set per frame) */
+              background: radial-gradient(circle at var(--wx) var(--wy), #dde7f1 0, #dde7f1 calc(var(--wr) * var(--wp)), rgba(221, 231, 241, 0) var(--wr)); }
+  #whiteout.whole { background: #dde7f1; }
   /* the light page breathes: one idea a screen, big type, one line under it and wide empty space round it (the
      sites in the field put everything on one crowded page; this is the opposite) */
   #story section.one { min-height: 100vh; display: flex; align-items: center; padding: 16vh 6vw; box-sizing: border-box; }
@@ -975,7 +982,7 @@ if (el) {
 <div id="depth-rail" aria-hidden="true"><u></u><span>Problem</span><i></i></div>
 <a id="top"></a>
 <div id="scroller">
-  <div id="stage">
+  <div id="stage"><div id="whiteout"></div>
     <div id="loading">LOADING 0%</div>
     <div class="copy" id="hero-copy">
       <h1>Clock out at <span class="warm">sunset.</span> <em>We've got the night&nbsp;shift.</em></h1>
@@ -1258,7 +1265,7 @@ if (el) {
 </footer>
 
 <script>
-  // dive progress p from pixels scrolled into #scroller, linear. The dive is cut at DIVE_END, just after "Most fish
+  // dive progress p from pixels scrolled into #scroller, linear up to the outro. The dive is cut at DIVE_END, just after "Most fish
   // are lost before sunrise": there the scene scrolls away with the page and the plain page follows (2026-10-25).
   // The timings in p are those of the old 0..1 dive, and the scroller is cut to match, so the pace is unchanged.
   const DIVE_END = 0.44;
@@ -1266,13 +1273,18 @@ if (el) {
     const span = Math.max(1, document.getElementById('scroller').offsetHeight - innerHeight);
     return [span];
   }
+  // the outro (OUT_P to DIVE_END, the push-in onto the float) gets 1.8x the scroll a unit of p that the dive before it
+  // has, so the zoom is unhurried while the rest keeps its pace: 204vh for p 0..0.34, then 108vh for the last 0.1
+  const OUT_P = 0.34, OUT_F = 204 / 312;   // where the outro starts, in p and as a fraction of the scroller's span
   function diveP(y) {
     const [span] = diveSpans();
-    return Math.min(Math.max(y / span, 0), 1) * DIVE_END;
+    const t = Math.min(Math.max(y / span, 0), 1);
+    return t <= OUT_F ? t / OUT_F * OUT_P : OUT_P + (t - OUT_F) / (1 - OUT_F) * (DIVE_END - OUT_P);
   }
   function diveY(p) {
     const [span] = diveSpans();
-    return Math.min(p / DIVE_END, 1) * span;
+    p = Math.min(Math.max(p, 0), DIVE_END);
+    return (p <= OUT_P ? p / OUT_P * OUT_F : OUT_F + (p - OUT_P) / (DIVE_END - OUT_P) * (1 - OUT_F)) * span;
   }
   // fade elements in as they enter the viewport, lightly staggered within each group
   document.querySelectorAll('.params .param, .features .feature, .steps .step, ul.points li').forEach((el, i) => {
@@ -3317,9 +3329,12 @@ function layout() {
   frame(0);
 }
 // above water the picture is nudged down to show more sky; under water it is centred on the blades
+let reframe = 0;   // 0..1 over the dive's outro, which brings the float to the middle of the frame
+const _wv = new THREE.Vector3();
 function frame(dive) {
-  if (wide) camera.setViewOffset(viewW, viewH, -viewW * 0.2, -viewH * 0.1 * (1 - dive), viewW, viewH);
-  else camera.setViewOffset(viewW, viewH, 0, viewH * 0.16, viewW, viewH);
+  const k = 1 - reframe;
+  if (wide) camera.setViewOffset(viewW, viewH, -viewW * 0.2 * k, -viewH * 0.1 * (1 - dive) * k, viewW, viewH);
+  else camera.setViewOffset(viewW, viewH, 0, viewH * 0.16 * k, viewW, viewH);
   camera.updateProjectionMatrix();
 }
 addEventListener('resize', layout);
@@ -3592,6 +3607,10 @@ function tick(static_ = false) {
   const p = pCurrent;
   const q = qCurrent;
   const curScrollY = scrollCurrentY;
+  // once the light page is on screen the white under it is whole, wherever the eased scroll has got to (a fast flick
+  // would otherwise bring the page's edge up over the water for a few frames)
+  const whole = storyTop < innerHeight;
+  if (whole !== whiteout._whole) { whiteout._whole = whole; whiteout.classList.toggle('whole', whole); if (whole) whiteout.style.opacity = '1'; }
   header.classList.toggle('scrolled', curScrollY > 40);
   header.classList.toggle('on-light', storyTop < 70);   // the light page is under it
   // story sections ride over the fixed scene: keep the frame loop alive while they scroll, even after the
@@ -3621,15 +3640,28 @@ function tick(static_ = false) {
   const recede = smooth(0.28, 0.92, q);
   const sunlit = smooth(0.30, 0.52, p) * (1 - smooth(0.68, 0.84, p));
   const reefV = 0;
+  // the dive's last stretch is an outro, a camera operator's push-in: the lens closes on the float's white shell, slow at
+  // first and gathering pace, re-framing so the float comes to the middle and narrowing a little (dolly and zoom
+  // together, where before the widening lens cancelled the dolly out); in its last third the white spreads from where
+  // the lens is aimed until it fills the screen, so the light page that follows rises out of white instead of cutting in
+  // (it has its own slower stretch of scroll, ~103vh, see diveP: at ~57vh it felt rushed)
+  const ou = Math.min(Math.max((p - 0.34) / (0.435 - 0.34), 0), 1);   // done just before DIVE_END, so the white is whole
+  const push = smooth(0, 0.85, ou);   // the lens sets off gently and arrives gently at the shell
+  const aim = smooth(0, 0.7, ou);
+  reframe = smooth(0, 0.7, ou);
+  const glow = smooth(0.55, 1, ou);   // then the white surface floods the lens (exposure), see the finishing pass below
 
   const lens = smooth(0.18, 0.48, p);
-  camera.fov = lerp(32, wide ? 40 : 44, lens);
+  camera.fov = lerp(32, wide ? 40 : 44, lens) * (1 - 0.2 * push);
   const halfT = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2));
   const fitW = wide ? 1 : Math.min(2.2, 0.9 / camera.aspect * TAN16 / halfT);
 
   // Camera distance: smooth ease-in to frame the sensors at close range; during the story phase the lens backs
   // away slowly, so the float shrinks into the blue behind the panels instead of staring at you from under them
-  const dist = lerp(lerp(14.8, 12.0, dive), wide ? 11.2 : 12.2, uw) * fitW * (1 - deep * 0.16) * (1 + 0.2 * rise) * (1 + recede * 1.5);
+  const dist0 = lerp(lerp(14.8, 12.0, dive), wide ? 11.2 : 12.2, uw) * fitW * (1 - deep * 0.16) * (1 + 0.2 * rise) * (1 + recede * 1.5);
+  // the outro's approach is geometric, a steady rate of growth as a lens closing in reads (a straight dolly only made the
+  // float balloon in the last moment), and it ends ~1.2 from the axis on every screen (phones start much further out)
+  const dist = dist0 * Math.pow(Math.min(0.11, 1.22 / dist0), push);
   // camera height: smooth realistic descent with buoyant ocean coupling (+1.9 -> 0.0 -> -1.8 -> -2.5), then the
   // story sections sink on past it at a slow rate (-3.6 by the end of the page) — one continuous dive, no seam
   const storyY = -3.6;   // still well above the seabed (REEF_Y is -24): the lens stays in the lit water column
@@ -3657,9 +3689,24 @@ function tick(static_ = false) {
   const keepTip = smooth(0.16, 0.25, p);   // in place by the time the lens is under (the waterline is crossed at p ≈ 0.22)
   const pitch = lerp(pitchFree, Math.min(pitchFree, Math.atan2(tipY - camY, dist) + edgeB), keepTip);
   frame(dive);
-  camera.position.set(0, camY, dist);
-  camera.lookAt(0, camY + dist * Math.tan(pitch), 0);
+  // outro: the lens heads for the solid neck of the shell, under the disc, and looks straight at it
+  const shellY = buoy.y - FLOAT_SINK - recede * 4.6 - 0.5;   // (lower, the lens ended on a gap between the spirals)
+  camera.position.set(0, lerp(camY, shellY, aim), dist);
+  camera.lookAt(0, lerp(camY + dist * Math.tan(pitch), shellY, aim), 0);
   camera.updateMatrixWorld();
+  // the white of the outro, on top of the exposure: a broad glow centred where the lens is aimed, no edge to it at first,
+  // that settles into the page's own colour across the screen (left whole once the light page is up, see above)
+  if (!whiteout._whole) {
+    const op = smooth(0.72, 1, ou).toFixed(3);
+    if (whiteout.style.opacity !== op) whiteout.style.opacity = op;
+    if (ou > 0.72) {
+      _wv.set(0, shellY, 0).project(camera);
+      whiteout.style.setProperty('--wx', ((_wv.x + 1) * 50).toFixed(1) + '%');
+      whiteout.style.setProperty('--wy', ((1 - _wv.y) * 50).toFixed(1) + '%');
+      whiteout.style.setProperty('--wr', (Math.hypot(innerWidth, innerHeight) * (0.7 + 1.3 * glow)).toFixed(0) + 'px');
+      whiteout.style.setProperty('--wp', (0.6 * smooth(0.8, 1, ou)).toFixed(3));
+    }
+  }
   pickView();
   snowU.uFocal.value = bufH / (2 * halfT);
   view.px = 2 * halfT / bufH;
@@ -3689,7 +3736,7 @@ function tick(static_ = false) {
   finish.uniforms.uSubmerge.value = plungePeak;
   finish.uniforms.uSplash.value = plungePeak * (Math.abs(curScrollY - _uw.y) > 0.5 ? 0.75 : 0.35);
   finish.uniforms.uVignette.value = lerp(0.24, 0.42, uw);
-  finish.uniforms.uExposure.value = lerp(0.52, 0.76, smooth(0.2, -3.0, camY));
+  finish.uniforms.uExposure.value = lerp(0.52, 0.76, smooth(0.2, -3.0, camY)) * (1 + 1.6 * glow * glow);
   fishU.uFishT.value = t;
   if (fishMesh && p > 0.06) {
     updateFish(t, buoy.sx, buoy.y - FLOAT_SINK - recede * 4.6, buoy.sz);   // round the float, wherever it has drifted to
