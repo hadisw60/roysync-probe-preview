@@ -207,12 +207,24 @@
   .why { padding: 112px 0; background: var(--pale); color: var(--ink); text-align: center; scroll-margin-top: 110px; }
   .why p { margin: 24px auto 0; max-width: 620px; font-size: 18px; line-height: 1.6; }
 
-  /* ---- our edge: mid-blue band, six reasons with a line icon each ---- */
-  .edge { padding: 112px 0; background: var(--mid); text-align: center; }
-  .edge-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 64px 48px; margin-top: 64px; }
-  .edge-grid svg { width: 40px; height: 40px; margin: 0 auto; color: #fff; }
-  .edge-grid h3 { margin-top: 20px; font-size: 24px; }
-  .edge-grid p { margin: 14px auto 0; max-width: 320px; font-size: 14px; line-height: 1.6; }
+  /* ---- our edge: six numbered cards in a strip; with script it holds still and slides sideways as you scroll ---- */
+  .edge { padding: 112px 0; background: var(--navy); overflow-x: clip; }
+  .edge-head { display: flex; justify-content: space-between; align-items: end; gap: 24px; }
+  .edge-head small { display: block; margin-bottom: 10px; font: 600 12px var(--text); letter-spacing: .14em; text-transform: uppercase; color: var(--ice); }
+  .edge-head h2 { font-size: clamp(36px, 4.6vw, 60px); }
+  .edge-count { font: 300 15px var(--text); color: rgba(255,255,255,.6); letter-spacing: .06em; white-space: nowrap; }
+  .edge-count b { font: 400 22px var(--head); color: #fff; }
+  .edge-track { display: flex; gap: 22px; margin-top: 48px; padding: 0 var(--gut); overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; }
+  .edge-track::-webkit-scrollbar { display: none; }
+  .edge-card { flex: none; width: min(78vw, 420px); min-height: 380px; padding: 34px; border-radius: 22px; display: flex; flex-direction: column; scroll-snap-align: start;
+               background: linear-gradient(160deg, rgba(255,255,255,.10), rgba(255,255,255,.03)); border: 1px solid rgba(159,208,247,.2); }
+  .edge-card .big { font: 200 120px/.9 var(--head); letter-spacing: -.06em; color: transparent; -webkit-text-stroke: 1px rgba(159,208,247,.7); }
+  .edge-card h3 { margin-top: auto; padding-top: 28px; font-size: 28px; }
+  .edge-card p { margin-top: 12px; font-size: 15px; line-height: 1.6; color: rgba(255,255,255,.75); }
+  .edge.pinned { padding: 0; }
+  .edge.pinned .edge-stage { position: sticky; top: 0; height: 100vh; display: flex; flex-direction: column; justify-content: center; }
+  .edge.pinned .edge-head { width: 100%; }
+  .edge.pinned .edge-track { overflow: visible; width: max-content; will-change: transform; }
 
   /* ---- last call: navy band, white line, outlined button ---- */
   .call { padding: 112px 0; background: var(--navy); text-align: center; }
@@ -265,12 +277,12 @@
     .lids small { margin-left: auto; margin-right: auto; }
     .use { grid-template-columns: minmax(0, 1fr); gap: 36px; padding: 72px 0; }
     .use-body .rule { margin-right: 0; }
-    .edge-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   }
   @media (max-width: 600px) {
     .hero { height: 520px; } .hero p { font-size: 16px; }
-    .system, .uses { padding-top: 84px; } .why, .edge, .call { padding: 84px 0; } .versus { padding-bottom: 84px; }
-    .stage, .use-grid, .edge-grid { grid-template-columns: minmax(0, 1fr); }
+    .system, .uses { padding-top: 84px; } .why, .edge:not(.pinned), .call { padding: 84px 0; } .versus { padding-bottom: 84px; }
+    .stage, .use-grid { grid-template-columns: minmax(0, 1fr); }
+    .edge-card { min-height: 340px; padding: 28px; } .edge-card .big { font-size: 96px; }
   }
   @media (prefers-reduced-motion: reduce) {
     html { scroll-behavior: auto; } *, *::before, *::after { transition: none !important; animation: none !important; }
@@ -485,17 +497,17 @@
     </div>
   </section>
 
-  <section class="edge" aria-labelledby="edge-h">
-    <div class="col">
-      <h2 id="edge-h" class="reveal">Our Edge</h2>
-      <div class="edge-grid">
-        <div class="reveal"><svg viewBox="0 0 48 48" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="24" cy="24" r="17"/><circle cx="24" cy="24" r="10"/><circle cx="24" cy="24" r="3"/></svg><h3>Made for Fish Farms</h3><p>Not a lab instrument taken outdoors. Every choice starts from ponds, tanks and cages.</p></div>
-        <div class="reveal"><svg viewBox="0 0 48 48" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 18c4-4 8-4 12 0s8 4 12 0 8-4 12 0M6 28c4-4 8-4 12 0s8 4 12 0 8-4 12 0M6 38c4-4 8-4 12 0s8 4 12 0 8-4 12 0"/></svg><h3>Readings You Can Trust</h3><p>Each value carries its time and a sense check, so a fouled sensor shows up as a warning, not as a number.</p></div>
-        <div class="reveal"><svg viewBox="0 0 48 48" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M24 8v6M24 34v6M8 24h6M34 24h6M12.7 12.7l4.2 4.2M31.1 31.1l4.2 4.2M12.7 35.3l4.2-4.2M31.1 16.9l4.2-4.2"/><circle cx="24" cy="24" r="6"/></svg><h3>It Acts, Not Only Reports</h3><p>The float runs the aerator itself, so a low at 4 a.m. is handled before anyone wakes.</p></div>
-        <div class="reveal"><svg viewBox="0 0 48 48" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 24h26M28 16l8 8-8 8"/></svg><h3>Quick to Start</h3><p>No civil works and no wiring. A pilot starts with one float on the pond that worries you most.</p></div>
-        <div class="reveal"><svg viewBox="0 0 48 48" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="14" y="5" width="20" height="38" rx="4"/><path d="M21 37h6"/></svg><h3>On Your Phone</h3><p>Live readings and alerts in one dashboard, in the language your team works in.</p></div>
-        <div class="reveal"><svg viewBox="0 0 48 48" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 30v-6a14 14 0 0 1 28 0v6"/><rect x="6" y="28" width="8" height="12" rx="2"/><rect x="34" y="28" width="8" height="12" rx="2"/></svg><h3>A Team That Answers</h3><p>A person at RoySync replies within one working day, and stays with you through the pilot.</p></div>
-      </div>
+  <section class="edge" id="edge" aria-labelledby="edge-h">
+    <div class="edge-stage">
+      <div class="col edge-head"><div><small>Why AquaRoy</small><h2 id="edge-h">Six reasons to trust the float</h2></div><div class="edge-count" aria-hidden="true"><b>01</b> / 06</div></div>
+      <ol class="edge-track" role="list">
+        <li class="edge-card"><span class="big" aria-hidden="true">01</span><h3>Born on the Pond</h3><p>Designed around ponds, raceways and cages from day one, not carried out of a lab and hoped for the best.</p></li>
+        <li class="edge-card"><span class="big" aria-hidden="true">02</span><h3>Every Number Checked</h3><p>Each reading is time-stamped and sense-checked. A fouled sensor shows up as a warning, never as a wrong value.</p></li>
+        <li class="edge-card"><span class="big" aria-hidden="true">03</span><h3>It Switches the Aerator</h3><p>When oxygen sinks at night, the float turns the aerator on by itself. Nobody has to be awake for it.</p></li>
+        <li class="edge-card"><span class="big" aria-hidden="true">04</span><h3>Drop It In and Go</h3><p>Nothing to dig and no cables to run. Set one float on the pond that worries you most and the pilot has begun.</p></li>
+        <li class="edge-card"><span class="big" aria-hidden="true">05</span><h3>The Farm in Your Pocket</h3><p>Live values and alerts on one dashboard, in the language your team already speaks.</p></li>
+        <li class="edge-card"><span class="big" aria-hidden="true">06</span><h3>People, Not Tickets</h3><p>Write to RoySync and a real person answers within one working day, then stays with you through the pilot.</p></li>
+      </ol>
     </div>
   </section>
 
@@ -586,6 +598,21 @@
         f.firstElementChild.style.transform = `translateY(${(-11.5 + p * 9).toFixed(2)}%) scale(${(1 + .12 * Math.abs(p)).toFixed(3)})`; }); };
     // scroll events already arrive once per frame, so update straight away
     addEventListener('scroll', step, { passive: true }); addEventListener('resize', step); step();
+  })();
+
+  // our edge: the section holds still while its six cards slide past; without motion it stays a strip you swipe
+  if (!reduce) (() => {
+    const sec = document.getElementById('edge'); if (!sec) return;
+    const track = sec.querySelector('.edge-track'), count = sec.querySelector('.edge-count b');
+    sec.classList.add('pinned');
+    let run = 0;
+    // the first and last cards line up with the heading's left edge
+    const size = () => { const lead = sec.querySelector('h2').getBoundingClientRect().left + 'px';
+      track.style.paddingLeft = track.style.paddingRight = lead; run = Math.max(0, track.scrollWidth - innerWidth); sec.style.height = (innerHeight + run) + 'px'; move(); };
+    const move = () => { const p = run ? Math.max(0, Math.min(1, -sec.getBoundingClientRect().top / run)) : 0;
+      track.style.transform = `translateX(${(-p * run).toFixed(1)}px)`;
+      count.textContent = '0' + (Math.min(5, Math.round(p * 5)) + 1); };
+    addEventListener('scroll', move, { passive: true }); addEventListener('resize', size); size();
   })();
 
   // the oxygen dial: midnight at the top, the 24 hours clockwise, oxygen as distance from the centre; day and night halves
