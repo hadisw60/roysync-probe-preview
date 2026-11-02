@@ -190,6 +190,8 @@
   .use { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr); gap: 56px; align-items: center; padding: 96px 0; }
   .use figure { margin: 0; aspect-ratio: 4 / 3.4; border-radius: 12px; overflow: hidden; background: #0b1a2a; }
   .use figure img { width: 100%; height: 100%; object-fit: cover; }
+  /* taller than its frame so it can drift as the page scrolls */
+  .use figure.drift img { height: 130%; will-change: transform; }
   .use-body h2 { font-size: clamp(32px, 3.4vw, 44px); }
   .use-body .rule { height: 2px; margin: 22px calc(-1 * var(--gut)) 34px 0; background: linear-gradient(90deg, #4f9fe0, var(--ice) 50%, rgba(159,208,247,.12)); }
   .use-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 40px 40px; }
@@ -566,6 +568,20 @@
   // things rise into place once, as they come on screen
   const seen = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add('seen'); seen.unobserve(e.target); } }), { rootMargin: '0px 0px -8% 0px' });
   document.querySelectorAll('.reveal').forEach(el => seen.observe(el));
+
+  // the farm photos drift a little slower than the page and settle from a zoom, only while on screen
+  if (!reduce) (() => {
+    const figs = [...document.querySelectorAll('.use figure')];
+    figs.forEach(f => f.classList.add('drift'));
+    const step = () => {
+      figs.forEach(f => { const r = f.getBoundingClientRect(), vh = innerHeight;
+        if (r.bottom < 0 || r.top > vh) return;
+        // -1 as it enters at the bottom, 0 mid-screen, 1 as it leaves at the top
+        const p = Math.max(-1, Math.min(1, (vh / 2 - (r.top + r.height / 2)) / (vh / 2 + r.height / 2)));
+        f.firstElementChild.style.transform = `translateY(${(-11.5 + p * 9).toFixed(2)}%) scale(${(1 + .12 * Math.abs(p)).toFixed(3)})`; }); };
+    // scroll events already arrive once per frame, so update straight away
+    addEventListener('scroll', step, { passive: true }); addEventListener('resize', step); step();
+  })();
 
   // the oxygen dial: midnight at the top, the 24 hours clockwise, oxygen as distance from the centre; day and night halves
   (() => {
