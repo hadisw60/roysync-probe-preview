@@ -10,11 +10,11 @@
 <link rel="preload" href="assets/fonts/montserrat.woff2" as="font" type="font/woff2" crossorigin>
 <style>
   /* the look of the reference page the user handed over: black ground with fine wave lines, light DM Sans headings,
-     Montserrat text, one orange accent, then a pale band, a mid-blue band, a navy band and a white footer */
+     Montserrat text, the landing page's ice blue for the lines and highlights, then a pale band, a mid-blue band, a navy band and a white footer */
   @font-face { font-family: 'DM Sans'; font-style: normal; font-weight: 300 600; font-display: swap; src: url(assets/fonts/dmsans.woff2) format('woff2'); }
   @font-face { font-family: 'Montserrat'; font-style: normal; font-weight: 400 600; font-display: swap; src: url(assets/fonts/montserrat.woff2) format('woff2'); }
   :root {
-    --black: #000; --white: #fff; --orange: #f77f3b; --orange-d: #e56a24;
+    --black: #000; --white: #fff; --ice: #9fd0f7; --ice-line: rgba(159,208,247,.55); --warn: #fbbf24;
     --pale: #dae5ec; --mid: #4a80a3; --navy: #09356b; --ink: #0b1a2a; --grey: #9aa3ab;
     --head: 'DM Sans', system-ui, sans-serif; --text: Montserrat, system-ui, sans-serif;
     --col: 1200px; --gut: 5%;
@@ -24,7 +24,7 @@
   html, body { margin: 0; background: var(--black); color: var(--white); font: 400 16px/1.5 var(--text); -webkit-font-smoothing: antialiased; }
   a { color: inherit; }
   img, video, svg { display: block; }
-  :focus-visible { outline: 2px solid var(--orange); outline-offset: 3px; }
+  :focus-visible { outline: 2px solid var(--ice); outline-offset: 3px; }
   .col { max-width: calc(var(--col) + 2 * var(--gut)); margin: 0 auto; padding: 0 var(--gut); }
   h1, h2, h3 { margin: 0; font-family: var(--head); font-weight: 400; letter-spacing: -.03em; }
   h1 { font-size: clamp(40px, 4.4vw, 56px); line-height: 1.2; }
@@ -32,24 +32,71 @@
   h3 { font-size: 24px; line-height: 1.4; }
   p { margin: 0; }
 
-  /* ---- header: a dark glass bar with the orange Contact pill ---- */
-  header { position: fixed; z-index: 20; top: 24px; left: var(--gut); right: var(--gut); max-width: var(--col); margin: 0 auto;
-           display: flex; align-items: center; justify-content: space-between; height: 72px; padding: 0 16px 0 24px;
-           background: rgba(0,0,0,.4); border-radius: 16px; backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
-  .logo { display: flex; align-items: center; gap: 10px; text-decoration: none; font: 600 20px var(--head); letter-spacing: -.02em; }
-  .logo img { width: 34px; height: 34px; border-radius: 50%; }
-  .nav { display: flex; align-items: center; gap: 4px; }
-  .nav a { padding: 8px 14px; font-size: 15px; text-decoration: none; color: rgba(255,255,255,.72); transition: color .2s; }
-  .nav a:hover, .nav a[aria-current="page"] { color: #fff; }
-  .pill { display: inline-flex; align-items: center; justify-content: center; padding: 12px 22px; border-radius: 999px; background: var(--orange); color: #fff;
-          font: 500 15px var(--text); text-decoration: none; border: 0; cursor: pointer; transition: background .2s; }
-  .pill:hover { background: var(--orange-d); }
-  .nav .pill { margin-left: 10px; color: #fff; padding: 10px 20px; }
+  /* ---- header and footer: the landing page's own, in its Jost and Inter and its ice blue ---- */
+  @font-face { font-family: 'Inter'; font-style: normal; font-weight: 400 600; font-display: swap; src: url(assets/fonts/inter.woff2) format('woff2'); }
+  @font-face { font-family: 'Jost'; font-style: normal; font-weight: 300 700; font-display: swap; src: url(assets/fonts/jost.woff2) format('woff2'); }
+  header, footer { --accent: #4f9fe0; --accent-2: #9fd0f7; --glow: rgba(79,159,224,.35); --line: rgba(170,210,255,.12); --jost: Jost, Inter, system-ui, sans-serif;
+                   font-family: Inter, system-ui, sans-serif; }
+  header {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 20;
+    display: flex; align-items: center; justify-content: space-between; padding: 22px 6vw; border: 1px solid transparent;
+    transition: background .5s, padding .5s, backdrop-filter .5s, top .5s cubic-bezier(.2,.8,.2,1), left .5s cubic-bezier(.2,.8,.2,1),
+                right .5s cubic-bezier(.2,.8,.2,1), border-radius .5s, box-shadow .5s, border-color .5s;
+  }
+  /* full width over the film, then it gathers into a floating glass capsule */
+  header.scrolled { top: 12px; left: max(16px, calc(50vw - 520px)); right: max(16px, calc(50vw - 520px)); border-radius: 999px;
+                    padding: 10px 10px 10px 18px; background: linear-gradient(180deg, rgba(14,32,54,.62), rgba(5,14,26,.58));
+                    backdrop-filter: blur(18px) saturate(1.4); -webkit-backdrop-filter: blur(18px) saturate(1.4);
+                    border-color: rgba(170,215,255,.16);
+                    box-shadow: 0 18px 50px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.08), 0 0 0 1px rgba(79,159,224,.06); }
+  .logo { display: flex; align-items: center; gap: 12px; font: 600 19px var(--jost); letter-spacing: -.01em; text-decoration: none; }
+  .logo img { width: 40px; height: 40px; border-radius: 50%; display: block; transition: width .4s, height .4s; }
+  header.scrolled .logo img { width: 32px; height: 32px; }
+  .logo b { font-weight: 600; }
+  .logo i { position: relative; overflow: hidden; font-style: normal; font-size: 11px; font-weight: 600; letter-spacing: .12em; color: var(--accent-2);
+            border: 1px solid rgba(159,208,247,.4); border-radius: 999px; padding: 3px 8px 2px; margin-left: 2px; }
+  .logo i::after { content: ""; position: absolute; inset: 0; transform: translateX(-120%);
+                   background: linear-gradient(100deg, transparent 30%, rgba(255,255,255,.55) 50%, transparent 70%); animation: tagshine 6s ease-in-out 2s infinite; }
+  @keyframes tagshine { 0%, 80% { transform: translateX(-120%); } 95%, 100% { transform: translateX(120%); } }
+  .navlinks { position: relative; display: flex; gap: 4px; margin-left: auto; margin-right: 26px; }
+  .navlinks a { position: relative; z-index: 1; padding: 8px 14px; border-radius: 999px; color: #d6e6f3; text-decoration: none; font-size: 14px;
+                letter-spacing: .01em; white-space: nowrap; transition: color .2s; }
+  .navlinks a:hover, .navlinks a.on { color: #fff; }
+  .navlinks a::before { content: ""; position: absolute; inset: -7px -2px; }
+  .nav-lens { position: absolute; top: 0; left: 0; height: 100%; width: 0; border-radius: 999px; opacity: 0; pointer-events: none;
+              background: linear-gradient(180deg, rgba(159,208,247,.16), rgba(159,208,247,.06)); border: 1px solid rgba(159,208,247,.22);
+              box-shadow: inset 0 1px 0 rgba(255,255,255,.12), 0 4px 18px rgba(79,159,224,.18);
+              transition: transform .45s cubic-bezier(.2,.9,.25,1.15), width .45s cubic-bezier(.2,.9,.25,1.15), opacity .3s; }
+  .nav-progress { position: absolute; left: 22px; right: 22px; bottom: -1px; height: 2px; border-radius: 2px; opacity: 0; pointer-events: none;
+                  background: linear-gradient(90deg, rgba(159,208,247,0), #9fd0f7 40%, #e3f3ff); transform-origin: left; transform: scaleX(0);
+                  box-shadow: 0 0 10px rgba(159,208,247,.8); transition: opacity .4s; }
+  header.scrolled .nav-progress { opacity: .9; }
+  /* the one action in the header: a solid ice-blue pill with a soft halo, a shine on hover and a ripple where it is touched */
+  .btn { position: relative; overflow: hidden; display: inline-flex; align-items: center; gap: 8px; padding: 10px 20px; border-radius: 999px; white-space: nowrap;
+         background: linear-gradient(135deg, #e3f3ff 0%, #9fd0f7 48%, #5fa9e6 100%); color: #06182b; font-weight: 600; font-size: 13.5px; letter-spacing: .01em;
+         text-decoration: none; transition: transform .2s, box-shadow .2s, filter .2s;
+         box-shadow: 0 0 0 4px rgba(159,208,247,.12), 0 8px 26px var(--glow), inset 0 1px 0 rgba(255,255,255,.7); }
+  .btn:hover { transform: translateY(-1px); filter: brightness(1.06); box-shadow: 0 12px 34px rgba(79,159,224,.5), inset 0 1px 0 rgba(255,255,255,.7); }
+  .btn:focus-visible { outline: 2px solid #9fd0f7; outline-offset: 4px; border-radius: 999px; }
+  .btn::after { content: ""; position: absolute; top: 0; bottom: 0; width: 60%; left: -80%; transform: skewX(-20deg);
+                background: linear-gradient(90deg, transparent, rgba(255,255,255,.75), transparent); transition: left .7s ease; }
+  .btn:hover::after { left: 130%; }
+  .btn > span { position: relative; z-index: 2; }
+  .btn .rip { position: absolute; z-index: 1; width: 10px; height: 10px; margin: -5px 0 0 -5px; border-radius: 50%;
+              pointer-events: none; border: 2px solid rgba(255,255,255,.9); animation: ctarip .9s ease-out forwards; }
+  @keyframes ctarip { to { transform: scale(18); opacity: 0; border-width: .5px; } }
+  header :focus-visible, footer :focus-visible { outline-color: #9fd0f7; }
+  @media (max-width: 720px) {
+    .navlinks { gap: 2px; margin-right: 8px; } .navlinks a { font-size: 13px; padding: 7px 8px; }
+    header.scrolled .logo b, header.scrolled .logo i { display: none; } .btn { padding: 8px 14px; font-size: 13px; }
+  }
+  @media (max-width: 640px) { header.scrolled { left: 10px; right: 10px; top: 10px; padding: 8px 8px 8px 12px; } }
+  @media (prefers-reduced-motion: reduce) { .logo i::after { animation: none; } header, .nav-lens { transition: none; } }
 
   /* the fine wave lines behind the black sections, drawn in script so each section gets its own field */
   .waves { position: absolute; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; }
   .waves svg { position: absolute; left: 50%; top: 50%; width: max(1600px, 120%); height: 100%; transform: translate(-50%, -50%); }
-  .waves path { fill: none; stroke: rgba(70,150,230,.22); stroke-width: 1; }
+  .waves path { fill: none; stroke: rgba(120,180,235,.13); stroke-width: 1; }
   .black { position: relative; background: #000; }
   .black > .col { position: relative; z-index: 1; }
 
@@ -60,7 +107,7 @@
   .hero .col { position: relative; z-index: 1; padding-top: 60px; }
   .hero p { margin: 20px auto 0; max-width: 640px; font-size: 18px; }
 
-  /* ---- the float: picture in the middle, orange elbow leaders out to each label ---- */
+  /* ---- the float: picture in the middle, thin ice-blue elbow leaders out to each label ---- */
   .system { padding: 112px 0 40px; scroll-margin-top: 110px; }
   .center { text-align: center; }
   .center .sub { margin: 24px auto 0; max-width: 640px; font-size: 18px; }
@@ -76,7 +123,7 @@
   .tag h3 { font-size: 22px; }
   .tag p { margin-top: 22px; font-size: 14px; line-height: 1.6; color: rgba(255,255,255,.85); }
   /* the leader: a short horizontal under the title, then a slant toward the float */
-  .tag::before, .tag::after { content: ""; position: absolute; background: var(--orange); height: 2px; }
+  .tag::before, .tag::after { content: ""; position: absolute; background: var(--ice-line); height: 1.5px; }
   .tags-l .tag::before { right: 0; top: 41px; width: 60%; max-width: 220px; }
   .tags-l .tag::after { right: -38px; top: 41px; width: 44px; transform-origin: left center; transform: rotate(28deg); }
   .tags-r .tag::before { left: 0; top: 41px; width: 60%; max-width: 220px; }
@@ -91,45 +138,45 @@
   .compact p { margin-top: 6px; font: 400 clamp(20px, 1.8vw, 24px)/1.4 var(--head); }
   .compact small { display: block; margin-top: 18px; max-width: 380px; font-size: 14px; line-height: 1.6; color: rgba(255,255,255,.7); }
 
-  /* ---- partial picture vs whole night: two rows split by the orange line, then the oxygen chart ---- */
+  /* ---- partial picture vs whole night: two rows split by the ice-blue line, then the oxygen chart ---- */
   .versus { padding: 40px 0 112px; scroll-margin-top: 110px; }
   .vs-bar { display: grid; grid-template-columns: 1fr auto; row-gap: 28px; font: 400 20px var(--head); }
   .vs-bar .r { text-align: right; color: rgba(255,255,255,.85); }
-  .vs-bar .line { display: block; grid-column: 1 / -1; height: 2px; background: var(--orange); }
+  .vs-bar .line { display: block; grid-column: 1 / -1; height: 2px; background: linear-gradient(90deg, #4f9fe0, var(--ice) 60%, rgba(159,208,247,.15)); }
   .vs-bar .us { font-weight: 600; }
   .chart { margin-top: 56px; padding: 32px 32px 24px; border: 1px solid rgba(255,255,255,.12); border-radius: 12px; background: rgba(8,20,34,.6); }
   .chart-top { display: flex; justify-content: space-between; align-items: flex-end; gap: 24px; flex-wrap: wrap; margin-bottom: 20px; }
   .chart-top h3 { font-size: clamp(24px, 2.4vw, 32px); max-width: 620px; }
   .chart-tabs { display: flex; gap: 6px; padding: 4px; border-radius: 999px; background: rgba(255,255,255,.08); }
   .chart-tabs button { font: 500 14px var(--text); color: rgba(255,255,255,.75); background: none; border: 0; padding: 9px 18px; border-radius: 999px; cursor: pointer; }
-  .chart-tabs button[aria-selected="true"] { background: var(--orange); color: #fff; }
+  .chart-tabs button[aria-selected="true"] { background: linear-gradient(135deg, #e3f3ff 0%, #9fd0f7 48%, #5fa9e6 100%); color: #06182b; }
   .chart svg { width: 100%; max-width: 760px; height: auto; margin: 0 auto; overflow: visible; }
   .chart-note { text-align: center; }
   .chart .ax { font: 12px var(--text); fill: rgba(255,255,255,.55); }
   .chart .grid { stroke: rgba(255,255,255,.08); }
-  .chart .danger { fill: rgba(247,127,59,.1); }
-  .chart .danger-l { stroke: var(--orange); stroke-dasharray: 4 4; }
-  .chart .danger-t { font: 12px var(--text); fill: var(--orange); }
-  .chart .truth { fill: none; stroke: #6fb6ff; stroke-width: 2.4; stroke-linecap: round; }
+  .chart .danger { fill: rgba(251,191,36,.07); }
+  .chart .danger-l { stroke: rgba(251,191,36,.6); stroke-dasharray: 4 4; }
+  .chart .danger-t { font: 12px var(--text); fill: var(--warn); }
+  .chart .truth { fill: none; stroke: #9fd0f7; stroke-width: 2.4; stroke-linecap: round; }
   .chart .ghost { fill: none; stroke: rgba(111,182,255,.22); stroke-width: 2; stroke-dasharray: 3 5; }
   .chart .spot { fill: #fff; }
   .chart .spot-line { fill: none; stroke: #fff; stroke-width: 2; stroke-dasharray: 6 5; }
-  .chart .low { fill: #000; stroke: var(--orange); stroke-width: 2.4; }
-  .chart .low-t { font: 600 12.5px var(--text); fill: var(--orange); }
-  .chart .fan { fill: #6fb6ff; }
-  .chart .fan-t { font: 12px var(--text); fill: #6fb6ff; }
+  .chart .low { fill: #000; stroke: var(--warn); stroke-width: 2.4; }
+  .chart .low-t { font: 600 12.5px var(--text); fill: var(--warn); }
+  .chart .fan { fill: #9fd0f7; }
+  .chart .fan-t { font: 12px var(--text); fill: #9fd0f7; }
   .chart .only-full, .chart .only-spot { transition: opacity .45s; }
   .chart[data-view="spot"] .only-full, .chart[data-view="full"] .only-spot { opacity: 0; }
   .chart-note { margin-top: 12px; min-height: 3em; font-size: 15px; line-height: 1.6; color: rgba(255,255,255,.8); }
 
-  /* ---- industries: a heading, then one row per kind of farm: picture left, title with its orange rule, four points ---- */
+  /* ---- industries: a heading, then one row per kind of farm: picture left, title with its ice-blue rule, four points ---- */
   .uses { padding: 112px 0 40px; scroll-margin-top: 110px; }
   .uses > .col > h2 { text-align: center; max-width: 760px; margin: 0 auto; }
   .use { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr); gap: 56px; align-items: center; padding: 96px 0; }
   .use figure { margin: 0; aspect-ratio: 4 / 3.4; border-radius: 12px; overflow: hidden; background: #0b1a2a; }
   .use figure img { width: 100%; height: 100%; object-fit: cover; }
   .use-body h2 { font-size: clamp(32px, 3.4vw, 44px); }
-  .use-body .rule { height: 2px; margin: 22px calc(-1 * var(--gut)) 34px 0; background: var(--orange); }
+  .use-body .rule { height: 2px; margin: 22px calc(-1 * var(--gut)) 34px 0; background: linear-gradient(90deg, #4f9fe0, var(--ice) 50%, rgba(159,208,247,.12)); }
   .use-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 40px 40px; }
   .use-grid h3 { font-size: 20px; line-height: 1.35; }
   .use-grid p { margin-top: 12px; font-size: 13px; line-height: 1.7; color: rgba(255,255,255,.88); }
@@ -146,33 +193,43 @@
   .edge-grid p { margin: 14px auto 0; max-width: 320px; font-size: 14px; line-height: 1.6; }
 
   /* ---- last call: navy band, white line, outlined button ---- */
-  .cta { padding: 112px 0; background: var(--navy); text-align: center; }
+  .call { padding: 112px 0; background: var(--navy); text-align: center; }
   .ghost-btn { display: inline-block; margin-top: 32px; padding: 12px 24px; border: 1px solid rgba(255,255,255,.5); border-radius: 999px; font-size: 15px; text-decoration: none; transition: background .2s, border-color .2s; }
   .ghost-btn:hover { background: rgba(255,255,255,.1); border-color: #fff; }
 
-  /* ---- footer: white, the brand and the updates box on the left, the links on the right ---- */
-  footer { padding: 80px 0 40px; background: #fff; color: var(--ink); font-size: 14px; line-height: 1.6; }
-  .ft { display: grid; grid-template-columns: minmax(0, 1.6fr) repeat(2, minmax(0, .6fr)); gap: 48px; }
-  .ft .logo { color: var(--navy); }
-  .ft-brand > p { margin-top: 18px; }
-  .ft h4 { margin: 0 0 16px; font: 600 14px var(--text); }
-  .ft-col { display: flex; flex-direction: column; gap: 10px; }
-  .ft-col a { width: fit-content; text-decoration: none; } .ft-col a:hover { text-decoration: underline; }
+  /* ---- footer: the landing page's: brand first, then the pages, the company's registration and the updates box; the registered
+     office (UK law asks for it, with the registration) runs along the bottom line ---- */
+  footer { padding: 72px 6vw 30px; border-top: 1px solid var(--line); color: #9fb4c8; font-size: 14px; line-height: 1.6;
+           background: linear-gradient(180deg, rgba(4,12,22,.9), #03080f 65%); }
+  footer a { color: inherit; text-decoration: none; }
+  .ft { display: grid; grid-template-columns: 1.2fr .8fr 1.2fr 1.6fr; gap: 40px; max-width: 1140px; margin: 0 auto; }
+  .ft h4 { margin: 0 0 16px; font-size: 12px; font-weight: 600; letter-spacing: .16em; text-transform: uppercase; color: var(--accent-2); }
+  .ft-col { display: flex; flex-direction: column; gap: 8px; }
+  .ft-col a { position: relative; width: fit-content; transition: color .2s; } .ft-col a:hover { color: #fff; }
+  .ft-col a::before { content: ""; position: absolute; inset: -4px -6px; }
+  .ft-brand .logo { margin-bottom: 16px; color: #fff; }
+  .ft-brand p { margin: 0 0 18px; max-width: 280px; text-wrap: balance; }
   /* no list server yet: the address reaches info@roysync.com as a ready-written email from the visitor's own mail app */
-  .ft-news { margin-top: 28px; max-width: 460px; }
-  .ft-news label { display: block; margin-bottom: 14px; font: 400 18px var(--head); }
-  .ft-news-row { display: flex; gap: 12px; }
-  .ft-news input { flex: 1; min-width: 0; padding: 11px 14px; border: 1px solid var(--orange); border-radius: 6px; font: inherit; font-size: 15px; color: var(--ink); background: #fff; outline: 0; }
-  .ft-news input:focus { box-shadow: 0 0 0 3px rgba(247,127,59,.2); }
-  .ft-news small { display: block; margin-top: 12px; font-size: 12px; line-height: 1.5; color: #5d6b78; }
-  .ft-bottom { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 10px 24px; margin-top: 64px; padding-top: 28px; border-top: 1px solid rgba(11,26,42,.12); font-size: 13px; color: #5d6b78; }
+  .ft-news { max-width: 340px; }
+  .ft-news label { display: block; margin: 0 0 10px; color: #fff; font-weight: 500; }
+  .ft-news-row { display: flex; align-items: center; gap: 6px; padding: 4px 4px 4px 18px; border: 1px solid rgba(159,208,247,.3); border-radius: 999px;
+                 background: rgba(255,255,255,.04); transition: border-color .2s, background .2s; }
+  .ft-news-row:focus-within { border-color: rgba(159,208,247,.8); background: rgba(255,255,255,.07); }
+  .ft-news input { flex: 1; min-width: 0; border: 0; outline: 0; background: none; color: #fff; font: inherit; padding: 8px 0; }
+  .ft-news input::placeholder { color: #6f879e; }
+  .ft-news button { flex: none; width: 38px; height: 38px; border: 0; border-radius: 50%; cursor: pointer; font-size: 17px; color: #06182b;
+                    background: linear-gradient(135deg, #e3f3ff 0%, #9fd0f7 48%, #5fa9e6 100%); transition: transform .2s; }
+  .ft-news button:hover { transform: translateX(2px); }
+  .ft-news small { display: block; margin-top: 10px; font-size: 12px; line-height: 1.5; color: #6f879e; }
+  .ft-bottom { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 10px 24px; max-width: 1140px; margin: 56px auto 0; padding-top: 22px;
+               border-top: 1px solid var(--line); font-size: 12.5px; color: #6f879e; }
+  @media (max-width: 900px) { .ft { grid-template-columns: 1fr 1fr; } }
+  @media (max-width: 540px) { footer { padding: 52px 16px 24px; font-size: 13px; } .ft { grid-template-columns: 1fr 1fr; gap: 28px 18px; } .ft-brand, .ft-news { grid-column: 1 / -1; } }
 
   .reveal { opacity: 0; transform: translateY(24px); transition: opacity .9s cubic-bezier(.2,.7,.2,1), transform .9s cubic-bezier(.2,.7,.2,1); }
   .reveal.seen { opacity: 1; transform: none; }
 
   @media (max-width: 991px) {
-    header { top: 16px; height: 64px; padding: 0 10px 0 16px; }
-    .nav a:not(.pill) { padding: 8px 8px; font-size: 14px; }
     .stage { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); min-height: 0; gap: 32px; }
     .stage figure { grid-column: 1 / -1; grid-row: 1; max-width: 300px; margin: 0 auto; }
     .tags { padding: 0; gap: 32px; justify-content: flex-start; }
@@ -184,18 +241,13 @@
     .use { grid-template-columns: minmax(0, 1fr); gap: 36px; padding: 72px 0; }
     .use-body .rule { margin-right: 0; }
     .edge-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    .ft { grid-template-columns: repeat(2, minmax(0, 1fr)); } .ft-brand { grid-column: 1 / -1; }
   }
   @media (max-width: 600px) {
-    .logo span { display: none; }
-    .nav a:not(.pill) { font-size: 13px; padding: 8px 6px; }
-    .nav .pill { padding: 9px 14px; font-size: 13px; margin-left: 4px; }
     .hero { height: 520px; } .hero p { font-size: 16px; }
-    .system, .uses { padding-top: 84px; } .why, .edge, .cta { padding: 84px 0; } .versus { padding-bottom: 84px; }
+    .system, .uses { padding-top: 84px; } .why, .edge, .call { padding: 84px 0; } .versus { padding-bottom: 84px; }
     .stage, .use-grid, .edge-grid { grid-template-columns: minmax(0, 1fr); }
     .vs-bar { font-size: 16px; }
     .chart { padding: 22px 16px 16px; }
-    .ft-news-row { flex-direction: column; }
   }
   @media (prefers-reduced-motion: reduce) {
     html { scroll-behavior: auto; } *, *::before, *::after { transition: none !important; animation: none !important; }
@@ -205,13 +257,19 @@
 </head>
 <body>
 
-<header>
-  <a class="logo" href="./" aria-label="RoySync home"><img src="assets/logo.png" alt="" width="34" height="34"><span>RoySync</span></a>
-  <nav class="nav" aria-label="Primary">
-    <a href="./">Home</a>
-    <a href="solutions.html" aria-current="page">Solutions</a>
-    <a class="pill" href="contact.html">Contact</a>
+<header id="site-header" role="banner">
+  <nav aria-label="Primary" style="display:contents">
+  <a class="logo" href="./" aria-label="RoySync Gen2 home">
+    <img src="assets/logo.png" alt="" width="40" height="40">
+    <b>RoySync</b><i>Gen2</i>
+  </a>
+  <div class="navlinks">
+    <span class="nav-lens" aria-hidden="true"></span>
+    <a href="solutions.html" class="on" aria-current="page">Solutions</a>
+  </div>
+  <a class="btn cta" href="contact.html"><span>Contact us</span></a>
   </nav>
+  <i class="nav-progress" aria-hidden="true"></i>
 </header>
 
 <main>
@@ -379,7 +437,7 @@
     </div>
   </section>
 
-  <section class="cta" aria-labelledby="cta-h">
+  <section class="call" aria-labelledby="cta-h">
     <div class="col">
       <h2 id="cta-h" class="reveal">Contact us to plan a pilot.</h2>
       <a class="ghost-btn reveal" href="contact.html">Contact</a>
@@ -388,36 +446,36 @@
 </main>
 
 <footer>
-  <div class="col">
-    <div class="ft">
-      <div class="ft-brand">
-        <a class="logo" href="./"><img src="assets/logo.png" alt="" width="34" height="34" loading="lazy">RoySync</a>
-        <p>Water-quality monitoring for fish farms.<br>ROYSYNC LTD · Company No. 17360256 · Registered in England and Wales</p>
-        <form class="ft-news" action="mailto:info@roysync.com?subject=Subscribe%20to%20RoySync%20updates" method="post" enctype="text/plain">
-          <label for="ft-email">Stay up to date with our news &amp; updates.</label>
-          <div class="ft-news-row">
-            <input id="ft-email" name="email" type="email" placeholder="Enter your email" autocomplete="email" required>
-            <button class="pill" type="submit">Subscribe</button>
-          </div>
-          <small>By subscribing you agree to our Privacy Policy and provide consent to receive updates from our company.</small>
-        </form>
-      </div>
-      <nav class="ft-col" aria-label="Footer">
-        <h4>Pages</h4>
-        <a href="./">Home</a>
-        <a href="solutions.html">Solutions</a>
-        <a href="contact.html">Contact</a>
-      </nav>
-      <div class="ft-col">
-        <h4>Contact</h4>
-        <a href="mailto:info@roysync.com">info@roysync.com</a>
-      </div>
+  <div class="ft">
+    <div class="ft-brand">
+      <a class="logo" href="./"><img src="assets/logo.png" alt="" width="40" height="40" loading="lazy"><b>RoySync</b></a>
+      <p>Water-quality monitoring for fish farms.</p>
     </div>
-    <div class="ft-bottom">
-      <span>© 2026 ROYSYNC LTD. All rights reserved.</span>
-      <span>Registered office: 35 Peacock Drive, Highfields Caldecote, Cambridge CB23 7FE, United Kingdom</span>
-      <span>Registered design No. 6535677</span>
+    <nav class="ft-col" aria-label="Footer">
+      <h4>Pages</h4>
+      <a href="./">Home</a>
+      <a href="solutions.html">Solutions</a>
+      <a href="contact.html">Contact us</a>
+    </nav>
+    <div class="ft-col">
+      <h4>Company</h4>
+      <span>ROYSYNC LTD</span>
+      <span>Company No. 17360256</span>
+      <span>Registered in England and Wales</span>
     </div>
+    <form class="ft-news" action="mailto:info@roysync.com?subject=Subscribe%20to%20RoySync%20updates" method="post" enctype="text/plain">
+      <label for="ft-email">Stay up to date with our news &amp; updates.</label>
+      <div class="ft-news-row">
+        <input id="ft-email" name="email" type="email" placeholder="Enter your email" autocomplete="email" required>
+        <button type="submit" aria-label="Subscribe">→</button>
+      </div>
+      <small>By subscribing you agree to our Privacy Policy and provide consent to receive updates from our company.</small>
+    </form>
+  </div>
+  <div class="ft-bottom">
+    <span>© 2026 ROYSYNC LTD. All rights reserved.</span>
+    <span>Registered office: 35 Peacock Drive, Highfields Caldecote, Cambridge CB23 7FE, United Kingdom</span>
+    <span>Registered design No. 6535677</span>
   </div>
 </footer>
 
@@ -465,6 +523,41 @@
   chart.querySelectorAll('.chart-tabs button').forEach(b => b.addEventListener('click', () => setView(b.dataset.view)));
   // the spot checks first, then the night fills in by itself once, the first time the chart is seen
   if (!reduce) new IntersectionObserver(([e], o) => { if (e.isIntersecting) { o.disconnect(); setTimeout(() => setView('full'), 2200); } }, { threshold: .6 }).observe(chart);
+
+  // the header: a capsule once the page moves, a glass lens under the hovered or current link, and a glow line that fills with the page
+  (() => {
+    const header = document.getElementById('site-header'), nav = header.querySelector('.navlinks'), lens = nav.querySelector('.nav-lens'),
+          bar = header.querySelector('.nav-progress'), cur = nav.querySelector('a.on');
+    const place = a => {
+      if (!a) { lens.style.opacity = '0'; return; }
+      lens.style.opacity = '1'; lens.style.width = a.offsetWidth + 'px'; lens.style.transform = `translateX(${a.offsetLeft}px)`;
+    };
+    let hover = null;
+    nav.querySelectorAll('a').forEach(a => a.addEventListener('mouseenter', () => { hover = a; place(a); }));
+    nav.addEventListener('mouseleave', () => { hover = null; place(cur); });
+    const update = () => {
+      header.classList.toggle('scrolled', scrollY > 40);
+      if (!hover) place(cur);
+      const max = document.documentElement.scrollHeight - innerHeight;
+      bar.style.transform = `scaleX(${max > 0 ? Math.min(scrollY / max, 1) : 0})`;
+    };
+    addEventListener('scroll', update, { passive: true }); addEventListener('resize', update); update(); setTimeout(update, 600);
+  })();
+
+  // the Contact button: a ripple where the pointer enters or moves (a few a second at most), and on a tap
+  (() => {
+    const b = document.querySelector('header .btn.cta');
+    if (!b || reduce) return;
+    let last = 0;
+    const ripple = e => {
+      const now = performance.now(); if (now - last < 160) return; last = now;
+      const r = b.getBoundingClientRect(), i = document.createElement('i');
+      i.className = 'rip'; i.style.left = (e.clientX - r.left) + 'px'; i.style.top = (e.clientY - r.top) + 'px';
+      b.appendChild(i); setTimeout(() => i.remove(), 950);
+    };
+    b.addEventListener('pointerenter', ripple); b.addEventListener('pointermove', ripple);
+    b.addEventListener('pointerdown', e => { last = 0; ripple(e); });
+  })();
 
   // the updates box hands the address to the visitor's mail app
   document.querySelectorAll('.ft-news').forEach(f => f.addEventListener('submit', e => {
