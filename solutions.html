@@ -149,10 +149,15 @@
   .lids { padding: 64px 0 112px; display: grid; gap: 56px; }
   .lid-row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: center; gap: 48px; }
   .lid-row.flip > figure { order: 2; }
-  .lid-view { margin: 0; aspect-ratio: 1; width: min(100%, 420px); justify-self: end; position: relative; }
+  .lid-view { margin: 0; width: min(100%, 360px); justify-self: end; }
   .lid-row.flip .lid-view { justify-self: start; }
-  .lid-view canvas { width: 100%; height: 100%; display: block; cursor: grab; touch-action: pan-y; }
-  .lid-view canvas:active { cursor: grabbing; }
+  .lid-view svg { width: 100%; height: auto; display: block; cursor: grab; touch-action: pan-y; user-select: none; }
+  .lid-view svg:active { cursor: grabbing; }
+  .lid-view .pulse { transform-origin: 160px 160px; animation: magpulse 2.8s ease-out infinite; }
+  @keyframes magpulse { from { transform: scale(.85); opacity: .8; } to { transform: scale(1.5); opacity: 0; } }
+  .lid-view .sheen { animation: sheen 7s ease-in-out infinite; }
+  @keyframes sheen { 0%, 100% { transform: translateX(-60px); } 50% { transform: translateX(60px); } }
+  @media (prefers-reduced-motion: reduce) { .lid-view .pulse, .lid-view .sheen { animation: none; } }
   .lids h3 { font-size: clamp(28px, 2.6vw, 36px); }
   .lids p { margin-top: 6px; font: 400 clamp(20px, 1.8vw, 24px)/1.4 var(--head); }
   .lid-tag { display: inline-block; margin-top: 22px; padding: 7px 16px; border-radius: 999px; font: 500 14px var(--text); color: #06182b;
@@ -260,7 +265,7 @@
     .tags-l .tag::before, .tags-r .tag::before { left: 0; right: auto; top: 0; width: 64px; }
     .tag::after { display: none; }
     .lid-row { grid-template-columns: minmax(0, 1fr); text-align: center; gap: 20px; }
-    .lid-row.flip > figure { order: 0; } .lid-view, .lid-row.flip .lid-view { justify-self: center; width: min(86%, 340px); }
+    .lid-row.flip > figure { order: 0; } .lid-view, .lid-row.flip .lid-view { justify-self: center; width: min(80%, 300px); }
     .lids small { margin-left: auto; margin-right: auto; }
     .use { grid-template-columns: minmax(0, 1fr); gap: 36px; padding: 72px 0; }
     .use-body .rule { margin-right: 0; }
@@ -331,10 +336,38 @@
           <div class="tag reveal" data-part="board" tabindex="0"><h3>Acts on Its Own</h3><p>Switches on the aeration when oxygen falls, before anyone is awake to do it.</p></div>
         </div>
       </div>
-      <!-- compact construction: the float twice, each turning slowly and turnable by hand; its lid one of two ways -->
+      <!-- compact construction: the float from above twice, each turning slowly and turnable by hand; its lid one of two ways -->
       <div class="lids">
         <div class="lid-row">
-          <figure class="lid-view reveal"><canvas data-lid="sun" role="img" aria-label="The float with solar cells on its lid, turning slowly; drag to turn it"></canvas></figure>
+          <figure class="lid-view reveal">
+          <svg viewBox="0 0 320 320" role="img" aria-label="The float from above, about 200 millimetres across, with solar cells on its lid; drag to turn it">
+            <defs>
+              <clipPath id="lid"><circle cx="160" cy="160" r="86"/></clipPath>
+              <radialGradient id="lidWhite" cx="40%" cy="35%" r="75%"><stop offset="0" stop-color="#ffffff"/><stop offset=".7" stop-color="#e6ecf1"/><stop offset="1" stop-color="#c9d3db"/></radialGradient>
+              <linearGradient id="cell" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#1d4f86"/><stop offset="1" stop-color="#0b2343"/></linearGradient>
+              <pattern id="cells" width="22" height="22" patternUnits="userSpaceOnUse" x="149" y="149">
+                <rect x="1" y="1" width="20" height="20" rx="1.5" fill="url(#cell)"/>
+                <path d="M1 7.7H21M1 14.3H21" stroke="#7fa9d6" stroke-opacity=".35" stroke-width=".6"/>
+              </pattern>
+              <linearGradient id="glare" x1="0" x2="1"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset=".5" stop-color="#fff" stop-opacity=".22"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>
+              <radialGradient id="puck" cx="40%" cy="35%" r="70%"><stop offset="0" stop-color="#3a4f63"/><stop offset="1" stop-color="#16222f"/></radialGradient>
+              <filter id="drop" x="-30%" y="-30%" width="160%" height="160%"><feDropShadow dx="0" dy="3" stdDeviation="4" flood-color="#000" flood-opacity=".35"/></filter>
+            </defs>
+            <g class="turn">
+              <circle cx="160" cy="160" r="118" fill="#1a2a3a" stroke="rgba(255,255,255,.35)" stroke-width="2"/>
+              <g fill="#0b1520" stroke="rgba(255,255,255,.25)"><circle cx="265" cy="160" r="3.2"/><circle cx="234.2" cy="234.2" r="3.2"/><circle cx="160" cy="265" r="3.2"/><circle cx="85.8" cy="234.2" r="3.2"/><circle cx="55" cy="160" r="3.2"/><circle cx="85.8" cy="85.8" r="3.2"/><circle cx="160" cy="55" r="3.2"/><circle cx="234.2" cy="85.8" r="3.2"/></g>
+            </g>
+            <circle cx="160" cy="160" r="92" fill="url(#lidWhite)"/>
+            <g class="turn">
+              <circle cx="160" cy="160" r="88" fill="#c9d3db"/>
+              <circle cx="160" cy="160" r="86" fill="#08182b"/>
+              <rect x="70" y="70" width="180" height="180" fill="url(#cells)" clip-path="url(#lid)"/>
+            </g>
+            <g clip-path="url(#lid)"><g transform="rotate(25 160 160)"><rect class="sheen" x="40" y="60" width="90" height="200" fill="url(#glare)"/></g></g>
+            <g stroke="#fff" stroke-width="1.5"><line x1="42" y1="300" x2="278" y2="300"/><line x1="42" y1="292" x2="42" y2="308"/><line x1="278" y1="292" x2="278" y2="308"/></g>
+            <text x="160" y="292" text-anchor="middle" fill="#fff" font-family="Montserrat, sans-serif" font-size="13">≈ 200 mm</text>
+          </svg>
+          </figure>
           <div class="reveal">
             <h3>Compact Construction</h3>
             <p>About 200 mm (8 in.) in diameter</p>
@@ -343,7 +376,24 @@
           </div>
         </div>
         <div class="lid-row flip">
-          <figure class="lid-view reveal"><canvas data-lid="mag" role="img" aria-label="The float with a magnetic charger on its lid, turning slowly; drag to turn it"></canvas></figure>
+          <figure class="lid-view reveal">
+          <svg viewBox="0 0 320 320" role="img" aria-label="The float from above, about 200 millimetres across, with a magnetic charger on its lid; drag to turn it">
+            <g class="turn">
+              <circle cx="160" cy="160" r="118" fill="#1a2a3a" stroke="rgba(255,255,255,.35)" stroke-width="2"/>
+              <g fill="#0b1520" stroke="rgba(255,255,255,.25)"><circle cx="265" cy="160" r="3.2"/><circle cx="234.2" cy="234.2" r="3.2"/><circle cx="160" cy="265" r="3.2"/><circle cx="85.8" cy="234.2" r="3.2"/><circle cx="55" cy="160" r="3.2"/><circle cx="85.8" cy="85.8" r="3.2"/><circle cx="160" cy="55" r="3.2"/><circle cx="234.2" cy="85.8" r="3.2"/></g>
+            </g>
+            <circle cx="160" cy="160" r="92" fill="url(#lidWhite)"/>
+            <g class="turn">
+              <path d="M188 168C214 172 236 186 262 196" fill="none" stroke="#16222f" stroke-width="6" stroke-linecap="round"/>
+              <circle class="pulse" cx="160" cy="160" r="40" fill="none" stroke="#9fd0f7" stroke-width="2"/>
+              <circle cx="160" cy="160" r="38" fill="url(#puck)" filter="url(#drop)"/>
+              <circle cx="160" cy="160" r="29" fill="none" stroke="#9fd0f7" stroke-opacity=".9" stroke-width="2.5"/>
+              <path d="M163 145l-11 19h9l-3 14 12-21h-9z" fill="#9fd0f7"/>
+            </g>
+            <g stroke="#fff" stroke-width="1.5"><line x1="42" y1="300" x2="278" y2="300"/><line x1="42" y1="292" x2="42" y2="308"/><line x1="278" y1="292" x2="278" y2="308"/></g>
+            <text x="160" y="292" text-anchor="middle" fill="#fff" font-family="Montserrat, sans-serif" font-size="13">≈ 200 mm</text>
+          </svg>
+          </figure>
           <div class="reveal">
             <span class="lid-tag">Under a roof · Magnetic</span>
             <small>For tanks under a roof, a magnetic charger snaps onto the lid and charges the battery. No plug, no opening in the casing.</small>
@@ -851,98 +901,28 @@ if (renderer) {
   }
 }
 </script>
-<script type="module">
-// compact construction: the float as it looks, solid white, turning slowly; drag to turn it by hand. One wears solar
-// cells on its lid, the other a magnetic charger whose lead runs up to the roof.
-import * as THREE from 'three';
-import { GLTFLoader } from 'three/addons/GLTFLoader.js';
-
-const views = [...document.querySelectorAll('.lid-view canvas')];
-const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
-const TOP = 1.64;   // the flat of the lid
-
-// the solar cells, drawn once: dark blue cells with fine bus bars, in a round panel
-const cellTexture = () => {
-  const c = document.createElement('canvas'); c.width = c.height = 512; const x = c.getContext('2d');
-  x.fillStyle = '#0a1a2e'; x.fillRect(0, 0, 512, 512);
-  const n = 8, s = 512 / n;
-  for (let i = 0; i < n; i++) for (let j = 0; j < n; j++) {
-    const g = x.createLinearGradient(i * s, j * s, (i + 1) * s, (j + 1) * s); g.addColorStop(0, '#24578f'); g.addColorStop(1, '#0e2a4e');
-    x.fillStyle = g; x.fillRect(i * s + 3, j * s + 3, s - 6, s - 6);
-    x.strokeStyle = 'rgba(160,200,240,.35)'; x.lineWidth = 1.5;
-    for (const f of [.33, .66]) { x.beginPath(); x.moveTo(i * s + 3, j * s + s * f); x.lineTo((i + 1) * s - 3, j * s + s * f); x.stroke(); }
-  }
-  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4; return t;
-};
-
-const solar = () => {
-  const g = new THREE.Group();
-  const rim = new THREE.Mesh(new THREE.CylinderGeometry(0.86, 0.86, 0.03, 72), new THREE.MeshStandardMaterial({ color: '#c9d3db', roughness: .4, metalness: .3 }));
-  rim.position.y = TOP + 0.015;
-  const cells = new THREE.Mesh(new THREE.CircleGeometry(0.82, 72), new THREE.MeshStandardMaterial({ map: cellTexture(), roughness: .18, metalness: .35 }));
-  cells.rotation.x = -Math.PI / 2; cells.position.y = TOP + 0.032;
-  g.add(rim, cells); return g;
-};
-
-const magnetic = () => {
-  const g = new THREE.Group();
-  const puck = new THREE.Mesh(new THREE.CylinderGeometry(0.34, 0.37, 0.13, 64), new THREE.MeshStandardMaterial({ color: '#253545', roughness: .35, metalness: .4 }));
-  puck.position.y = TOP + 0.065;
-  const ring = new THREE.Mesh(new THREE.TorusGeometry(0.25, 0.018, 12, 64), new THREE.MeshStandardMaterial({ color: '#9fd0f7', emissive: '#9fd0f7', emissiveIntensity: 1.2 }));
-  ring.rotation.x = Math.PI / 2; ring.position.y = TOP + 0.132;
-  const lead = new THREE.CatmullRomCurve3([[0.34, TOP + 0.06, 0], [0.62, TOP + 0.22, 0.08], [0.8, TOP + 1, 0.14], [0.86, TOP + 3.2, 0.2]]
-    .map(p => new THREE.Vector3(...p)));
-  const cable = new THREE.Mesh(new THREE.TubeGeometry(lead, 64, 0.035, 10), new THREE.MeshStandardMaterial({ color: '#1a2633', roughness: .6 }));
-  g.add(puck, ring, cable); g.userData.ring = ring; return g;
-};
-
-const dequantize = g => {
-  const q = g.userData.q; if (!q) return;
-  const P = g.attributes.position, pos = new Float32Array(P.count * 3);
-  for (let i = 0; i < P.count; i++) { pos[i * 3] = q[0] + q[3] * P.getX(i); pos[i * 3 + 1] = q[1] + q[3] * P.getY(i); pos[i * 3 + 2] = q[2] + q[3] * P.getZ(i); }
-  g.setAttribute('position', new THREE.BufferAttribute(pos, 3)); g.deleteAttribute('normal'); g.computeVertexNormals();
-};
-
-if (views.length) new GLTFLoader().load('probe-baked.glb?v=65', gltf => {
-  const shells = [];
-  gltf.scene.traverse(o => { if (o.isMesh && o.name.startsWith('main')) { dequantize(o.geometry); shells.push(o.geometry); } });
-  const white = new THREE.MeshStandardMaterial({ color: '#eef3f7', roughness: .45, metalness: .05 });
-
-  views.forEach(canvas => {
-    let renderer;
-    try { renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true }); } catch (e) { return; }
-    renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
-    const scene = new THREE.Scene(), camera = new THREE.PerspectiveCamera(32, 1, 0.1, 100);
-    camera.position.set(0, 4.6, 12.5); camera.lookAt(0, -1.05, 0);
-    scene.add(new THREE.HemisphereLight('#ffffff', '#3c5268', 1.7));
-    const sun = new THREE.DirectionalLight('#ffffff', 1.6); sun.position.set(4, 7, 5); scene.add(sun);
-    const spin = new THREE.Group(); scene.add(spin);
-    shells.forEach(geo => spin.add(new THREE.Mesh(geo, white)));
-    const lid = canvas.dataset.lid === 'sun' ? solar() : magnetic(); spin.add(lid);
-    spin.rotation.y = canvas.dataset.lid === 'sun' ? 0.4 : 2.2;
-
-    // drag to turn; let go and it carries on turning slowly by itself
-    let drag = null, vel = 0;
-    canvas.addEventListener('pointerdown', e => { drag = e.clientX; vel = 0; canvas.setPointerCapture(e.pointerId); });
-    canvas.addEventListener('pointermove', e => { if (drag === null) return; const d = (e.clientX - drag) * 0.012; spin.rotation.y += d; vel = d; drag = e.clientX; });
-    const up = () => { drag = null; };
-    canvas.addEventListener('pointerup', up); canvas.addEventListener('pointercancel', up);
-
-    const size = () => { const w = canvas.clientWidth, h = canvas.clientHeight; if (!w || !h) return; renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix(); };
-    addEventListener('resize', size); size();
-    let inView = false, last = performance.now();
-    new IntersectionObserver(([e]) => { inView = e.isIntersecting; last = performance.now(); }, { rootMargin: '100px 0px' }).observe(canvas);
+<script>
+// compact construction: each top view turns slowly; drag it to turn it by hand, let go and it carries on
+(() => {
+  const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  document.querySelectorAll('.lid-view svg').forEach((svg, k) => {
+    const turns = svg.querySelectorAll('.turn');   // the brim and what sits on the lid; the lid's sheen stays put
+    let angle = k ? 140 : 20, vel = 0, drag = null, last = performance.now(), inView = false;
+    const at = e => { const r = svg.getBoundingClientRect(); return Math.atan2(e.clientY - r.top - r.height / 2, e.clientX - r.left - r.width / 2) * 180 / Math.PI; };
+    svg.addEventListener('pointerdown', e => { drag = at(e); vel = 0; svg.setPointerCapture(e.pointerId); });
+    svg.addEventListener('pointermove', e => { if (drag === null) return; let d = at(e) - drag; d = (d + 540) % 360 - 180; angle += d; vel = d; drag = at(e); });
+    svg.addEventListener('pointerup', () => { drag = null; }); svg.addEventListener('pointercancel', () => { drag = null; });
+    new IntersectionObserver(([e]) => { inView = e.isIntersecting; last = performance.now(); }).observe(svg);
     const frame = now => {
       requestAnimationFrame(frame);
-      if (!inView) return;
       const dt = Math.min(0.05, (now - last) / 1000); last = now;
-      if (drag === null) { vel *= 0.92; spin.rotation.y += vel + (still ? 0 : dt * 0.18); }
-      if (lid.userData.ring) lid.userData.ring.material.emissiveIntensity = 0.8 + 0.6 * Math.sin(now / 450);
-      renderer.render(scene, camera);
+      if (!inView) return;
+      if (drag === null) { vel *= 0.92; angle += vel + (still ? 0 : dt * 8); }
+      turns.forEach(t => t.setAttribute('transform', `rotate(${angle.toFixed(2)} 160 160)`));
     };
     requestAnimationFrame(frame);
   });
-}, undefined, () => {});
+})();
 </script>
 </body>
 </html>
