@@ -6,17 +6,15 @@
 <title>Solutions — RoySync</title>
 <meta name="description" content="The AquaRoy float watches oxygen, pH, conductivity, temperature and turbidity around the clock, on ponds, tanks, raceways and cages, and switches on the aeration when oxygen falls.">
 <link rel="icon" type="image/png" href="assets/favicon.png">
-<link rel="preload" href="assets/fonts/dmsans.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="preload" href="assets/fonts/montserrat.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="assets/fonts/jost.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="assets/fonts/inter.woff2" as="font" type="font/woff2" crossorigin>
 <style>
-  /* the look of the reference page the user handed over: black ground with fine wave lines, light DM Sans headings,
-     Montserrat text, the landing page's ice blue for the lines and highlights, then a pale band, a mid-blue band, a navy band and a white footer */
-  @font-face { font-family: 'DM Sans'; font-style: normal; font-weight: 300 600; font-display: swap; src: url(assets/fonts/dmsans.woff2) format('woff2'); }
-  @font-face { font-family: 'Montserrat'; font-style: normal; font-weight: 400 600; font-display: swap; src: url(assets/fonts/montserrat.woff2) format('woff2'); }
+  /* the look of the reference page the user handed over: black ground with fine wave lines, the landing page's Jost headings
+     and Inter text, the landing page's ice blue for the lines and highlights, then a pale band, a mid-blue band, a navy band and a white footer */
   :root {
     --black: #000; --white: #fff; --ice: #9fd0f7; --ice-line: rgba(159,208,247,.55); --warn: #fbbf24;
     --pale: #dae5ec; --mid: #4a80a3; --navy: #09356b; --ink: #0b1a2a; --grey: #9aa3ab;
-    --head: 'DM Sans', system-ui, sans-serif; --text: Montserrat, system-ui, sans-serif;
+    --head: Jost, Inter, system-ui, sans-serif; --text: Inter, system-ui, sans-serif;
     --col: 1200px; --gut: 5%;
   }
   * { box-sizing: border-box; }
@@ -26,7 +24,7 @@
   img, video, svg { display: block; }
   :focus-visible { outline: 2px solid var(--ice); outline-offset: 3px; }
   .col { max-width: calc(var(--col) + 2 * var(--gut)); margin: 0 auto; padding: 0 var(--gut); }
-  h1, h2, h3 { margin: 0; font-family: var(--head); font-weight: 400; letter-spacing: -.03em; }
+  h1, h2, h3 { margin: 0; font-family: var(--head); font-weight: 500; letter-spacing: -.02em; }
   h1 { font-size: clamp(40px, 4.4vw, 56px); line-height: 1.2; }
   h2 { font-size: clamp(34px, 4.4vw, 56px); line-height: 1.2; }
   h3 { font-size: 24px; line-height: 1.4; }
@@ -169,7 +167,7 @@
 
   /* ---- partial picture vs whole night: one sentence, then the oxygen dial ---- */
   .versus { padding: 40px 0 112px; scroll-margin-top: 110px; }
-  .vs-h { margin: 0; font: 300 clamp(34px, 4.6vw, 60px)/1.12 var(--head); letter-spacing: -.035em; max-width: 1000px; }
+  .vs-h { margin: 0; font: 500 clamp(34px, 4.6vw, 60px)/1.12 var(--head); letter-spacing: -.035em; max-width: 1000px; }
   .vs-h .dim { color: rgba(255,255,255,.38); }
   .vs-h .us { background: linear-gradient(100deg, #e3f3ff, var(--ice) 45%, #5fa9e6); -webkit-background-clip: text; background-clip: text; color: transparent; }
   .dial-row { margin-top: 56px; display: grid; grid-template-columns: 1fr 1.1fr; gap: 56px; align-items: center; }
@@ -210,26 +208,34 @@
   /* ---- our edge: six numbered cards in a strip; with script it holds still and slides sideways as you scroll ---- */
   .edge { padding: 112px 0; background: var(--navy); overflow-x: clip; }
   .edge-head { display: flex; justify-content: space-between; align-items: end; gap: 24px; }
-  .edge-head small { display: block; margin-bottom: 10px; font: 600 12px var(--text); letter-spacing: .14em; text-transform: uppercase; color: var(--ice); }
-  .edge-head h2 { font-size: clamp(36px, 4.6vw, 60px); }
+  .edge-head small { display: block; margin-bottom: 8px; font: 600 12px var(--text); letter-spacing: .14em; text-transform: uppercase; color: var(--ice); }
+  .edge-head h2 { font-size: clamp(28px, 3.2vw, 42px); }
   .edge-count { font: 300 15px var(--text); color: rgba(255,255,255,.6); letter-spacing: .06em; white-space: nowrap; }
-  .edge-count b { font: 400 22px var(--head); color: #fff; }
-  .edge-track { display: flex; gap: 22px; margin-top: 48px; padding: 0 var(--gut); overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; }
+  .edge-count b { font: 500 20px var(--head); color: #fff; }
+  .edge-track { display: flex; gap: 18px; margin: 36px 0 0; padding: 0 var(--gut); list-style: none; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; }
   .edge-track::-webkit-scrollbar { display: none; }
-  .edge-card { flex: none; width: min(78vw, 420px); min-height: 380px; padding: 34px; border-radius: 22px; display: flex; flex-direction: column; scroll-snap-align: start;
-               background: linear-gradient(160deg, rgba(255,255,255,.10), rgba(255,255,255,.03)); border: 1px solid rgba(159,208,247,.2); }
-  .edge-card .big { font: 200 120px/.9 var(--head); letter-spacing: -.06em; color: transparent; -webkit-text-stroke: 1px rgba(159,208,247,.7); }
-  .edge-card h3 { margin-top: auto; padding-top: 28px; font-size: 28px; }
-  .edge-card p { margin-top: 12px; font-size: 15px; line-height: 1.6; color: rgba(255,255,255,.75); }
+  /* cards of one size; number, title and words always start at the same height so the row reads as a set */
+  .edge-card { flex: none; width: min(74vw, 330px); padding: 28px 28px 30px; border-radius: 18px; scroll-snap-align: start;
+               background: linear-gradient(160deg, rgba(255,255,255,.09), rgba(255,255,255,.03)); border: 1px solid rgba(159,208,247,.18); }
+  .edge-card .big { display: block; font: 300 56px/1 var(--head); letter-spacing: -.04em; color: transparent; -webkit-text-stroke: 1px rgba(159,208,247,.75); }
+  .edge-card h3 { margin-top: 40px; font-size: 21px; }
+  .edge-card p { margin-top: 10px; font-size: 14px; line-height: 1.6; color: rgba(255,255,255,.72); }
   .edge.pinned { padding: 0; }
   .edge.pinned .edge-stage { position: sticky; top: 0; height: 100vh; display: flex; flex-direction: column; justify-content: center; }
   .edge.pinned .edge-head { width: 100%; }
   .edge.pinned .edge-track { overflow: visible; width: max-content; will-change: transform; }
 
-  /* ---- last call: navy band, white line, outlined button ---- */
-  .call { padding: 112px 0; background: var(--navy); text-align: center; }
-  .ghost-btn { display: inline-block; margin-top: 32px; padding: 12px 24px; border: 1px solid rgba(255,255,255,.5); border-radius: 999px; font-size: 15px; text-decoration: none; transition: background .2s, border-color .2s; }
-  .ghost-btn:hover { background: rgba(255,255,255,.1); border-color: #fff; }
+  /* ---- last call: light ice-blue band after the navy strip, navy line, outlined navy button ---- */
+  .call { padding: 112px 0; background: linear-gradient(160deg, #bfe0fb 0%, #9fd0f7 50%, #78b9ee 100%); color: var(--navy); text-align: center; }
+  /* the landing page's closing band: its heading in Jost and its button in Inter */
+  .call h2 { font: 600 clamp(28px, 3.4vw, 48px)/1.1 var(--head); letter-spacing: -.01em; }
+  /* the closing button is the header's: the same ice pill, shine and ripple of bubbles under the pointer, only larger */
+  .call { --glow: rgba(79,159,224,.35); }
+  .call .call-btn { margin-top: 32px; padding: 15px 32px; font: 600 15px Inter, system-ui, sans-serif; }
+  /* on the light band it needs a white ring and a navy shadow to stand off the blue, and navy bubbles to be seen */
+  .call .call-btn { box-shadow: 0 0 0 5px rgba(255,255,255,.45), 0 12px 30px rgba(9,53,107,.35), inset 0 1px 0 rgba(255,255,255,.8); }
+  .call .call-btn:hover { box-shadow: 0 0 0 6px rgba(255,255,255,.6), 0 16px 38px rgba(9,53,107,.45), inset 0 1px 0 rgba(255,255,255,.8); }
+  .call .call-btn .rip { border-color: rgba(9,53,107,.6); }
 
   /* ---- footer: the landing page's: brand first, then the pages, the company's registration and the updates box; the registered
      office (UK law asks for it, with the registration) runs along the bottom line ---- */
@@ -282,7 +288,6 @@
     .hero { height: 520px; } .hero p { font-size: 16px; }
     .system, .uses { padding-top: 84px; } .why, .edge:not(.pinned), .call { padding: 84px 0; } .versus { padding-bottom: 84px; }
     .stage, .use-grid { grid-template-columns: minmax(0, 1fr); }
-    .edge-card { min-height: 340px; padding: 28px; } .edge-card .big { font-size: 96px; }
   }
   @media (prefers-reduced-motion: reduce) {
     html { scroll-behavior: auto; } *, *::before, *::after { transition: none !important; animation: none !important; }
@@ -371,7 +376,7 @@
             </g>
             <g clip-path="url(#lid)"><g transform="rotate(25 160 160)"><rect class="sheen" x="40" y="60" width="90" height="200" fill="url(#glare)"/></g></g>
             <g stroke="#fff" stroke-width="1.5"><line x1="42" y1="300" x2="278" y2="300"/><line x1="42" y1="292" x2="42" y2="308"/><line x1="278" y1="292" x2="278" y2="308"/></g>
-            <text x="160" y="292" text-anchor="middle" fill="#fff" font-family="Montserrat, sans-serif" font-size="13">≈ 200 mm</text>
+            <text x="160" y="292" text-anchor="middle" fill="#fff" font-family="Inter, sans-serif" font-size="13">≈ 200 mm</text>
           </svg>
           </figure>
           <div class="reveal">
@@ -397,7 +402,7 @@
               <path d="M163 145l-11 19h9l-3 14 12-21h-9z" fill="#9fd0f7"/>
             </g>
             <g stroke="#fff" stroke-width="1.5"><line x1="42" y1="300" x2="278" y2="300"/><line x1="42" y1="292" x2="42" y2="308"/><line x1="278" y1="292" x2="278" y2="308"/></g>
-            <text x="160" y="292" text-anchor="middle" fill="#fff" font-family="Montserrat, sans-serif" font-size="13">≈ 200 mm</text>
+            <text x="160" y="292" text-anchor="middle" fill="#fff" font-family="Inter, sans-serif" font-size="13">≈ 200 mm</text>
           </svg>
           </figure>
           <div class="reveal">
@@ -514,7 +519,7 @@
   <section class="call" aria-labelledby="cta-h">
     <div class="col">
       <h2 id="cta-h" class="reveal">Contact us to plan a pilot.</h2>
-      <a class="ghost-btn reveal" href="contact.html">Contact</a>
+      <div class="reveal"><a class="btn cta call-btn" href="contact.html"><span>Contact</span></a></div>
     </div>
   </section>
 </main>
@@ -630,7 +635,7 @@
     const clock = h => { const m = Math.round((9 * 60 + h * 60) % 1440); return `${Math.floor(m / 60)}:${String(m % 60).padStart(2, '0')}`; };
     const NS = 'http://www.w3.org/2000/svg', el = (tag, a, parent) => { const e = document.createElementNS(NS, tag); for (const k in a) e.setAttribute(k, a[k]); parent.appendChild(e); return e; };
     const txt = (s, a, parent) => { const t = el('text', a, parent); t.textContent = s; return t; };
-    const F = { 'font-family': 'Montserrat, sans-serif', 'font-size': 12 };
+    const F = { 'font-family': 'Inter, sans-serif', 'font-size': 12 };
     const S = 560, c = S / 2, r0 = 66, r1 = 228, svg = el('svg', { viewBox: `0 0 ${S} ${S}`, 'aria-hidden': 'true' }, box);
     const ang = h => ((9 + h) % 24) / 24 * Math.PI * 2 - Math.PI / 2, rad = v => r0 + Math.max(0, v) / 12 * (r1 - r0);
     const ray = (h, r) => [c + Math.cos(ang(h)) * r, c + Math.sin(ang(h)) * r], pt = (h, v) => ray(h, rad(v));
@@ -661,7 +666,7 @@
     const [rx, ry] = ray(21, r1 + 22); txt('sunrise', { x: rx + 6, y: ry + 16, fill: '#f6c768', ...F, 'font-size': 11 }, svg);
     const [tx, ty] = ray(10.5, r1 + 22); txt('sunset', { x: tx - 6, y: ty - 6, 'text-anchor': 'end', fill: '#8fa0d8', ...F, 'font-size': 11 }, svg);
     const top = txt('low before dawn', { x: c, y: c - 18, 'text-anchor': 'middle', fill: 'rgba(255,255,255,.5)', ...F, 'font-size': 11 }, svg);
-    const big = txt('4.0', { x: c, y: c + 13, 'text-anchor': 'middle', fill: '#fff', 'font-family': 'DM Sans, sans-serif', 'font-size': 34, 'font-weight': 300 }, svg);
+    const big = txt('4.0', { x: c, y: c + 13, 'text-anchor': 'middle', fill: '#fff', 'font-family': 'Jost, Inter, sans-serif', 'font-size': 34, 'font-weight': 300 }, svg);
     txt('mg/L', { x: c, y: c + 32, 'text-anchor': 'middle', fill: 'rgba(255,255,255,.5)', ...F, 'font-size': 11 }, svg);
     // point anywhere on the dial: a hand reads the hour under it
     const hand = el('line', { x1: c, y1: c, stroke: 'rgba(255,255,255,.5)', opacity: 0 }, svg), knob = el('circle', { r: 5, fill: '#9fd0f7', stroke: '#000', 'stroke-width': 2, opacity: 0 }, svg);
@@ -695,19 +700,20 @@
     addEventListener('scroll', update, { passive: true }); addEventListener('resize', update); update(); setTimeout(update, 600);
   })();
 
-  // the Contact button: a ripple where the pointer enters or moves (a few a second at most), and on a tap
+  // the Contact buttons, in the header and at the foot: a ripple where the pointer enters or moves (a few a second at most), and on a tap
   (() => {
-    const b = document.querySelector('header .btn.cta');
-    if (!b || reduce) return;
-    let last = 0;
-    const ripple = e => {
-      const now = performance.now(); if (now - last < 160) return; last = now;
-      const r = b.getBoundingClientRect(), i = document.createElement('i');
-      i.className = 'rip'; i.style.left = (e.clientX - r.left) + 'px'; i.style.top = (e.clientY - r.top) + 'px';
-      b.appendChild(i); setTimeout(() => i.remove(), 950);
-    };
-    b.addEventListener('pointerenter', ripple); b.addEventListener('pointermove', ripple);
-    b.addEventListener('pointerdown', e => { last = 0; ripple(e); });
+    if (reduce) return;
+    document.querySelectorAll('.btn.cta').forEach(b => {
+      let last = 0;
+      const ripple = e => {
+        const now = performance.now(); if (now - last < 160) return; last = now;
+        const r = b.getBoundingClientRect(), i = document.createElement('i');
+        i.className = 'rip'; i.style.left = (e.clientX - r.left) + 'px'; i.style.top = (e.clientY - r.top) + 'px';
+        b.appendChild(i); setTimeout(() => i.remove(), 950);
+      };
+      b.addEventListener('pointerenter', ripple); b.addEventListener('pointermove', ripple);
+      b.addEventListener('pointerdown', e => { last = 0; ripple(e); });
+    });
   })();
 
   // the updates box hands the address to the visitor's mail app
