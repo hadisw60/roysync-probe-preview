@@ -562,35 +562,73 @@
 <script>
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  // the ribbon: about fifty lines, each the same centre curve offset across a band whose face turns as it travels, so the
-  // lines fan out where the band faces you and pinch together where it twists edge-on. It is one ribbon down the whole
-  // page: each black section draws its own stretch from page position, so the stretches meet across section edges
-  document.querySelectorAll('[data-waves]').forEach(box => {
+  // the ribbon: a band of fine lines down the black part of the page, built like a strip of paper: a centre path that
+  // sways, a width, and a face that turns as it goes. Each line sits at its own place across the band and turns a little
+  // after its neighbour, so where the band goes edge-on its two edges cross and swap sides over a short stretch instead
+  // of meeting at a point, and the near edge dips while the far edge lifts, which opens and closes the gaps like depth.
+  // The shape is a function of page position, so each black section draws its own stretch and the stretches meet
+  // across section edges; the lines fade out behind headings so the words stay clean. As the page scrolls the ribbon
+  // keeps turning and drifts a little slower than the page, so it feels like water moving past rather than wallpaper
+  const ribbonX = (gy, W) => W * (.5 + .2 * Math.sin(gy / 700 + 1.3) + .07 * Math.sin(gy / 290 + .4) + .03 * Math.sin(gy / 130 + 2.1));
+  const ribbonTurn = gy => gy / 520 + .6 * Math.sin(gy / 1300);
+  const smooth = pts => {                                            // a Catmull-Rom curve through the points, as cubic curves
+    const f = Math.round; let d = `M${f(pts[0][0])} ${f(pts[0][1])}`;
+    for (let i = 0; i < pts.length - 1; i++) {
+      const p0 = pts[i - 1] || pts[i], p1 = pts[i], p2 = pts[i + 1], p3 = pts[i + 2] || p2;
+      d += ` C${f(p1[0] + (p2[0] - p0[0]) / 6)} ${f(p1[1] + (p2[1] - p0[1]) / 6)} ${f(p2[0] - (p3[0] - p1[0]) / 6)} ${f(p2[1] - (p3[1] - p1[1]) / 6)} ${f(p2[0])} ${f(p2[1])}`;
+    }
+    return d;
+  };
+  const ribbons = [...document.querySelectorAll('[data-waves]')].map((box, b) => {
     const ns = 'http://www.w3.org/2000/svg', n = 52;
     const svg = document.createElementNS(ns, 'svg'); svg.setAttribute('aria-hidden', 'true'); box.appendChild(svg);
-    const draw = () => {
-      const W = Math.max(1, box.clientWidth), H = Math.max(1, box.clientHeight); svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
-      // the shape follows the page, swaying and twisting about once per screenful
-      const top = box.getBoundingClientRect().top + scrollY, band = Math.min(W * .3, 460), steps = Math.max(40, Math.round(H / 15));
-      let out = '';
-      for (let i = 0; i < n; i++) {
-        const t = i / (n - 1) - .5;
-        let d = '';
-        for (let k = 0; k <= steps; k++) {
-          const u = k / steps, y = -2 + (H + 4) * u, a = (top + y) / 900, seed = 1;
-          const cx = W * (.5 + .26 * Math.sin(a * 3.3 + seed * 1.9)) + Math.sin(a * 7.1 + seed) * W * .04;
-          const turn = Math.cos(a * 4.1 + seed * 2.3);                  // 1 face on, 0 edge on
-          const x = cx + t * band * (.12 + .88 * Math.abs(turn)) + t * t * band * .5 * Math.sin(a * 3 + seed);
-          d += (k ? ' L' : 'M') + x.toFixed(1) + ' ' + y.toFixed(1);
-        }
-        // brighter toward the two edges of the band, faint in its middle, as in a sheet of fine wire catching light
-        out += `<path d="${d}" style="opacity:${(.08 + .28 * (2 * Math.abs(t)) ** 2).toFixed(3)}"/>`;
-      }
-      svg.innerHTML = out;
+    svg.innerHTML = `<defs><radialGradient id="rb-hole-${b}"><stop offset=".45" stop-color="#000"/><stop offset="1" stop-color="#000" stop-opacity="0"/></radialGradient>`
+      + `<mask id="rb-mask-${b}" maskUnits="userSpaceOnUse"><rect fill="#fff"/><g></g></mask></defs><g mask="url(#rb-mask-${b})"></g>`;
+    const sheet = svg.querySelector('mask rect'), holes = svg.querySelector('mask g'), group = svg.lastChild, paths = [];
+    for (let i = 0; i < n; i++) {
+      const t = i / (n - 1) - .5, p = document.createElementNS(ns, 'path');
+      p.style.opacity = (.07 + .17 * (2 * Math.abs(t)) ** 1.5).toFixed(3);   // the two edges catch the most light, the middle the least
+      group.appendChild(p); paths.push(p);
+    }
+    // the section's size, its place on the page and the soft gaps behind its headings are measured when its shape
+    // changes; scrolling only moves the lines
+    let W = 1, H = 1, top = 0, band = 0, pad = 0;
+    const lay = () => {
+      W = Math.max(1, box.clientWidth); H = Math.max(1, box.clientHeight); svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+      const br = box.getBoundingClientRect(); top = br.top + scrollY; band = Math.min(W * .36, 540); pad = band * .2 + 40;
+      sheet.setAttribute('width', W); sheet.setAttribute('height', H);
+      holes.innerHTML = [...box.parentElement.querySelectorAll('h2, h3')].map(h => h.getBoundingClientRect()).filter(r => r.width).map(r => {
+        const x = r.left - br.left, y = r.top - br.top;
+        return `<rect x="${(x - 14).toFixed(0)}" y="${(y - 10).toFixed(0)}" width="${(r.width + 28).toFixed(0)}" height="${(r.height + 20).toFixed(0)}" rx="18" fill="#000" fill-opacity=".8"/>`
+          + `<rect x="${(x - r.width * .25 - 60).toFixed(0)}" y="${(y - 70).toFixed(0)}" width="${(r.width * 1.5 + 120).toFixed(0)}" height="${(r.height + 140).toFixed(0)}" fill="url(#rb-hole-${b})"/>`;
+      }).join('');
+      move();
     };
-    let wait; new ResizeObserver(() => { clearTimeout(wait); wait = setTimeout(draw, 120); }).observe(box);
-    draw();
+    // only the stretch on screen and a margin either side is drawn; the rest is drawn when it scrolls in
+    const move = () => {
+      const onTop = top - scrollY, from = Math.floor(Math.max(-pad, -onTop - 300) / 24) * 24, to = Math.min(H + pad, innerHeight - onTop + 300);
+      if (to <= from) return;
+      const roll = reduce ? 0 : scrollY, drift = roll * .3, spin = roll / 700, ys = [], cx = [], ca = [], sa = [];
+      for (let y = from; y <= to + 24; y += 24) {                     // the centre and the turn, once per height
+        const gy = top + y - drift, a = ribbonTurn(gy) + spin;
+        ys.push(y); cx.push(ribbonX(gy, W)); ca.push(Math.cos(a)); sa.push(Math.sin(a));
+      }
+      for (let i = 0; i < n; i++) {
+        // each line turns a little after the last: cos and sin of (turn + lag) by the angle-sum rule
+        const t = i / (n - 1) - .5, w = t * band, cl = Math.cos(t * .45), sl = Math.sin(t * .45), pts = [];
+        for (let k = 0; k < ys.length; k++) pts.push([cx[k] + w * (ca[k] * cl - sa[k] * sl), ys[k] + w * .2 * (sa[k] * cl + ca[k] * sl)]);
+        paths[i].setAttribute('d', smooth(pts));
+      }
+    };
+    let wait; new ResizeObserver(() => { clearTimeout(wait); wait = setTimeout(lay, 120); }).observe(box);
+    lay();
+    return { box, move, onScreen: () => { const q = top - scrollY; return q + H > 0 && q < innerHeight; } };
   });
+  // on scroll, move the lines of the stretches on screen, at most once a frame (without motion they only fill in as
+  // new stretches come into view)
+  let ribbonQueued = false;
+  addEventListener('scroll', () => { if (ribbonQueued) return; ribbonQueued = true;
+    requestAnimationFrame(() => { ribbonQueued = false; ribbons.forEach(r => { if (r.onScreen()) r.move(); }); }); }, { passive: true });
 
   // the hero film loads only near the screen and plays only while seen; a phone gets the portrait copy
   const smallFilms = matchMedia('(max-width: 760px)').matches;
