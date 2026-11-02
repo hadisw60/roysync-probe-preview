@@ -662,10 +662,14 @@ if (renderer) {
   const body = new THREE.Group(); rig.add(body);
   const bodyState = { level: 1.1, want: 1.1 };
   // the solid white casing: at rest it hides everything inside; it fades to glass while a label is hovered
-  const solidMat = new THREE.MeshStandardMaterial({ color: '#eef3f7', roughness: .45, metalness: .05, polygonOffset: true, polygonOffsetFactor: 1, polygonOffsetUnits: 1 });
-  solidMat.userData.fixed = true;
+  // Drawn last, in two passes: depth first, then colour over only the nearest skin, so the fade is one even veil
+  // with no flicker from the casing's own faces sorting against each other.
+  const OFFSET = { polygonOffset: true, polygonOffsetFactor: 1, polygonOffsetUnits: 1 };
+  const solidDepth = new THREE.MeshBasicMaterial({ colorWrite: false, transparent: true, ...OFFSET });   // transparent only so it queues after the parts
+  const solidMat = new THREE.MeshStandardMaterial({ color: '#eef3f7', roughness: .45, metalness: .05, transparent: true, depthWrite: false, ...OFFSET });
+  solidDepth.userData.fixed = solidMat.userData.fixed = true;
   const solidState = { level: 1, want: 1 };
-  const setSolid = v => { solidMat.opacity = v; solidMat.transparent = v < .99; solidMat.depthWrite = v > .5; solid.visible = v > .01; };
+  const setSolid = v => { solidMat.opacity = v * v * (3 - 2 * v); solid.visible = v > .005; };
   const solid = new THREE.Group(); rig.add(solid);
   scene.add(new THREE.HemisphereLight('#ffffff', '#4a6178', 1.6));
   const sun = new THREE.DirectionalLight('#ffffff', 1.4); sun.position.set(3, 5, 6); scene.add(sun);
@@ -723,7 +727,8 @@ if (renderer) {
       dequantize(o.geometry);
       const base = o.name.endsWith('paye');
       if (!o.geometry.attributes.normal) o.geometry.computeVertexNormals();
-      solid.add(new THREE.Mesh(o.geometry, solidMat));
+      const d = new THREE.Mesh(o.geometry, solidDepth), c = new THREE.Mesh(o.geometry, solidMat);
+      d.renderOrder = 10; c.renderOrder = 11; solid.add(d, c);
       body.add(new THREE.LineSegments(cleanEdges(o.geometry, 55, 40, base && inHoles, 1.5), lineMat()),
                new THREE.Mesh(base ? withoutHoles(o.geometry) : o.geometry, glowMat(.2)));
     });
@@ -793,8 +798,10 @@ if (renderer) {
     bodyState.want = 1.1; solidState.want = name ? 0 : 1;
     tags.forEach(t => t.classList.toggle('on', t.dataset.part === name));
   };
+  let linger;
   tags.forEach(t => {
-    const hold = () => show(t.dataset.part), drop = () => show(null);
+    // leaving a label waits a moment, so sliding from one label to the next doesn't flash the casing back
+    const hold = () => { clearTimeout(linger); show(t.dataset.part); }, drop = () => { clearTimeout(linger); linger = setTimeout(() => show(null), 300); };
     t.addEventListener('pointerenter', hold); t.addEventListener('focus', hold); t.addEventListener('click', hold);
     t.addEventListener('pointerleave', drop); t.addEventListener('blur', drop);
   });
@@ -814,7 +821,7 @@ if (renderer) {
       if (!inView) return;
       const dt = Math.min(0.05, (now - last) / 1000); last = now;
       if (!still) rig.rotation.y += dt * 0.22;
-      const ease = 1 - Math.exp(-dt * 8);
+      const ease = 1 - Math.exp(-dt * 6);
       for (const k in parts) { const p = parts[k]; p.level += (p.want - p.level) * ease; p.g.visible = p.level > .01; apply(p.g, p.level, false, p.hue); }
       bodyState.level += (bodyState.want - bodyState.level) * ease; apply(body, bodyState.level, true);
       solidState.level += (solidState.want - solidState.level) * ease; setSolid(solidState.level);
