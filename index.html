@@ -10,7 +10,6 @@
 <meta property="og:type" content="website">
 <meta property="og:image" content="assets/logo.png">
 <link rel="icon" type="image/png" href="assets/favicon.png">
-<link rel="preload" href="assets/fonts/instrument-serif.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="assets/fonts/jost.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="assets/fonts/inter.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="probe-baked.glb?v=65" as="fetch" crossorigin>
@@ -19,9 +18,6 @@
 <style>
   @font-face { font-family: 'Inter'; font-style: normal; font-weight: 400 600; font-display: swap; src: url(assets/fonts/inter.woff2) format('woff2'); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
   @font-face { font-family: 'Jost'; font-style: normal; font-weight: 300 700; font-display: swap; src: url(assets/fonts/jost.woff2) format('woff2'); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
-  /* the opening headline's serif (the other headings stay Jost) */
-  @font-face { font-family: 'Instrument Serif'; font-style: normal; font-weight: 400; font-display: swap; src: url(assets/fonts/instrument-serif.woff2) format('woff2'); }
-  @font-face { font-family: 'Instrument Serif'; font-style: italic; font-weight: 400; font-display: swap; src: url(assets/fonts/instrument-serif-italic.woff2) format('woff2'); }
   :root {
     /* palette from the logo: deep navy, white, and the steel-to-ice blue of its ring */
     --bg: #050c16; --bg-2: #0a1524; --panel: rgba(255,255,255,.04); --line: rgba(170,210,255,.12);
@@ -99,18 +95,14 @@
   .copy.faded { pointer-events: none; }
   /* the block ends above 60% of the screen's height, which is above the float's dome at any width, and stops short of
      the float's column on the right: the headline never lies over the device */
-  #hero-copy { left: 6vw; bottom: 40vh; max-width: min(52vw, 820px); transition: none; }   /* keyed to the waterline each frame: no lag */
-  .eyebrow { display: inline-flex; align-items: center; gap: 8px; font-size: 12px; letter-spacing: .18em; text-transform: uppercase; color: var(--accent-2); margin-bottom: 20px; }
-  .eyebrow::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--accent-2); box-shadow: 0 0 12px var(--accent-2); }
-  /* the category in one small line under the headline, for whoever needs to place us at a glance (investors) */
-  #hero-copy .eyebrow { font-size: 13px; font-weight: 600; letter-spacing: .2em; margin: 0; color: #cfe9ff; text-shadow: 0 1px 10px rgba(0, 12, 24, .7); }
-  /* a display headline in an editorial serif: the day's line in white with "sunset" in italic and the sky's own warm colours,
+  #hero-copy { left: 6vw; bottom: 40vh; max-width: min(58vw, 880px); transition: none; }   /* keyed to the waterline each frame: no lag */
+  /* the headline in the same type as the other pages' headlines: the day's line in white with "sunset" in the sky's own warm colours,
      the night's line in the cool blue of the water */
   /* sized by the window's height as well as its width: on a short laptop window the block would otherwise climb into the logo */
-  #hero-copy h1 { font: 400 clamp(40px, min(7.4vw, 19vh - 46px), 120px)/1 'Instrument Serif', Georgia, serif; letter-spacing: -.01em; margin: 0 0 24px; }
+  #hero-copy h1 { font: 500 clamp(36px, min(4.6vw, 12vh - 16px), 74px)/1.04 var(--head); letter-spacing: -.045em; margin: 0; }
   /* an upright tablet frames the float in the middle of the screen: the headline goes up into the sky instead */
   @media (orientation: portrait) and (min-width: 761px) { #hero-copy { bottom: auto; top: 14vh; max-width: 82vw; } }
-  #hero-copy h1 .warm { font-style: italic; padding-right: .06em; background: linear-gradient(100deg, #ffe7c2 0%, #ffbf8f 45%, #f59a7a 100%); -webkit-background-clip: text; background-clip: text;
+  #hero-copy h1 .warm { padding-right: .06em; background: linear-gradient(100deg, #ffe7c2 0%, #ffbf8f 45%, #f59a7a 100%); -webkit-background-clip: text; background-clip: text;
                         color: transparent; text-shadow: none; filter: drop-shadow(0 2px 16px rgba(60, 20, 0, .35)); }
   #hero-copy h1 em { display: block; font-style: normal;
                      background: linear-gradient(90deg, #6fb8f2, #a8dbff 55%, #e6f5ff); -webkit-background-clip: text; background-clip: text; color: transparent;
@@ -120,8 +112,7 @@
   /* a soft shade of deeper water behind each message, so the words keep their contrast over the sun's glare on the
      surface and over the fish crossing behind them (it follows the text, so it costs the picture nothing elsewhere) */
   #hero-copy::before, .beat::before { content: ""; position: absolute; z-index: -1; pointer-events: none; inset: -18% -22% -22% -14%;
-    background: radial-gradient(closest-side, rgba(3, 16, 30, .46), rgba(3, 16, 30, .22) 60%, rgba(3, 16, 30, 0)); }
-  .beat { left: 6vw; bottom: 14vh; max-width: 520px; opacity: 0; pointer-events: none; }
+    background: radial-gradient(closest-side, rgba(3, 16, 30, .46), rgba(3, 16, 30, .22) 60%, rgba(3, 16, 30, 0)); }  .beat { left: 6vw; bottom: 14vh; max-width: 520px; opacity: 0; pointer-events: none; }
   .beat h2 { font-size: clamp(24px, 2.7vw, 38px); font-weight: 600; letter-spacing: -.01em; line-height: 1.12; margin: 0 0 12px; text-shadow: 0 2px 18px rgba(0,0,0,.6); }
   .beat h2::before { content: ""; display: block; width: 34px; height: 3px; border-radius: 3px; margin: 0 0 16px; background: linear-gradient(90deg, var(--accent), var(--accent-2)); box-shadow: 0 0 12px var(--glow); }
   .beat h2 em, #contact h2 em { font-style: normal; color: #8fd0ff; }
@@ -170,7 +161,7 @@
     -webkit-mask: radial-gradient(closest-side, transparent calc(100% - 12px), #000 calc(100% - 12px)); mask: radial-gradient(closest-side, transparent calc(100% - 12px), #000 calc(100% - 12px)); }
   #drag-cursor .pin { position: absolute; top: -9px; left: 50%; translate: -50% 0; border: 6px solid transparent; border-top: 9px solid #ffbf8f; border-bottom: 0;
                       filter: drop-shadow(0 0 6px rgba(255, 170, 120, .8)); }
-  #drag-cursor b { font: italic 400 34px/1 'Instrument Serif', Georgia, serif; }
+  #drag-cursor b { font: 500 28px/1 var(--head); letter-spacing: -.02em; }
   #drag-cursor small { margin-top: 6px; font: 600 10px/1 Inter, system-ui, sans-serif; letter-spacing: .24em; padding-left: .24em; color: #cfe9ff; }
   @keyframes sway { 0%, 100% { rotate: -24deg; } 50% { rotate: 28deg; } }
   /* depth rail: a dot travels down as the camera dives; the tick marks the waterline */
@@ -578,17 +569,18 @@
   #story section.band .sub { color: rgba(232, 241, 250, .88); }
   #story .wave { position: absolute; left: 0; width: 100%; height: clamp(18px, 2.6vw, 40px); fill: var(--paper); pointer-events: none; }
   #story .wave.top { top: -1px; } #story .wave.bot { bottom: -1px; transform: scaleY(-1); }
-  /* the contact band: one line, and the buttons beside it */
-  #contact.band { min-height: 64vh; padding: 14vh 6vw; text-align: left; justify-content: flex-start; }
+  /* the contact band: a tall still of the farm with the line, a few words and the one way in centred on it;
+     the wash is even, darkest behind the words, instead of the other bands' left-to-right one */
+  #contact.band { min-height: max(88vh, 600px); padding: 16vh 6vw; text-align: center; justify-content: center; }
+  #story #contact.band::after { background: radial-gradient(ellipse 70% 65% at 50% 50%, rgba(4, 13, 24, .78) 0%, rgba(4, 13, 24, .52) 60%, rgba(4, 13, 24, .38) 100%); }
   #contact.band .band-media { object-position: 50% 50%; }
-  #contact.band .wrap { max-width: 1160px; width: 100%; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; gap: 32px 48px; flex-wrap: wrap; }
-  #contact.band h2.title { color: #fff; margin: 0 0 14px; } #contact.band h2 em { color: #9fd0f7; }
-  #contact.band p.lead { color: rgba(232, 241, 250, .85); margin: 0; max-width: 34em; }
-  #contact.band .cta-row { justify-content: flex-start; }
-  #contact.band .btn:not(.ghost) { background: linear-gradient(135deg, #e3f3ff 0%, #9fd0f7 48%, #5fa9e6 100%); color: #06182b; }
-  #contact.band .btn.ghost { color: #fff; border-color: rgba(255, 255, 255, .5); }
-  #contact.band .btn.ghost:hover { border-color: #fff; }
-  @media (max-width: 560px) { #trust { padding: 14vh 20px; } .caps { gap: 40px 22px; } .cap { padding: 0; } }
+  #contact.band .wrap { max-width: 760px; width: 100%; margin: 0 auto; }
+  #contact.band h2.title { color: #fff; margin: 0 auto 16px; } #contact.band h2 em { color: #9fd0f7; }
+  #contact.band p.lead { color: rgba(232, 241, 250, .85); margin: 0 auto; max-width: 27em; text-wrap: balance; }
+  #contact.band .cta-row { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 16px 28px; margin-top: 36px; }
+  #contact.band .btn:not(.ghost) { padding: 16px 30px; font-size: 16px; background: linear-gradient(135deg, #e3f3ff 0%, #9fd0f7 48%, #5fa9e6 100%); color: #06182b; }
+  #contact.band .btn span { display: inline-block; margin-left: 8px; transition: transform .2s ease; }
+  #contact.band .btn:hover span { transform: translateX(3px); }  @media (max-width: 560px) { #trust { padding: 14vh 20px; } .caps { gap: 40px 22px; } .cap { padding: 0; } }
   @media (prefers-reduced-motion: reduce) { .ladder li { transition: none; } }
   /* the RoySync dashboard on a phone, in the app's own look (front_end Dashboard.jsx), as on the contact page of
      preview/contact-dashboard. Everything inside is in cqw, so the phone keeps its proportions at any width. */
@@ -769,9 +761,7 @@
     #hero-copy, #solid-copy { left: 16px; right: 16px; bottom: 7vh; text-align: center; margin: 0 auto; }
     #hero-copy p, #solid-copy p { margin-left: auto; margin-right: auto; font-size: 15px; }
     #hero-copy { bottom: calc(3vh + 128px); max-width: none; }   /* clear of the scroll cue below it */
-    #hero-copy h1 { font-size: clamp(38px, 12.5vw, 56px); }
-    #hero-copy .eyebrow { font-size: 12px; letter-spacing: .1em; text-wrap: balance; }
-    #hero-copy .eyebrow::before { display: none; }
+    #hero-copy h1 { font-size: clamp(32px, 9.4vw, 48px); }
     #stage::before { background: linear-gradient(0deg, rgba(4,22,38,.75) 0%, rgba(4,22,38,.35) 38%, rgba(4,22,38,0) 58%),
                 linear-gradient(180deg, rgba(4,22,38,.45) 0%, rgba(4,22,38,0) 14%); }
     header { padding: 16px; }
@@ -857,8 +847,7 @@
 // the opening screen's load line: it runs on (as a compositor animation, so the 3D scene being built cannot stall it)
 // to 86% while the float's model and the fonts load, then to the end; at least ~0.9 s so it never flashes, at most ~9 s
 (() => {
-  const el = document.getElementById('intro'); if (!el) return;
-  const bar = el.querySelector('.in-bar i'), num = el.querySelector('.in-num'), t0 = performance.now();
+  const el = document.getElementById('intro'); if (!el) return;  const bar = el.querySelector('.in-bar i'), num = el.querySelector('.in-num'), t0 = performance.now();
   let done = false, lastN = -1, anim = null;
   const finish = () => { done = true; };
   addEventListener('probe-ready', () => (document.fonts ? document.fonts.ready : Promise.resolve()).then(finish));
@@ -986,7 +975,6 @@ if (el) {
     <div id="loading">LOADING 0%</div>
     <div class="copy" id="hero-copy">
       <h1>Clock out at <span class="warm">sunset.</span> <em>We've got the night&nbsp;shift.</em></h1>
-      <span class="eyebrow">Autonomous water intelligence for aquaculture</span>
     </div>
     <div class="copy beat" data-in="0.24" data-out="0.32">
       <h2>Eight sensors, <em>under the waterline</em></h2>
@@ -1217,15 +1205,14 @@ if (el) {
 <section id="contact" class="band">
   <svg class="wave top" viewBox="0 0 1440 40" preserveAspectRatio="none" aria-hidden="true"><path d="M0 0H1440V16C1260 34 1080 4 900 16S540 34 360 16 120 4 0 14Z"/></svg>
   <!-- a trout farm we visited, a raceway full of fish with its aerator running, under a dark wash: the place the float is asked to go -->
-  <img class="band-media" src="assets/farm-band.jpg" alt="" width="1920" height="820" loading="lazy" decoding="async">
+  <img class="band-media" src="assets/farm-band.jpg" alt="" width="1920" height="1080" loading="lazy" decoding="async">
   <div class="wrap">
     <div>
       <h2 class="title reveal">Want to try it <em>on your farm?</em></h2>
       <p class="lead reveal">Tell us about your ponds and the fish you raise. We'll come back to you within one working day.</p>
-    </div>
-    <div class="cta-row reveal">
-      <a class="btn" href="contact.html">Contact us</a>
-      <a class="btn ghost" href="mailto:info@roysync.com?subject=Pilot%20request">info@roysync.com</a>
+      <div class="cta-row reveal">
+        <a class="btn" href="contact.html">Talk to us<span aria-hidden="true">→</span></a>
+      </div>
     </div>
   </div>
 </section>
