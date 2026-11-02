@@ -660,7 +660,15 @@ if (renderer) {
   const parts = {};
   const part = (name, ...objs) => { const g = new THREE.Group(); objs.forEach(o => g.add(o)); rig.add(g); parts[name] = { g, level: 0, want: 0, hue: HUE[name] && new THREE.Color(HUE[name]) }; };
   const body = new THREE.Group(); rig.add(body);
-  const bodyState = { level: 1, want: 1 };
+  const bodyState = { level: 1.1, want: 1.1 };
+  // the solid white casing: at rest it hides everything inside; it fades to glass while a label is hovered
+  const solidMat = new THREE.MeshStandardMaterial({ color: '#eef3f7', roughness: .45, metalness: .05, polygonOffset: true, polygonOffsetFactor: 1, polygonOffsetUnits: 1 });
+  solidMat.userData.fixed = true;
+  const solidState = { level: 1, want: 1 };
+  const setSolid = v => { solidMat.opacity = v; solidMat.transparent = v < .99; solidMat.depthWrite = v > .5; solid.visible = v > .01; };
+  const solid = new THREE.Group(); rig.add(solid);
+  scene.add(new THREE.HemisphereLight('#ffffff', '#4a6178', 1.6));
+  const sun = new THREE.DirectionalLight('#ffffff', 1.4); sun.position.set(3, 5, 6); scene.add(sun);
 
   const dequantize = g => {
     const q = g.userData.q; if (!q) return;
@@ -670,13 +678,19 @@ if (renderer) {
   };
   // the eight sensor holes, kept private: they run from the top of the base down through the neck, inside 0.53 of
   // the axis. Their lines are dropped and their faces left out of the glow; the board covers the top of them.
-  const inHoles = (x, y, z) => Math.hypot(x, z) < 0.53 && y > -1.25 && y < 0.42;
+  const inHoles = (x, y, z) => Math.hypot(x, z) < 0.53 && y > -1.45 && y < 0.42;
+  const A = new THREE.Vector3(), B = new THREE.Vector3(), N = new THREE.Vector3(), SIGN = -1;
   const withoutHoles = geo => {
     const P = geo.attributes.position, src = geo.index ? geo.index.array : [...Array(P.count).keys()], keep = [];
     for (let i = 0; i < src.length; i += 3) {
       let x = 0, y = 0, z = 0;
       for (let k = 0; k < 3; k++) { x += P.getX(src[i + k]); y += P.getY(src[i + k]); z += P.getZ(src[i + k]); }
-      if (inHoles(x / 3, y / 3, z / 3)) continue;
+      x /= 3; y /= 3; z /= 3;
+      if (inHoles(x, y, z)) {   // keep the neck's own outer skin, which narrows into the zone further down
+        A.fromBufferAttribute(P, src[i]); B.fromBufferAttribute(P, src[i + 1]).sub(A); N.fromBufferAttribute(P, src[i + 2]).sub(A).cross(B).normalize();
+        const r = Math.hypot(x, z);
+        if (!(r > 0.4 && Math.abs(N.x * x + N.z * z) / r > 0.6 && (N.x * x + N.z * z) * SIGN > 0)) continue;
+      }
       keep.push(src[i], src[i + 1], src[i + 2]);
     }
     const g = geo.clone(); g.setIndex(keep); return g;
@@ -708,6 +722,8 @@ if (renderer) {
       if (!o.isMesh || !o.name.startsWith('main')) return;
       dequantize(o.geometry);
       const base = o.name.endsWith('paye');
+      if (!o.geometry.attributes.normal) o.geometry.computeVertexNormals();
+      solid.add(new THREE.Mesh(o.geometry, solidMat));
       body.add(new THREE.LineSegments(cleanEdges(o.geometry, 55, 40, base && inHoles, 1.5), lineMat()),
                new THREE.Mesh(base ? withoutHoles(o.geometry) : o.geometry, glowMat(.2)));
     });
@@ -767,14 +783,14 @@ if (renderer) {
     const tint = m.userData.tint, mix = Math.min(1, Math.max(0, lvl - 1));
     C.copy(ICE); if (tint) C.copy(tint); else if (hue) C.lerp(hue, mix);
     if (m.uniforms) { m.uniforms.uOp.value = (base ? .2 : .32) * lvl; m.uniforms.uCol.value.copy(C); }
-    else { m.opacity = Math.min(1, (base ? .42 : .6) * lvl); m.color.copy(C); }
+    else { m.opacity = Math.min(1, (base ? .85 : .6) * lvl); m.color.copy(C); }
   });
 
   // at rest only the shell shows; a part appears, in its colour, while its label is hovered or focused
   let inView = false, last = performance.now();
   const show = name => {
     for (const k in parts) parts[k].want = k === name ? 2 : 0;
-    bodyState.want = name ? .6 : 1;
+    bodyState.want = 1.1; solidState.want = name ? 0 : 1;
     tags.forEach(t => t.classList.toggle('on', t.dataset.part === name));
   };
   tags.forEach(t => {
@@ -801,6 +817,7 @@ if (renderer) {
       const ease = 1 - Math.exp(-dt * 8);
       for (const k in parts) { const p = parts[k]; p.level += (p.want - p.level) * ease; p.g.visible = p.level > .01; apply(p.g, p.level, false, p.hue); }
       bodyState.level += (bodyState.want - bodyState.level) * ease; apply(body, bodyState.level, true);
+      solidState.level += (solidState.want - solidState.level) * ease; setSolid(solidState.level);
       renderer.render(scene, camera);
     };
     requestAnimationFrame(frame);
