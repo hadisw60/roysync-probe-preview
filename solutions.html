@@ -151,6 +151,7 @@
   .lid-row.flip > figure { order: 2; }
   .lid-view { margin: 0; width: min(100%, 360px); justify-self: end; }
   .lid-row.flip .lid-view { justify-self: start; }
+  .lid-row.flip > div { justify-self: end; width: min(100%, 380px); }   /* the words sit beside their picture, not out at the edge */
   .lid-view svg { width: 100%; height: auto; display: block; cursor: grab; touch-action: pan-y; user-select: none; }
   .lid-view svg:active { cursor: grabbing; }
   .lid-view .pulse { transform-origin: 160px 160px; animation: magpulse 2.8s ease-out infinite; }
@@ -266,6 +267,7 @@
     .tag::after { display: none; }
     .lid-row { grid-template-columns: minmax(0, 1fr); text-align: center; gap: 20px; }
     .lid-row.flip > figure { order: 0; } .lid-view, .lid-row.flip .lid-view { justify-self: center; width: min(80%, 300px); }
+    .lid-row.flip > div { justify-self: stretch; width: auto; }
     .lids small { margin-left: auto; margin-right: auto; }
     .use { grid-template-columns: minmax(0, 1fr); gap: 36px; padding: 72px 0; }
     .use-body .rule { margin-right: 0; }
