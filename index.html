@@ -592,7 +592,6 @@
   #ask h2 em { font-style: normal; color: #9fd0f7; }
   #ask .cta-row { display: flex; flex-wrap: wrap; gap: 14px 16px; }
   #ask .btn { padding: 15px 28px; font-size: 16px; }
-  #ask .btn[hidden] { display: none; }
   #ask .btn.light { background: #fff; color: #0b3d6b; box-shadow: none; }
   #ask .btn.light:hover { box-shadow: 0 10px 28px rgba(4, 13, 24, .35); }
   @media (max-width: 560px) { #ask .cta-row { width: 100%; } #ask .btn { flex: 1 1 100%; justify-content: center; } }
@@ -1226,10 +1225,19 @@ if (el) {
     <h2 class="title reveal" id="ask-h">Interested in <em>RoySync?</em></h2>
     <div class="cta-row reveal">
       <a class="btn" href="contact.html">Contact us</a>
-      <a class="btn light" href="assets/roysync-brochure.pdf" download hidden>Download brochure</a>   <!-- shown once the PDF is in assets/ -->
+      <a class="btn light" id="brochure" href="assets/roysync-brochure.pdf" download>Download brochure</a>
     </div>
   </div>
 </section>
+<script>
+  // until the brochure's PDF is in assets/, the button asks for it on the contact page rather than downloading an error page
+  document.getElementById('brochure').addEventListener('click', async e => {
+    const a = e.currentTarget; if (a.dataset.ok) return;
+    e.preventDefault();
+    const ok = await fetch(a.href, { method: 'HEAD' }).then(r => r.ok && /pdf/.test(r.headers.get('content-type') || ''), () => false);
+    if (ok) { a.dataset.ok = 1; a.click(); } else location.href = 'contact.html';
+  });
+</script>
 
 <section id="trust" class="ed">
   <div class="wrap">
