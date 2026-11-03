@@ -12,7 +12,7 @@
 <link rel="icon" type="image/png" href="assets/favicon.png">
 <link rel="preload" href="assets/fonts/jost.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="assets/fonts/inter.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="preload" href="probe-baked.glb?v=65" as="fetch" crossorigin>
+<link rel="preload" href="probe-baked.glb?v=66" as="fetch" crossorigin>
 <link rel="preload" href="assets/waternormals.jpg" as="image">
 <script src="assets/whole-video.js?v=71"></script>
 <style>
@@ -258,6 +258,12 @@
 
   /* ---------- scroll-driven motion for the story sections ---------- */
   #story { position: relative; }
+  /* the light page comes up over the last stretch of the push-in, as its white fills the screen, so there is next to no
+     bare white between the dive and the first words (see OVERLAP where the outro is timed) */
+  #story { margin-top: -22vh; }
+  /* its top edge is not a line over the water but a fade, a fifth of a screen tall, into the white */
+  #story::before { content: ""; position: absolute; left: 0; right: 0; bottom: 100%; height: 20vh; pointer-events: none;
+                   background: linear-gradient(rgba(221, 231, 241, 0), #dde7f1); }
   /* the opening screen, "the school" (approved 2026-10-29): looking straight up from inside a school of fish that
      circles the lens, the sun through the surface in the middle and the mark on it, the load as a thin line and a number;
      the school is the dive's own fish model (assets/fish.glb), shared with the scene through THREE.Cache */
@@ -484,6 +490,10 @@
      sites in the field put everything on one crowded page; this is the opposite) */
   #story section.one { min-height: 100vh; display: flex; align-items: center; padding: 16vh 6vw; box-sizing: border-box; }
   #story section.one .wrap { width: 100%; max-width: 1060px; }
+  /* the first panel sits high, not centred: it rises straight out of the dive's whiteout, and centred it left a long
+     stretch of bare white between the push-in and its first words */
+  #story #action { align-items: flex-start; padding-top: 0; }   /* (the user wants the least white there can be) */
+  #story #action .marks { margin-bottom: 2vh; }
   .big { font-size: clamp(34px, 5.2vw, 68px); font-weight: 600; letter-spacing: -.015em; line-height: 1.05; margin: 0 0 24px; max-width: 13ch; text-wrap: balance; color: var(--ink); }
   .big em { font-style: normal; color: var(--blue); }
   .sub { font-size: clamp(16px, 1.45vw, 20px); line-height: 1.6; color: var(--ink-2); margin: 0; max-width: 32em; }
@@ -569,6 +579,23 @@
   #story section.band .sub { color: rgba(232, 241, 250, .88); }
   #story .wave { position: absolute; left: 0; width: 100%; height: clamp(18px, 2.6vw, 40px); fill: var(--paper); pointer-events: none; }
   #story .wave.top { top: -1px; } #story .wave.bot { bottom: -1px; transform: scaleY(-1); }
+  /* a slim band partway down, as a pause between the app and the float: the question on the left, the two ways forward
+     on the right (under it on a phone), on the cage farm seen from above */
+  #ask.band { min-height: clamp(320px, 56vh, 460px); display: flex; align-items: center; padding: 72px 6vw; box-sizing: border-box; }
+  /* (a deep-blue wash: the cage farm's green water would otherwise turn the band olive) */
+  #story #ask.band::after { background: linear-gradient(90deg, rgba(5, 22, 44, .84) 0%, rgba(8, 36, 70, .6) 60%, rgba(10, 44, 84, .5) 100%); }
+  /* the photo and its wash stop 4px short of the band's edges, under the waves: at a fractional offset the band's clip
+     edge otherwise left a hairline of the dark photo across the page above and below it */
+  #story #ask .band-media, #story #ask.band::after { top: 4px; bottom: 4px; height: calc(100% - 8px); }
+  #ask .wrap { width: 100%; max-width: 1280px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 26px 48px; }
+  #ask h2.title { color: #fff; font-size: clamp(26px, 3vw, 42px); font-weight: 600; letter-spacing: -.01em; line-height: 1.1; margin: 0; }
+  #ask h2 em { font-style: normal; color: #9fd0f7; }
+  #ask .cta-row { display: flex; flex-wrap: wrap; gap: 14px 16px; }
+  #ask .btn { padding: 15px 28px; font-size: 16px; }
+  #ask .btn[hidden] { display: none; }
+  #ask .btn.light { background: #fff; color: #0b3d6b; box-shadow: none; }
+  #ask .btn.light:hover { box-shadow: 0 10px 28px rgba(4, 13, 24, .35); }
+  @media (max-width: 560px) { #ask .cta-row { width: 100%; } #ask .btn { flex: 1 1 100%; justify-content: center; } }
   /* the contact band: a tall still of the farm with the line, a few words and the one way in centred on it;
      the wash is even, darkest behind the words, instead of the other bands' left-to-right one */
   #contact.band { min-height: max(88vh, 600px); padding: 16vh 6vw; text-align: center; justify-content: center; }
@@ -905,8 +932,9 @@ if (el) {
   camera.position.set(0, -6, 0); camera.up.set(0, 0, -1); camera.lookAt(0, 30, 0);
   scene.add(new THREE.HemisphereLight(0xdff1ff, 0x0a2440, 1.4));
   const sun = new THREE.DirectionalLight(0xffffff, 1.2); sun.position.set(0, 10, 2); scene.add(sun);
-  const size = () => { renderer.setSize(innerWidth, innerHeight, false); camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix(); };
-  size(); addEventListener('resize', size);
+  const size = () => { const pr = Math.min(devicePixelRatio, 2); if (Math.floor(innerWidth * pr) !== canvas.width || Math.floor(innerHeight * pr) !== canvas.height) renderer.setDrawingBufferSize(innerWidth, innerHeight, pr); camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix(); };
+  let sizeWait = 0; const resize = () => { clearTimeout(sizeWait); sizeWait = setTimeout(size, 180); };
+  size(); addEventListener('resize', resize);
   // a little wider as it rises; fewer fish on a phone
   const N = innerWidth < 600 ? 520 : 900, F = [];
   for (let i = 0; i < N; i++) {
@@ -957,7 +985,7 @@ if (el) {
   requestAnimationFrame(loop);
   // once the screen has lifted, its GPU context is given back for the dive
   el.addEventListener('intro-gone', () => {
-    live = false; removeEventListener('resize', size);
+    live = false; removeEventListener('resize', resize); clearTimeout(sizeWait);
     if (mesh) mesh.geometry.dispose(); mat.dispose(); renderer.dispose(); renderer.forceContextLoss();
   });
 }
@@ -1190,6 +1218,19 @@ if (el) {
   </div>
 </section>
 
+<section id="ask" class="band" aria-labelledby="ask-h">
+  <svg class="wave top" viewBox="0 0 1440 40" preserveAspectRatio="none" aria-hidden="true"><path d="M0 0H1440V16C1260 34 1080 4 900 16S540 34 360 16 120 4 0 14Z"/></svg>
+  <svg class="wave bot" viewBox="0 0 1440 40" preserveAspectRatio="none" aria-hidden="true"><path d="M0 0H1440V16C1260 34 1080 4 900 16S540 34 360 16 120 4 0 14Z"/></svg>
+  <img class="band-media" src="media/contact-farms.jpg" alt="" loading="lazy" decoding="async">
+  <div class="wrap">
+    <h2 class="title reveal" id="ask-h">Interested in <em>RoySync?</em></h2>
+    <div class="cta-row reveal">
+      <a class="btn" href="contact.html">Contact us</a>
+      <a class="btn light" href="assets/roysync-brochure.pdf" download hidden>Download brochure</a>   <!-- shown once the PDF is in assets/ -->
+    </div>
+  </div>
+</section>
+
 <section id="trust" class="ed">
   <div class="wrap">
     <div class="marks" aria-hidden="true"><i>+</i><i>+</i><i>+</i><i>+</i></div>
@@ -1364,7 +1405,7 @@ if (el) {
       const mid = innerHeight / 2;
       let best = chapters[chapters.length - 1];
       for (const s of chapters) { const r = s.getBoundingClientRect(); if (r.top <= mid && r.bottom > mid) { best = s; break; } }
-      const name = { action: 'Action', alerts: 'Alerts', farm: 'Farm', app: 'App', trust: 'Capabilities', contact: 'Contact' }[best.id] || best.id;
+      const name = { action: 'Action', alerts: 'Alerts', farm: 'Farm', app: 'App', ask: 'Contact', trust: 'Capabilities', contact: 'Contact' }[best.id] || best.id;
       if (label.textContent !== name) label.textContent = name;
     };
     addEventListener('scroll', () => { if (!ticking) { ticking = true; requestAnimationFrame(update); } }, { passive: true });
@@ -2756,7 +2797,7 @@ function probeDequantize(g) {
   let arrayBuffer = null;
   // 1. Direct GLB fetch: 985KB, instantaneous, zero stream/decompression failure risk
   try {
-    const res = await fetch('probe-baked.glb?v=65');
+    const res = await fetch('probe-baked.glb?v=66');
     if (res.ok) {
       arrayBuffer = await res.arrayBuffer();
     }
@@ -2766,7 +2807,7 @@ function probeDequantize(g) {
   // 2. Fallback to gzipped GLB if needed
   if (!arrayBuffer) {
     try {
-      const res = await fetch('probe-baked.glb.gz?v=65');
+      const res = await fetch('probe-baked.glb.gz?v=66');
       if (res.ok) {
         let blob = await res.blob();
         const sig = new Uint8Array(await blob.slice(0, 2).arrayBuffer());
@@ -3311,24 +3352,33 @@ const SHAFT_ON_PLATE = 14;  // vivid sun rays over filmed background
 
 
 // ---------------- layout ----------------
-let viewW = 1, viewH = 1, wide = true, sunWide = null, bufH = 1;
-let prScale = 1;                           // lowered at run time if the GPU cannot keep up
-function layout() {
+let viewW = 1, viewH = 1, wide = true, sunWide = null, bufW = 0, bufH = 1;
+// lowered at run time if the GPU cannot keep up, raised if it has room. A weak GPU starts at the floor it always ends at:
+// a resize costs little while the GPU has room and seconds while it is swamped, so the scale is better found from below
+let prScale = LOW_GPU ? 0.65 : 1;
+function layout(force) {
   viewW = stage.clientWidth; viewH = stage.clientHeight; wide = viewW / viewH >= 1;
   const dpr = window.devicePixelRatio || 1;
   // Adaptive Retina handling: desktop high-performance GPUs render at crisp up to 2.0 DPR.
   // Mobile devices or low/integrated GPUs clamp up to 1.35 DPR to protect framerate.
   const maxDpr = LOW_GPU ? 1.35 : (viewW < 768 ? 1.5 : 2.0);
   const pr = Math.min(dpr, maxDpr) * prScale;
-  renderer.setPixelRatio(pr);
-  renderer.setSize(viewW, viewH, false);
   // the composer works in whole pixels, matching the drawing buffer exactly (no 1138.5-px targets)
   const bw = Math.max(1, Math.floor(viewW * pr)), bh = Math.max(1, Math.floor(viewH * pr));
-  composer.setPixelRatio(1);
-  composer.setSize(bw, bh);
-  refrRT.setSize(Math.min(1024, Math.max(1, bw >> 1)), Math.min(1024, Math.max(1, bh >> 1)));
-  wu.uScreen.value.set(bw, bh);
-  bufH = bh;
+  // resizing the canvas makes the browser wait for the GPU to finish, so it happens once, and only when the pixel count
+  // really changes: zooming the page mostly trades CSS size against pixel ratio, and a step of a few percent keeps the
+  // buffers it has (the canvas is stretched to the stage either way); a new shape or the frame-rate governor resizes always
+  // a zoom that asks for a smaller buffer (past the pixel-ratio cap) keeps the one it has: shrinking it is what stalls
+  const k = bw / bufW, near = bufW > 0 && k < 1.15 && Math.abs((bw / bh) / (bufW / bufH) - 1) < 0.01;
+  if ((force || !near) && (bw !== bufW || bh !== bufH)) {
+    renderer.setDrawingBufferSize(viewW, viewH, pr);
+    composer.setPixelRatio(1);
+    composer.setSize(bw, bh);
+    refrRT.setSize(Math.min(1024, Math.max(1, bw >> 1)), Math.min(1024, Math.max(1, bh >> 1)));
+    wu.uScreen.value.set(bw, bh);
+    bufW = bw; bufH = bh;
+    holdDraw = 0;   // a new buffer starts blank: draw into it at once
+  }
   finish.uniforms.uAspect.value = viewW / viewH;
   camera.aspect = viewW / viewH;
   // the sun sits in frame, to the right of the probe and clear of the header
@@ -3345,10 +3395,13 @@ function frame(dive) {
   else camera.setViewOffset(viewW, viewH, 0, viewH * 0.16 * k, viewW, viewH);
   camera.updateProjectionMatrix();
 }
-addEventListener('resize', layout);
+// zooming fires a burst of resize events: the GPU buffers are rebuilt once, when it settles (the canvas stretches meanwhile)
+let relayout = 0, resizedAt = -1e9, holdDraw = 0;
+const queueLayout = () => { resizedAt = performance.now(); holdDraw = resizedAt + 400; clearTimeout(relayout); relayout = setTimeout(layout, 180); };
+addEventListener('resize', queueLayout);
 if (window.matchMedia) {
   try {
-    window.matchMedia(`(resolution: ${window.devicePixelRatio || 1}dppx)`).addEventListener('change', layout);
+    window.matchMedia(`(resolution: ${window.devicePixelRatio || 1}dppx)`).addEventListener('change', queueLayout);
   } catch (_) {}
 }
 layout();
@@ -3494,11 +3547,15 @@ function rideWaves(t) {   // t = sea time; the step is measured from it, so it i
 const perf = { sum: 0, n: 0, hold: 0 };
 function govern(t, dt) {
   if (dt <= 0 || dt > 0.25) return;                    // hidden tab or a hitch
+  // frames for a few seconds after a zoom are slow while the page is redrawn at its new scale: they say nothing about the
+  // GPU, and a resize then (the governor's own) waits behind all that redrawing for seconds
+  if (performance.now() - resizedAt < 6000) { perf.sum = perf.n = 0; return; }
   perf.sum += dt; perf.n++;
   if (perf.sum < 1.2) return;
   const avg = perf.sum / perf.n; perf.sum = 0; perf.n = 0;
-  if (avg > 1 / 48 && prScale > 0.65) { prScale = Math.max(0.65, prScale - 0.12); perf.hold = t + 10; layout(); }
-  else if (avg < 1 / 58 && prScale < 1 && t > perf.hold) { prScale = Math.min(1, prScale + 0.1); layout(); }
+  // a step up that proves too much is taken back once, and the scale then stays (no see-saw of resizes between scenes)
+  if (avg > 1 / 48 && prScale > 0.65) { prScale = Math.max(0.65, prScale - 0.12); perf.hold = t + 10; if (perf.raised) perf.settled = true; layout(true); }
+  else if (avg < 1 / 58 && prScale < 1 && t > perf.hold && !perf.settled) { prScale = Math.min(1, prScale + 0.1); perf.raised = true; layout(true); }
 }
 let rot = 0, lastT = 0;
 const clock = new THREE.Clock();
@@ -3585,8 +3642,10 @@ function tick(static_ = false) {
   const seaT = t * SEA_SPEED, seaDt = dt * SEA_SPEED;
   if (!UW_RM) stepSets(seaT);   // reduced motion: no sets, the sea holds still
   // setAnimationLoop passes its timestamp as static_, so rawDt is 0 there and the governor never ran: it gets its own clock
-  if (static_ !== true) govern(t, t - (tick._gt ?? t));
-  tick._gt = t;
+  // only a frame that drew the scene says anything about the GPU: past the dive the scene is not drawn and frames are
+  // quick, and a scale raised on those would make the way back up into the dive crawl (and then stall to come down)
+  if (static_ !== true && tick._drew) govern(t, t - (tick._gt ?? t));
+  tick._gt = t; tick._drew = false;
 
   const span = Math.max(1, scroller.offsetHeight - innerHeight);   // dive length: from the top of the page to the first story section
   const pTarget = diveP(-scroller.getBoundingClientRect().top);
@@ -3617,7 +3676,7 @@ function tick(static_ = false) {
   const curScrollY = scrollCurrentY;
   // once the light page is on screen the white under it is whole, wherever the eased scroll has got to (a fast flick
   // would otherwise bring the page's edge up over the water for a few frames)
-  const whole = storyTop < innerHeight;
+  const whole = storyTop < innerHeight * 0.8;   // (by then the push-in's own white is whole: the page rises into it, see ouEnd)
   if (whole !== whiteout._whole) { whiteout._whole = whole; whiteout.classList.toggle('whole', whole); if (whole) whiteout.style.opacity = '1'; }
   header.classList.toggle('scrolled', curScrollY > 40);
   header.classList.toggle('on-light', storyTop < 70);   // the light page is under it
@@ -3653,11 +3712,15 @@ function tick(static_ = false) {
   // together, where before the widening lens cancelled the dolly out); in its last third the white spreads from where
   // the lens is aimed until it fills the screen, so the light page that follows rises out of white instead of cutting in
   // (it has its own slower stretch of scroll, ~103vh, see diveP: at ~57vh it felt rushed)
-  const ou = Math.min(Math.max((p - 0.34) / (0.435 - 0.34), 0), 1);   // done just before DIVE_END, so the white is whole
-  const push = smooth(0, 0.85, ou);   // the lens sets off gently and arrives gently at the shell
+  // done just as the light page's first words come up at the bottom of the screen: the page overlaps the scroller by
+  // OVERLAP, so its faded top edge rises into the last of the push-in while the white is still spreading
+  const OVERLAP = 0.22, ouEnd = OUT_P + ((span - (OVERLAP - 0.15) * innerHeight) / span - OUT_F) / (1 - OUT_F) * (DIVE_END - OUT_P);
+  const ou = Math.min(Math.max((p - 0.34) / (ouEnd - 0.34), 0), 1);
+  const push = smooth(0, 0.92, ou);   // the lens sets off gently and arrives gently at the shell
   const aim = smooth(0, 0.7, ou);
   reframe = smooth(0, 0.7, ou);
-  const glow = smooth(0.55, 1, ou);   // then the white surface floods the lens (exposure), see the finishing pass below
+  const glow = smooth(0.7, 1, ou);   // then the white surface floods the lens (exposure), see the finishing pass below; kept to
+  // the very end of the push-in, so the screen is all white for as short a time as can be
 
   const lens = smooth(0.18, 0.48, p);
   camera.fov = lerp(32, wide ? 40 : 44, lens) * (1 - 0.2 * push);
@@ -3705,14 +3768,14 @@ function tick(static_ = false) {
   // the white of the outro, on top of the exposure: a broad glow centred where the lens is aimed, no edge to it at first,
   // that settles into the page's own colour across the screen (left whole once the light page is up, see above)
   if (!whiteout._whole) {
-    const op = smooth(0.72, 1, ou).toFixed(3);
+    const op = smooth(0.76, 1, ou).toFixed(3);
     if (whiteout.style.opacity !== op) whiteout.style.opacity = op;
-    if (ou > 0.72) {
+    if (ou > 0.76) {
       _wv.set(0, shellY, 0).project(camera);
       whiteout.style.setProperty('--wx', ((_wv.x + 1) * 50).toFixed(1) + '%');
       whiteout.style.setProperty('--wy', ((1 - _wv.y) * 50).toFixed(1) + '%');
       whiteout.style.setProperty('--wr', (Math.hypot(innerWidth, innerHeight) * (0.7 + 1.3 * glow)).toFixed(0) + 'px');
-      whiteout.style.setProperty('--wp', (0.6 * smooth(0.8, 1, ou)).toFixed(3));
+      whiteout.style.setProperty('--wp', (0.6 * smooth(0.86, 1, ou)).toFixed(3));
     }
   }
   pickView();
@@ -3877,7 +3940,10 @@ function tick(static_ = false) {
     if (curScrollY > span + innerHeight * 2) beats.forEach(el => { if (el.style.opacity !== '0') el.style.opacity = '0'; });
     return;
   }
+  // while a zoom settles the canvas keeps its last picture, leaving the GPU (which the sea keeps busy) to redraw the page
+  if (performance.now() < holdDraw) return;
   composer.render();
+  tick._drew = true;
 }
 let lastQ = -1;
 const storyEl = document.getElementById('story');
@@ -4074,7 +4140,9 @@ if (REDUCED) {
     cur = aim();   // (drawn at once up to where the page already is, e.g. after a reload halfway down)
     paint(cur);
   };
-  new ResizeObserver(() => { if (!queued) { queued = true; requestAnimationFrame(build); } }).observe(story);
+  // a zoom resizes the page in a burst of steps: the ribbon is rebuilt once they settle (it stretches with its viewBox meanwhile)
+  let rebuild = 0;
+  new ResizeObserver(() => { clearTimeout(rebuild); rebuild = setTimeout(() => { if (!queued) { queued = true; requestAnimationFrame(build); } }, 220); }).observe(story);
   build();
   if (!still) addEventListener('scroll', () => { if (!raf) { last = performance.now(); raf = requestAnimationFrame(step); } }, { passive: true });
 })();

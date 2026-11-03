@@ -89,10 +89,14 @@
     header.scrolled .logo b, header.scrolled .logo i { display: none; } .btn { padding: 8px 14px; font-size: 13px; }
   }
   @media (max-width: 640px) { header.scrolled { left: 10px; right: 10px; top: 10px; padding: 8px 8px 8px 12px; } }
+  /* a small phone: the button keeps its whole label, the Gen2 tag gives way */
+  .btn { flex-shrink: 0; }
+  @media (max-width: 420px) { header { padding: 18px 16px; } .logo { gap: 10px; } .logo i { display: none; } }
   @media (prefers-reduced-motion: reduce) { .logo i::after { animation: none; } header, .nav-lens { transition: none; } }
 
   /* behind the black sections: a ribbon of fine ice-blue lines that sweeps across and twists on itself, drawn in script per section */
-  .waves { position: absolute; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; }
+  /* the ribbon and the turning lids each sit on their own layer: a lid turning every frame must not repaint the ribbon */
+  .waves { position: absolute; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; contain: strict; will-change: transform; }
   .waves svg { position: absolute; inset: 0; width: 100%; height: 100%; }
   .waves path { fill: none; stroke: #5fb4ec; stroke-width: 1; vector-effect: non-scaling-stroke; }
   .black { position: relative; background: #000; }
@@ -150,7 +154,7 @@
   .lid-view { margin: 0; width: min(100%, 360px); justify-self: end; }
   .lid-row.flip .lid-view { justify-self: start; }
   .lid-row.flip > div { justify-self: end; width: min(100%, 380px); }   /* the words sit beside their picture, not out at the edge */
-  .lid-view svg { width: 100%; height: auto; display: block; cursor: grab; touch-action: pan-y; user-select: none; }
+  .lid-view svg { width: 100%; height: auto; display: block; cursor: grab; touch-action: pan-y; user-select: none; will-change: transform; }
   .lid-view svg:active { cursor: grabbing; }
   .lid-view .pulse { transform-origin: 160px 160px; animation: magpulse 2.8s ease-out infinite; }
   @keyframes magpulse { from { transform: scale(.85); opacity: .8; } to { transform: scale(1.5); opacity: 0; } }
@@ -272,7 +276,7 @@
   @media (max-width: 991px) {
     .dial-row { grid-template-columns: minmax(0, 1fr); gap: 36px; } .dial { justify-self: center; }
     .stage { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); min-height: 0; gap: 32px; }
-    .stage figure { grid-column: 1 / -1; grid-row: 1; max-width: 300px; margin: 0 auto; }
+    .stage figure { grid-column: 1 / -1; grid-row: 1; max-width: min(300px, 80vw); margin: 0 auto; }
     .tags { padding: 0; gap: 32px; justify-content: flex-start; }
     .tags-l .tag, .tags-r .tag { text-align: left; padding: 18px 0 0; }
     .tags-l .tag::before, .tags-r .tag::before { left: 0; right: auto; top: 0; width: 64px; }
@@ -872,6 +876,9 @@ if (renderer) {
   // the eight sensor holes, kept private: they run from the top of the base down through the neck, inside 0.53 of
   // the axis. Their lines are dropped and their faces left out of the glow; the board covers the top of them.
   const inHoles = (x, y, z) => Math.hypot(x, z) < 0.53 && y > -1.45 && y < 0.42;
+  // and the top rim of the smooth sleeve laid over the neck (it starts just inside the collar's underside), an open
+  // edge the blueprint would otherwise draw as a bright arc under the collar
+  const hideLines = (x, y, z) => inHoles(x, y, z) || (Math.abs(y - 0.09) < 0.012 && Math.abs(Math.hypot(x, z) - 0.689) < 0.012);
   const A = new THREE.Vector3(), B = new THREE.Vector3(), N = new THREE.Vector3(), SIGN = -1;
   const withoutHoles = geo => {
     const P = geo.attributes.position, src = geo.index ? geo.index.array : [...Array(P.count).keys()], keep = [];
@@ -910,7 +917,7 @@ if (renderer) {
     return g;
   };
 
-  new GLTFLoader().load('probe-baked.glb?v=65', gltf => {
+  new GLTFLoader().load('probe-baked.glb?v=66', gltf => {
     gltf.scene.traverse(o => {
       if (!o.isMesh || !o.name.startsWith('main')) return;
       dequantize(o.geometry);
@@ -918,7 +925,7 @@ if (renderer) {
       if (!o.geometry.attributes.normal) o.geometry.computeVertexNormals();
       const d = new THREE.Mesh(o.geometry, solidDepth), c = new THREE.Mesh(o.geometry, solidMat);
       d.renderOrder = 10; c.renderOrder = 11; solid.add(d, c);
-      body.add(new THREE.LineSegments(cleanEdges(o.geometry, 55, 40, base && inHoles, 1.5), lineMat()),
+      body.add(new THREE.LineSegments(cleanEdges(o.geometry, 55, 40, base && hideLines, 1.5), lineMat()),
                new THREE.Mesh(base ? withoutHoles(o.geometry) : o.geometry, glowMat(.2)));
     });
 
@@ -995,12 +1002,16 @@ if (renderer) {
     t.addEventListener('pointerleave', drop); t.addEventListener('blur', drop);
   });
 
+  // resizing the canvas, even to the size it has, makes the browser wait for the GPU: a zoom fires a burst of resizes,
+  // so it is sized once when they settle, and a zoom that keeps the shape and needs no more pixels keeps its buffer
   const size = () => {
     const w = canvas.clientWidth, h = canvas.clientHeight; if (!w || !h) return;
-    renderer.setSize(w, h, false); camera.aspect = w / h;
-    camera.fov = 26 * Math.max(1, 0.62 / camera.aspect); camera.updateProjectionMatrix();
+    camera.aspect = w / h; camera.fov = 26 * Math.max(1, 0.62 / camera.aspect); camera.updateProjectionMatrix();
+    const pr = Math.min(devicePixelRatio, 2), k = w * pr / canvas.width;
+    if (canvas.width > 1 && k < 1.15 && Math.abs((w / h) / (canvas.width / canvas.height) - 1) < 0.01) return;
+    renderer.setDrawingBufferSize(w, h, pr);
   };
-  addEventListener('resize', size);
+  let sizeWait = 0; addEventListener('resize', () => { clearTimeout(sizeWait); sizeWait = setTimeout(size, 180); });
 
   // drag the float to turn it; let go and it carries on turning slowly by itself
   let drag = null, spinVel = 0;
