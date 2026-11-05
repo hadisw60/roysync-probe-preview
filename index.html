@@ -582,9 +582,9 @@
   #story .wave { position: absolute; left: 0; width: 100%; height: clamp(18px, 2.6vw, 40px); fill: var(--paper); pointer-events: none; }
   #story .wave.top { top: -1px; } #story .wave.bot { bottom: -1px; transform: scaleY(-1); }
   /* a slim band partway down, as a pause between the app and the float: the question on the left, the two ways forward
-     on the right (under it on a phone), on the cage farm seen from above */
+     on the right (under it on a phone), on sea cages in open blue water */
   #ask.band { min-height: clamp(320px, 56vh, 460px); display: flex; align-items: center; padding: 72px 6vw; box-sizing: border-box; }
-  /* (a deep-blue wash: the cage farm's green water would otherwise turn the band olive) */
+  /* (a deep-blue wash, so the words read on the bright water) */
   #story #ask.band::after { background: linear-gradient(90deg, rgba(5, 22, 44, .84) 0%, rgba(8, 36, 70, .6) 60%, rgba(10, 44, 84, .5) 100%); }
   /* the photo and its wash stop 4px short of the band's edges, under the waves: at a fractional offset the band's clip
      edge otherwise left a hairline of the dark photo across the page above and below it */
@@ -1222,7 +1222,7 @@ if (el) {
 <section id="ask" class="band" aria-labelledby="ask-h">
   <svg class="wave top" viewBox="0 0 1440 40" preserveAspectRatio="none" aria-hidden="true"><path d="M0 0H1440V16C1260 34 1080 4 900 16S540 34 360 16 120 4 0 14Z"/></svg>
   <svg class="wave bot" viewBox="0 0 1440 40" preserveAspectRatio="none" aria-hidden="true"><path d="M0 0H1440V16C1260 34 1080 4 900 16S540 34 360 16 120 4 0 14Z"/></svg>
-  <img class="band-media" src="media/contact-farms.jpg" alt="" loading="lazy" decoding="async">
+  <img class="band-media" src="media/ask-sea.jpg" alt="" loading="lazy" decoding="async">
   <div class="wrap">
     <h2 class="title reveal" id="ask-h">Interested in <em>RoySync?</em></h2>
     <div class="cta-row reveal">
