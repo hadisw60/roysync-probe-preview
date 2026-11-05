@@ -573,6 +573,8 @@
   /* bands: a full-width film or picture under a dark wash, between the light screens, with wavy water edges */
   #story section.band { position: relative; overflow: hidden; color: #fff; isolation: isolate; }
   #story .band-media { position: absolute; inset: 0; z-index: -2; width: 100%; height: 100%; object-fit: cover; }
+  /* Windows moves a playing film onto its own overlay plane, and building that plane froze the whole page for ~0.65 s as the film came on screen; a filter keeps it drawn with the page */
+  #story video.band-media { filter: contrast(1.001); }
   #story section.band::after { content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none;
     background: linear-gradient(90deg, rgba(4, 13, 24, .8) 0%, rgba(4, 13, 24, .5) 55%, rgba(4, 13, 24, .25) 100%); }
   #story section.band .big { color: #fff; } #story section.band .big em { color: #9fd0f7; }
@@ -2451,6 +2453,7 @@ fishMat.onBeforeCompile = sh => {
 // the float, now passing close by it.
 const N_FISH = 16, N_RING = 9;
 let fishMesh = null;
+let fishReady; const fishLoaded = new Promise(r => fishReady = r);   // (the shader warm-up waits for the fish, see warmUp)
 const school = {
   r: new Float32Array(N_FISH),     // distance from the float's axis
   y: new Float32Array(N_FISH),     // depth below the float's origin
@@ -2507,7 +2510,7 @@ function fishAt(i, t, out) {
 new GLTFLoader().load('assets/fish.glb', gltf => {
   let src = null;
   gltf.scene.traverse(o => { if (o.isMesh && !src) src = o; });
-  if (!src) return;
+  if (!src) return fishReady();
   const g = src.geometry.clone();
   g.rotateY(Math.PI);
   g.translate(0, -0.1435, 0.0035);
@@ -2529,7 +2532,8 @@ new GLTFLoader().load('assets/fish.glb', gltf => {
   fishMesh.frustumCulled = false;
   fishMesh.layers.set(L_UNDER);
   scene.add(fishMesh);
-});
+  fishReady();
+}, undefined, () => fishReady());
 // ---------------- bubbles: now and then a fish lets out a little puff that wobbles up and away ----------------
 // each fish owns BUB_PER bubbles, let out together every 5..9 s from just behind its head and left behind as it swims on
 const BUB_PER = 6, N_BUB = N_FISH * BUB_PER;
@@ -2786,8 +2790,21 @@ const onProbeLoaded = gltf => {
   // no meniscus ring (makeFoam): its bright hairline read as a white band round the collar, so the water meets the
   // hull bare
   loadingEl.style.transform = 'scaleX(1)'; loadingEl.style.opacity = 0;
-  dispatchEvent(new Event('probe-ready'));   // the footage starts loading only now, so it never competes with the probe
+  // the opening screen stays up while every shader the dive needs is compiled (the fish too, if they come in time)
+  Promise.race([fishLoaded, new Promise(r => setTimeout(r, 4000))]).then(() => {
+    try { warmUp(); } catch (e) { console.warn('warm-up', e); }
+    dispatchEvent(new Event('probe-ready'));   // the footage starts loading only now, so it never competes with the probe
+  });
 };
+// one frame of the view under the water and one of the split view at the waterline, drawn behind the opening screen and
+// thrown away: the first frame under the water used to compile all of its shaders on the spot, a ~0.75 s freeze as the
+// lens went through the surface
+function warmUp() {
+  const p0 = camera.position.clone(), q0 = camera.quaternion.clone(), m0 = view.mode;
+  camera.position.set(0, -2.2, 9); camera.lookAt(0, -2, 0); camera.updateMatrixWorld();
+  for (const m of [2, 1]) { view.mode = m; composer.render(0.016); }
+  camera.position.copy(p0); camera.quaternion.copy(q0); camera.updateMatrixWorld(); view.mode = m0;
+}
 const onProbeFailed = err => { console.error(err); loadingEl.style.opacity = 0; dispatchEvent(new Event('probe-ready')); };
 function probeDequantize(g) {
   const q = g.userData.q; if (!q || g.userData.dq) return;
@@ -3696,6 +3713,9 @@ function tick(static_ = false) {
   // loop is "static_ !== true", as for govern above: setAnimationLoop passes a timestamp there, so the old
   // "!static_" checks never ran and the 3D went on drawing behind the whole page.)
   if (static_ !== true && storyTop <= 0) return;
+  // nor once the push-in's white is whole: it hides the stage, and the page rises over the rest (drawing the dive
+  // behind it there cost every frame of the hand-over, the slowest stretch of the page)
+  if (static_ !== true && whiteout._whole) return;
 
   // camera: descend from above the surface to below it, pulling in on the blades.
   // 1. Surface float: p = 0 .. 0.10
