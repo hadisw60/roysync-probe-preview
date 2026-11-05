@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Contact — RoySync</title>
-<meta name="description" content="Fish farmers: plan an AquaRoy pilot with us. Investors and partners: talk to the founders. RoySync, water-quality monitoring for fish farms.">
+<meta name="description" content="Fish farmers: see what AquaRoy could save you and request a demo. Investors and partners: get the pitch deck and meet the founders.">
 <link rel="icon" type="image/png" href="assets/favicon.png">
 <link rel="preload" href="assets/fonts/sora.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="assets/fonts/jost.woff2" as="font" type="font/woff2" crossorigin>
@@ -92,18 +92,19 @@
   .box { padding: 60px 72px; background: #fff; border: 1px solid rgba(18,38,58,.12);
          border-radius: 6px; box-shadow: 0 24px 60px -36px rgba(14,34,54,.35); scroll-margin-top: 90px; }
   .box-head { max-width: 620px; margin-bottom: 40px; }
+  .box .intro a { color: var(--blue); }
   .box h2 { margin: 0; font: 500 44px/1.08 var(--head); letter-spacing: -.035em; color: var(--navy); }
   .box .intro { margin: 16px 0 0; font-size: 17px; line-height: 1.65; color: var(--muted); }
   .facts { display: flex; flex-wrap: wrap; gap: 6px 36px; margin-top: 44px; padding-top: 22px; border-top: 1px solid var(--line); font-size: 15.5px; line-height: 1.6; color: var(--muted); }
   .facts b { font-weight: 400; color: var(--ink); }
-  form { display: flex; flex-direction: column; gap: 30px; }
-  .tabs { display: flex; gap: 28px; }
+  form { display: flex; flex-direction: column; gap: 30px; } form[hidden] { display: none; }
+  .tabs { display: flex; gap: 28px; margin-bottom: 36px; }
   .tabs button { font: inherit; font-size: 16px; color: var(--faint); background: none; border: 0; padding: 0 0 6px; border-bottom: 2px solid transparent; cursor: pointer; }
   .tabs button[aria-selected="true"] { color: var(--ink); font-weight: 500; border-bottom-color: var(--navy); }
   .fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 30px 36px; }
   label, .lab { display: block; font-size: 14px; color: var(--muted); }
   label i { font-style: normal; color: #8a9bab; }
-  input[type=text], input[type=email], textarea { display: block; width: 100%; margin-top: 6px; font: inherit; font-size: 18px; line-height: 1.4; color: var(--ink); padding: 8px 0;
+  input[type=text], input[type=email], input[type=number], textarea { display: block; width: 100%; margin-top: 6px; font: inherit; font-size: 18px; line-height: 1.4; color: var(--ink); padding: 8px 0;
     border: 0; border-bottom: 1px solid rgba(18,38,58,.3); border-radius: 0; background: transparent; outline: none; transition: border-color .2s; }
   input::placeholder, textarea::placeholder { color: #9aa9b7; }
   input:focus, textarea:focus { border-bottom-color: var(--navy); }
@@ -116,14 +117,6 @@
   .picks input { position: absolute; opacity: 0; pointer-events: none; }
   .picks label:has(input:checked) { color: var(--ink); border-bottom-color: var(--navy); }
   .picks label:has(input:focus-visible) { outline: 2px solid var(--blue); outline-offset: 3px; }
-  .msg-head { display: flex; justify-content: space-between; align-items: baseline; }
-  .help-open { font: inherit; font-size: 14px; color: var(--blue); background: none; border: 0; padding: 0; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
-  .help-box { margin-top: 12px; padding: 16px; background: var(--paper); border: 1px solid var(--line); border-radius: 4px; }
-  .help-box p { margin: 0 0 10px; font-size: 14.5px; line-height: 1.5; color: var(--muted); }
-  .help-row { display: flex; gap: 10px; align-items: flex-end; }
-  .help-row input { margin-top: 0; font-size: 16px; }
-  .help-row button { flex: none; font: 500 15px Jost, sans-serif; color: #fff; background: var(--blue); border: 0; padding: 10px 16px; cursor: pointer; }
-  .help-msg { margin: 10px 0 0 !important; } .help-msg:empty { display: none; }
   .only-inv, .door-inv .only-farm { display: none; }
   .door-inv .only-inv { display: block; } .door-inv span.only-inv { display: inline; }
   .door-inv .only-inv.fieldwrap, .fieldwrap { display: contents; }
@@ -133,13 +126,36 @@
   .send { font: 500 16px Jost, sans-serif; color: #fff; background: var(--navy); border: 0; padding: 16px 34px; cursor: pointer; transition: background .2s; }
   .send:hover { background: #1b3550; }
   .send-row span { font-size: 14px; color: var(--faint); }
+  /* the farm's path: three steps, the sum's inputs, then the result */
+  .stepper { display: flex; gap: 26px; margin: 0 0 32px; padding: 0; list-style: none; counter-reset: st; font-size: 15px; color: var(--faint); }
+  .stepper li { counter-increment: st; } .stepper li::before { content: counter(st) ". "; }
+  .stepper li[aria-current] { color: var(--navy); font-weight: 500; }
+  input[type=number] { appearance: textfield; -moz-appearance: textfield; }
+  input[type=number]::-webkit-inner-spin-button { appearance: none; }
+  input[type=range] { display: block; width: 100%; margin: 16px 0 0; accent-color: var(--blue); }
+  output { color: var(--navy); font-weight: 500; }
+  .ready { margin: 0; font-size: 18px; color: var(--ink); }
+  .small { margin: 0; font-size: 13.5px; line-height: 1.55; color: var(--faint); }
+  .send.ghost { color: var(--navy); background: none; box-shadow: inset 0 0 0 1px var(--navy); }
+  .send.ghost:hover { background: var(--paper); }
+  .back { font: inherit; font-size: 15px; color: var(--blue); background: none; border: 0; padding: 8px 0; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
+  .res-lead { margin: 0; font-size: 18px; color: var(--muted); }
+  .res-big { margin: 6px 0 0; font: 500 52px/1.1 var(--head); letter-spacing: -.035em; color: var(--navy); } .res-big b { font-weight: 500; color: var(--blue); }
+  .res-rows { margin: 30px 0; border-top: 1px solid var(--line); }
+  .res-rows div { display: flex; justify-content: space-between; gap: 20px; padding: 12px 0; border-bottom: 1px solid var(--line); font-size: 16.5px; }
+  .res-rows div[hidden] { display: none; }
+  .res-rows dt { color: var(--muted); } .res-rows dd { margin: 0; color: var(--ink); font-weight: 500; white-space: nowrap; }
+  .res-note { margin: 0 0 24px; font-size: 16.5px; line-height: 1.55; color: var(--warn); }
+  #result .small { margin-top: 18px; }
   .done { padding: 20px 0; } .done h3 { margin: 0; font: 500 28px var(--head); letter-spacing: -.03em; color: var(--navy); }
   .done p { margin: 12px 0 0; max-width: 440px; font-size: 16.5px; line-height: 1.6; color: var(--muted); }
   .done button { margin-top: 16px; font: inherit; font-size: 15px; color: var(--blue); background: none; border: 0; padding: 0; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
 
-  /* the trout strip sits in the same column, still on the pale band */
+  /* the film strip sits in the same column, still on the pale band */
   .strip { position: relative; height: 400px; margin-top: 80px; overflow: hidden; background: var(--navy); }
   .strip video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  /* Windows moves a playing film onto its own overlay plane, and building that plane froze the page for ~0.65 s; a filter keeps it drawn with the page */
+  .door video, .strip video { filter: contrast(1.001); }
   .strip::after { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, rgba(14,34,54,.72), rgba(14,34,54,.1) 60%); }
   .strip p { position: absolute; z-index: 1; left: 64px; top: 50%; transform: translateY(-50%); margin: 0; max-width: 560px;
              font: 500 clamp(28px, 3vw, 40px)/1.15 var(--head); letter-spacing: -.03em; color: #fff; }
@@ -176,12 +192,11 @@
   .ft-news small { display: block; margin-top: 10px; font-size: 12px; line-height: 1.5; color: #6f879e; }
 
   /* finger-sized tap areas, invisible: the links stay the size they look */
-  .navlinks a::before, .ft-col a::before, .tabs button::before, .help-open::before { content: ""; position: absolute; }
-  .ft-col a, .tabs button, .help-open { position: relative; }
+  .navlinks a::before, .ft-col a::before, .tabs button::before { content: ""; position: absolute; }
+  .ft-col a, .tabs button { position: relative; }
   .navlinks a::before { inset: -7px -2px; }
   .ft-col a::before { inset: -4px -6px; }
   .tabs button::before { inset: -7px -8px -9px; z-index: 1; }   /* above the form card that starts just under the tabs */
-  .help-open::before { inset: -10px -8px; }
   .ft-bottom { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 10px 24px; max-width: var(--col); margin: 56px auto 0; padding-top: 22px;
                border-top: 1px solid rgba(170,210,255,.12); font-size: 12.5px; color: #6f879e; }
 
@@ -199,10 +214,11 @@
     .door b { font-size: 22px; } .door p { display: none; } .door .go { margin-top: 10px; font-size: 14px; }
     .band { margin-top: 40px; padding: 28px 0; }
     .box { padding: 28px 20px; gap: 24px; }
-    .box h2 { font-size: 30px; } .box .intro, .facts { display: none; }
+    .stepper { gap: 14px; font-size: 14px; } .stepper li { white-space: nowrap; }
+    .box h2 { font-size: 30px; } .box .intro { font-size: 16px; } .facts { display: none; } .res-big { font-size: 38px; }
     form { gap: 22px; }
     .fields { grid-template-columns: minmax(0, 1fr); gap: 22px; }
-    input[type=text], input[type=email], textarea { font-size: 17px; }
+    input[type=text], input[type=email], input[type=number], textarea { font-size: 17px; }
     .send { width: 100%; padding: 17px; } .send-row { gap: 10px; } .send-row span { width: 100%; text-align: center; }
     .strip { display: none; }
     .next { padding-top: 48px; padding-bottom: 52px; } .next h2 { font-size: 22px; }
@@ -234,16 +250,16 @@
   <section class="open col" aria-label="Contact RoySync">
     <div class="open-head">
       <h1>Every farm has a story under the surface.</h1>
-      <p>Tell us yours. Choose the door that fits, and a person at RoySync will answer within one working day.</p>
+      <p>Choose the door that fits, and a person at RoySync will answer within one working day.</p>
     </div>
     <div class="doors">
       <a class="door" href="#write" data-door="farm" aria-current="true">
-        <video muted loop playsinline preload="metadata" poster="media/contact-feed.jpg" aria-hidden="true" data-src="media/contact-feed.mp4" data-src-sm="media/contact-feed-sm.mp4"></video>
-        <span class="cap"><b>I run a farm</b><p>Ponds, tanks or sea cages. Tell us about your water and we'll plan a pilot with you.</p><span class="go">Plan a pilot →</span></span>
+        <video muted loop playsinline preload="metadata" poster="media/contact-school-hd.jpg" aria-hidden="true" data-src="media/contact-school-hd.mp4" data-src-sm="media/contact-school-sm.mp4"></video>
+        <span class="cap"><b>I run a farm</b><p>Optimise your profit. See how much of your fish losses AquaRoy could save.</p><span class="go">See my savings →</span></span>
       </a>
       <a class="door" href="#write" data-door="inv" aria-current="false">
-        <video muted loop playsinline preload="metadata" poster="media/contact-farms.jpg" aria-hidden="true" data-src="media/contact-farms.mp4" data-src-sm="media/contact-farms-sm.mp4"></video>
-        <span class="cap"><b>I invest or partner</b><p>Distribution, technology partnerships and investment. A UK company with a registered design.</p><span class="go">Talk to the founders →</span></span>
+        <video muted loop playsinline preload="metadata" poster="media/contact-farms-hd.jpg" aria-hidden="true" data-src="media/contact-farms-hd.mp4" data-src-sm="media/contact-farms-sm2.mp4"></video>
+        <span class="cap"><b>I invest or partner</b><p>Let's own the future of smart aquaculture.</p><span class="go">Get the pitch deck →</span></span>
       </a>
     </div>
   </section>
@@ -251,55 +267,100 @@
   <div class="band">
     <div class="col">
       <section class="box" id="write" aria-labelledby="write-h">
-        <div class="box-head">
-          <h2 id="write-h">Write to us.</h2>
-          <p class="intro">A few lines are plenty: where the farm is, what you keep, and what you'd like to keep an eye on. Not sure how to put it? Use <i>Help me write</i> and edit what comes back.</p>
+        <div class="tabs" role="tablist" aria-label="Who are you?">
+          <button type="button" role="tab" data-door="farm" aria-selected="true">I run a farm</button>
+          <button type="button" role="tab" data-door="inv" aria-selected="false">I invest or partner</button>
         </div>
 
-        <div>
-          <form id="form" novalidate>
-            <div class="tabs" role="tablist" aria-label="Who are you?">
-              <button type="button" role="tab" data-door="farm" aria-selected="true">I run a farm</button>
-              <button type="button" role="tab" data-door="inv" aria-selected="false">I invest or partner</button>
+        <div class="box-head">
+          <h2 id="write-h"><span class="only-farm">You raise the fish. RoySync protects your investment.</span><span class="only-inv">Aquaculture is hungry for AI. We built the tools.</span></h2>
+          <p class="intro only-farm">Optimise your profit. Enter your ponds and see what fish losses cost you each year, and how much of that AquaRoy could save.</p>
+          <p class="intro only-inv">RoySync is an intelligent ecosystem targeting the multi-billion-dollar problem of fish lost on farms. Disease alone costs fish farming <a href="https://marinescience.blog.gov.uk/2017/02/02/solving-the-6-billion-per-year-global-aquaculture-disease-problem" target="_blank" rel="noopener">about $6 billion a year</a>.</p>
+        </div>
+
+        <div class="only-farm">
+          <ol class="stepper" aria-label="Three steps">
+            <li data-step="1" aria-current="step">Your ponds</li><li data-step="2">Your details</li><li data-step="3">Your savings</li>
+          </ol>
+
+          <form id="calc" novalidate>
+            <div class="fields">
+              <div id="w-ponds"><label for="f-ponds">Ponds or tanks</label><input type="number" id="f-ponds" name="ponds" min="1" step="1" inputmode="numeric" placeholder="4"><p class="err" id="e-ponds" hidden>How many ponds or tanks do you run?</p></div>
+              <div id="w-tonnes"><label for="f-tonnes">Fish sold per year, in tonnes</label><input type="number" id="f-tonnes" name="tonnes" min="0" step="any" inputmode="decimal" placeholder="400"><p class="err" id="e-tonnes" hidden>Add your yearly tonnes.</p></div>
+              <div id="w-price"><label for="f-price">Sale price per kg, in £</label><input type="number" id="f-price" name="price" min="0" step="any" inputmode="decimal" placeholder="4"><p class="err" id="e-price" hidden>Add your price per kg.</p></div>
+              <div id="w-loss"><label for="f-loss">Fish lost in a year, in %</label><input type="number" id="f-loss" name="loss" min="0" max="100" step="any" inputmode="decimal" placeholder="15"><p class="err" id="e-loss" hidden>Add a share between 0 and 100.</p></div>
             </div>
+            <div>
+              <label for="f-water">How much of that loss comes from the water (oxygen, temperature, pH)? <output id="o-water" for="f-water">30%</output></label>
+              <input type="range" id="f-water" name="water" min="0" max="100" step="5" value="30">
+            </div>
+            <div class="send-row"><button class="send" type="submit">See my savings</button><span>Takes under a minute.</span></div>
+          </form>
+
+          <form id="gate" novalidate hidden>
+            <p class="ready">Your result is ready. Tell us who it's for and we'll show it right away.</p>
             <div class="fields">
               <div id="w-name"><label for="f-name">Name</label><input type="text" id="f-name" name="name" autocomplete="name" maxlength="100"><p class="err" id="e-name" hidden>Add your name so we know who to answer.</p></div>
-              <div id="w-email"><label for="f-email">Email</label><input type="email" id="f-email" name="email" autocomplete="email" maxlength="200"><p class="err" id="e-email" hidden>That email doesn't look right. Check it and send again.</p></div>
-              <div><label for="f-org"><span class="only-farm">Farm or company</span><span class="only-inv">Organisation</span> <i>(optional)</i></label><input type="text" id="f-org" name="org" autocomplete="organization" maxlength="120"></div>
-              <div class="fieldwrap only-farm"><div><label for="f-keep">What you keep, and how many <i>(optional)</i></label><input type="text" id="f-keep" name="keep" maxlength="160" placeholder="12 tanks of trout"></div></div>
-              <div class="fieldwrap only-inv"><div><label for="f-region">Region <i>(optional)</i></label><input type="text" id="f-region" name="region" maxlength="80" placeholder="UK, Gulf, Europe"></div></div>
+              <div id="w-email"><label for="f-email">Email</label><input type="email" id="f-email" name="email" autocomplete="email" maxlength="200"><p class="err" id="e-email" hidden>That email doesn't look right. Check it and try again.</p></div>
+              <div><label for="f-phone">Phone or WhatsApp <i>(optional)</i></label><input type="text" id="f-phone" name="phone" autocomplete="tel" maxlength="40"></div>
+              <div><label for="f-org">Farm or company <i>(optional)</i></label><input type="text" id="f-org" name="org" autocomplete="organization" maxlength="120"></div>
             </div>
-            <fieldset class="only-farm" style="border:0;margin:0;padding:0">
-              <legend class="lab" style="padding:0">What worries you most <i style="font-style:normal;color:#8a9bab">(pick any)</i></legend>
-              <div class="picks">
-                <label><input type="checkbox" name="worry" value="Oxygen at night">Oxygen at night</label><label><input type="checkbox" name="worry" value="Temperature swings">Temperature swings</label>
-                <label><input type="checkbox" name="worry" value="pH">pH</label><label><input type="checkbox" name="worry" value="Alerts when I'm away">Alerts when I'm away</label>
-              </div>
-            </fieldset>
-            <fieldset class="only-inv" style="border:0;margin:0;padding:0">
+            <div class="send-row"><button class="send" type="submit">Show my result</button><button type="button" class="back" data-go="1">Change my numbers</button></div>
+            <p class="small">We use these details to reply to you about AquaRoy, and nothing else.</p>
+          </form>
+
+          <div id="result" hidden>
+            <p class="res-lead">AquaRoy could save you about</p>
+            <p class="res-big"><b id="r-saved"></b> a year</p>
+            <dl class="res-rows">
+              <div><dt>Fish lost today</dt><dd id="r-lost"></dd></div>
+              <div><dt>Of that, from the water</dt><dd id="r-water"></dd></div>
+              <div><dt id="r-cost-l"></dt><dd id="r-cost"></dd></div>
+              <div><dt>Left in your pocket, first year</dt><dd id="r-net"></dd></div>
+              <div id="r-pay-w"><dt>The floats pay for themselves in</dt><dd id="r-pay"></dd></div>
+            </dl>
+            <p class="res-note" id="r-low" hidden>On these numbers the floats would not pay for themselves in the first year. Every farm is different, so let's look at yours together.</p>
+            <div class="send-row">
+              <button class="send" type="button" data-ask="Demo request">Request a demo</button>
+              <button class="send ghost" type="button" data-ask="Consultation request">Request a consultation</button>
+              <button type="button" class="back" data-go="1">Change my numbers</button>
+            </div>
+            <p class="small" id="r-basis"></p>
+          </div>
+
+          <div class="done" id="done-farm" role="status" hidden>
+            <h3>We have your request.</h3>
+            <p class="done-text"></p>
+          </div>
+        </div>
+
+        <div class="only-inv">
+          <form id="inv" novalidate>
+            <div class="fields">
+              <div id="w-iname"><label for="i-name">Name</label><input type="text" id="i-name" name="name" autocomplete="name" maxlength="100"><p class="err" id="e-iname" hidden>Add your name so we know who to answer.</p></div>
+              <div id="w-iemail"><label for="i-email">Email</label><input type="email" id="i-email" name="email" autocomplete="email" maxlength="200"><p class="err" id="e-iemail" hidden>That email doesn't look right. Check it and try again.</p></div>
+              <div><label for="i-org">Organisation <i>(optional)</i></label><input type="text" id="i-org" name="org" autocomplete="organization" maxlength="120"></div>
+              <div><label for="i-region">Region <i>(optional)</i></label><input type="text" id="i-region" name="region" maxlength="80" placeholder="UK, Gulf, Europe"></div>
+            </div>
+            <fieldset style="border:0;margin:0;padding:0">
               <legend class="lab" style="padding:0">Interested in <i style="font-style:normal;color:#8a9bab">(pick any)</i></legend>
               <div class="picks">
                 <label><input type="checkbox" name="interest" value="Investment">Investment</label><label><input type="checkbox" name="interest" value="Distribution">Distribution</label>
                 <label><input type="checkbox" name="interest" value="Technology partnership">Technology partnership</label><label><input type="checkbox" name="interest" value="Press">Press</label>
               </div>
             </fieldset>
-            <div>
-              <div class="msg-head"><label for="f-msg">Message</label><button type="button" class="help-open" id="help-open" aria-expanded="false" aria-controls="help-box">Help me write</button></div>
-              <div class="help-box" id="help-box" hidden>
-                <p>Say it in a few words, in any language. We'll turn it into a clear message you can edit before sending.</p>
-                <div class="help-row"><input type="text" id="help-in" maxlength="300" aria-label="A few words"><button type="button" id="help-go">Draft it</button></div>
-                <p class="help-msg" id="help-msg" role="status" aria-live="polite"></p>
-              </div>
-              <textarea id="f-msg" name="message" rows="4" maxlength="2000" placeholder="Oxygen drops in the small hours in summer, and I'm not always there…"></textarea>
+            <div class="send-row">
+              <button class="send" type="submit" data-ask="Pitch deck request">Get the pitch deck</button>
+              <button class="send ghost" type="submit" data-ask="Meeting request">Book a meeting</button>
             </div>
-            <div class="send-row"><button class="send" type="submit">Send message</button><span>Opens your mail app with everything filled in.</span></div>
+            <p class="small">We use these details to reply to you about RoySync, and nothing else.</p>
           </form>
-          <div class="done" id="done" role="status" hidden>
-            <h3>Your message is ready.</h3>
-            <p>Your mail app should have opened with everything filled in; press send there. If nothing opened, write to <a href="mailto:info@roysync.com">info@roysync.com</a>.</p>
-            <button type="button" id="edit">Edit the message</button>
+          <div class="done" id="done-inv" role="status" hidden>
+            <h3>We have your request.</h3>
+            <p class="done-text"></p>
           </div>
         </div>
+
         <div class="facts">
           <div><b>Email</b> — <a href="mailto:info@roysync.com">info@roysync.com</a></div>
           <div><b>Answer</b> — within one working day</div>
@@ -308,7 +369,7 @@
       </section>
 
       <div class="strip">
-        <video muted loop playsinline preload="none" poster="media/contact-trout.jpg" aria-hidden="true" data-src="media/contact-trout.mp4" data-src-sm="media/contact-trout-sm.mp4"></video>
+        <video muted loop playsinline preload="none" poster="media/contact-dusk-still.jpg" aria-hidden="true" data-src="media/contact-dusk-1080.mp4?v=2" data-src-sm="media/contact-dusk-960.mp4?v=2"></video>
         <p>Oxygen falls while you sleep. The float doesn't.</p>
       </div>
     </div>
@@ -317,8 +378,8 @@
   <section class="next col" aria-labelledby="next-h">
     <h2 id="next-h">What happens next</h2>
     <ol class="steps">
-      <li><span>Within a working day</span><p class="only-farm">We read your note and answer it ourselves. If we need more, we ask one short question.</p><p class="only-inv">A reply from the people who build AquaRoy.</p></li>
-      <li><span>Within a week</span><p class="only-farm">A pilot plan: how many floats, where they go, how they connect, and a clear price.</p><p class="only-inv">A call, and the details you ask for.</p></li>
+      <li><span>Within a working day</span><p class="only-farm">We read your numbers and answer ourselves. If we need more, we ask one short question.</p><p class="only-inv">The pitch deck, from the people who build AquaRoy.</p></li>
+      <li><span>Within a week</span><p class="only-farm">Your demo, then a plan: how many floats, where they go, how they connect, and a clear price.</p><p class="only-inv">A meeting, in person or online, and the details you ask for.</p></li>
       <li><span>Then</span><p class="only-farm">The float goes in the water and your pond reports to the dashboard, day and night.</p><p class="only-inv">The next step we agree on together.</p></li>
     </ol>
   </section>
@@ -386,7 +447,7 @@
   })();
 
   // the films load only when they come near the screen and play only while seen; a still stays for reduced motion
-  // A phone gets the small copies (about 1.6 MB for all three, not 7.9 MB): the doors are 170 px wide there.
+  // A phone gets the small copies (about 1.7 MB for the two doors, not 8.4 MB): the doors are 170 px wide there.
   const smallFilms = matchMedia('(max-width: 760px)').matches;
   document.querySelectorAll('video[data-src]').forEach(v => {
     new IntersectionObserver(([e]) => {
@@ -394,69 +455,106 @@
     }, { rootMargin: '200px 0px' }).observe(v);
   });
 
-  // the two doors: a door (in the pictures or the form's tabs) switches the form's fields, the words beside it and the steps
-  const form = document.getElementById('form'), done = document.getElementById('done');
+  // the two doors: a door (in the pictures or the box's tabs) switches the box's words and path, and the steps
   let door = 'farm';
   const setDoor = d => {
     door = d;
     document.body.classList.toggle('door-farm', d === 'farm'); document.body.classList.toggle('door-inv', d === 'inv');
     document.querySelectorAll('.tabs button').forEach(b => b.setAttribute('aria-selected', b.dataset.door === d));
     document.querySelectorAll('.door').forEach(b => b.setAttribute('aria-current', b.dataset.door === d));
-    form['message'].placeholder = d === 'farm' ? "Oxygen drops in the small hours in summer, and I'm not always there…" : "What you're looking for, and where.";
-    form.hidden = false; done.hidden = true;
   };
   document.querySelectorAll('.tabs button').forEach(b => b.addEventListener('click', () => setDoor(b.dataset.door)));
   document.querySelectorAll('.door').forEach(a => a.addEventListener('click', e => {
     e.preventDefault(); setDoor(a.dataset.door);
     document.getElementById('write').scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' });
-    setTimeout(() => document.getElementById('f-name').focus({ preventScroll: true }), reduce ? 0 : 700);
   }));
 
-  const clip = (s, n) => s.trim().slice(0, n);
-  const picked = n => [...form.querySelectorAll(`input[name="${n}"]:checked`)].map(i => i.value);
+  const $ = id => document.getElementById(id), clip = (s, n) => s.trim().slice(0, n);
+  const isMail = s => /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(s.trim());
+  const showErr = (k, on) => { $('w-' + k).classList.toggle('bad', on); $('e-' + k).hidden = !on; };
 
-  // help me write: a few words go to the drafting service and come back as a message the visitor edits.
-  // HELP_URL stays empty until that service exists; until then the box says so instead of pretending
-  const HELP_URL = '';
-  const helpOpen = document.getElementById('help-open'), helpBox = document.getElementById('help-box'), helpIn = document.getElementById('help-in'), helpMsg = document.getElementById('help-msg');
-  helpOpen.addEventListener('click', () => {
-    const o = helpBox.hidden; helpBox.hidden = !o; helpOpen.setAttribute('aria-expanded', o);
-    helpIn.placeholder = door === 'farm' ? '12 trout tanks, oxygen drops at night in summer' : 'we distribute farm equipment in the Gulf';
-    if (o) helpIn.focus();
-  });
-  document.getElementById('help-go').addEventListener('click', async () => {
-    const words = helpIn.value.trim();
-    if (!words) { helpMsg.textContent = 'Write a few words first.'; return; }
-    if (!HELP_URL) { helpMsg.textContent = 'The writing helper is not switched on yet. A few lines in your own words are plenty.'; return; }
-    helpMsg.textContent = 'Drafting…';
-    try {
-      const r = await fetch(HELP_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ words, door, worries: picked('worry'), interest: picked('interest') }) });
-      if (!r.ok) throw new Error(r.status === 429 ? 'The helper is busy. Try again in a minute.' : 'The helper could not draft that.');
-      form['message'].value = (await r.json()).draft || ''; helpMsg.textContent = 'Drafted. Change anything you like.';
-    } catch (err) { helpMsg.textContent = err.message + ' You can still write it yourself.'; }
-  });
+  // Where a visitor's details go. LEAD_URL stays empty until a list server exists; until then they reach
+  // info@roysync.com through the visitor's own mail app, and only if the visitor presses send there.
+  // BOOK_URL is the calendar page a meeting request opens, once there is one.
+  const LEAD_URL = '', BOOK_URL = '';
+  const sendLead = async (kind, lines) => {
+    if (LEAD_URL) {
+      try { const r = await fetch(LEAD_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ kind, lines }) }); if (r.ok) return true; } catch {}
+    }
+    location.href = 'mailto:info@roysync.com?subject=' + encodeURIComponent('RoySync: ' + kind) + '&body=' + encodeURIComponent(lines.filter(Boolean).join('\n'));
+    return false;
+  };
+  const doneText = sent => sent ? 'A person at RoySync will answer within one working day.'
+    : 'Your mail app should have opened with everything filled in; press send there. If nothing opened, write to info@roysync.com.';
 
-  // no backend on the static site: check the two fields that matter, then hand the message to the visitor's mail app
-  const showErr = (k, on) => { document.getElementById('w-' + k).classList.toggle('bad', on); document.getElementById('e-' + k).hidden = !on; };
-  form.addEventListener('submit', e => {
+  // the savings sum. One float per pond, at the prices below; floats are taken to catch CAUGHT of the water's losses in time
+  const FLOAT = 2360, YEARLY = 1620, CAUGHT = 0.5;
+  const money = n => (n < 0 ? '−' : '') + '£' + Math.abs(Math.round(n)).toLocaleString('en-GB');
+  const calc = $('calc'), gate = $('gate'), result = $('result');
+  let farm = null;
+  const toStep = n => {
+    calc.hidden = n !== 1; gate.hidden = n !== 2; result.hidden = n !== 3; $('done-farm').hidden = true;
+    document.querySelectorAll('.stepper li').forEach(l => { if (+l.dataset.step === n) l.setAttribute('aria-current', 'step'); else l.removeAttribute('aria-current'); });
+  };
+  const sum = () => {
+    const { ponds, tonnes, price, loss, water } = farm;
+    const lost = tonnes * 1000 * price * loss / 100, fromWater = lost * water / 100, saved = fromWater * CAUGHT;
+    const yearly = ponds * YEARLY, firstYear = ponds * FLOAT + yearly;
+    return { lost, fromWater, saved, firstYear, net: saved - firstYear, payback: saved > yearly ? Math.ceil(ponds * FLOAT / ((saved - yearly) / 12)) : 0 };
+  };
+  const showResult = () => {
+    const r = sum();
+    $('r-saved').textContent = money(r.saved); $('r-lost').textContent = money(r.lost); $('r-water').textContent = money(r.fromWater);
+    $('r-cost-l').textContent = `AquaRoy, first year (${farm.ponds} float${farm.ponds > 1 ? 's' : ''})`; $('r-cost').textContent = money(r.firstYear);
+    $('r-net').textContent = money(r.net);
+    $('r-pay-w').hidden = !r.payback; $('r-pay').textContent = r.payback + (r.payback > 1 ? ' months' : ' month');
+    $('r-low').hidden = r.net >= 0;
+    $('r-basis').textContent = `An estimate from your own numbers, not a promise. It takes one float per pond at ${money(FLOAT)} plus ${money(YEARLY)} a year, and assumes the floats catch ${CAUGHT * 100}% of the water's losses in time.`;
+    toStep(3);
+  };
+  const farmLines = () => { const r = sum(), f = farm; return [
+    'Name: ' + clip(gate['name'].value, 100), 'Email: ' + clip(gate['email'].value, 200),
+    gate['phone'].value.trim() && 'Phone: ' + clip(gate['phone'].value, 40), gate['org'].value.trim() && 'Farm or company: ' + clip(gate['org'].value, 120), '',
+    `Ponds: ${f.ponds}`, `Tonnes a year: ${f.tonnes}`, `Price per kg: £${f.price}`, `Fish lost a year: ${f.loss}%`, `From the water: ${f.water}%`, `Estimated saving: ${money(r.saved)} a year`]; };
+
+  $('f-water').addEventListener('input', e => { $('o-water').textContent = e.target.value + '%'; });
+  calc.addEventListener('submit', e => {
     e.preventDefault();
-    const name = form['name'].value, email = form['email'].value, org = form['org'].value;
-    const badName = !name.trim(), badMail = !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email.trim());
-    showErr('name', badName); showErr('email', badMail);
-    if (badName || badMail) { (badName ? form['name'] : form['email']).focus(); return; }
-    const who = clip(org, 100) || clip(name, 100);
-    const lines = door === 'farm'
-      ? [org.trim() && 'Farm or company: ' + clip(org, 120), form['keep'].value.trim() && 'Keeps: ' + clip(form['keep'].value, 160),
-         picked('worry').length && 'Worried about: ' + picked('worry').join(', ')]
-      : [org.trim() && 'Organisation: ' + clip(org, 120), form['region'].value.trim() && 'Region: ' + clip(form['region'].value, 80),
-         picked('interest').length && 'Interested in: ' + picked('interest').join(', ')];
-    const body = ['Name: ' + clip(name, 100), 'Email: ' + clip(email, 200), ...lines.filter(Boolean), '', clip(form['message'].value, 2000)].join('\n');
-    location.href = 'mailto:info@roysync.com?subject=' + encodeURIComponent((door === 'farm' ? 'Pilot request — ' : 'Partnership — ') + who) + '&body=' + encodeURIComponent(body);
-    form.hidden = true; done.hidden = false;
+    const v = k => parseFloat(calc[k].value), ok = { ponds: Number.isInteger(v('ponds')) && v('ponds') > 0, tonnes: v('tonnes') > 0, price: v('price') > 0, loss: v('loss') >= 0 && v('loss') <= 100 };
+    Object.keys(ok).forEach(k => showErr(k, !ok[k]));
+    const bad = Object.keys(ok).find(k => !ok[k]);
+    if (bad) { calc[bad].focus(); return; }
+    farm = { ponds: v('ponds'), tonnes: v('tonnes'), price: v('price'), loss: v('loss'), water: v('water') };
+    if (gate.dataset.known) showResult(); else { toStep(2); gate['name'].focus(); }
   });
-  ['name', 'email'].forEach(k => form[k].addEventListener('input', () => showErr(k, false)));
-  document.getElementById('edit').addEventListener('click', () => { form.hidden = false; done.hidden = true; });
+  gate.addEventListener('submit', e => {
+    e.preventDefault();
+    const badName = !gate['name'].value.trim(), badMail = !isMail(gate['email'].value);
+    showErr('name', badName); showErr('email', badMail);
+    if (badName || badMail) { (badName ? gate['name'] : gate['email']).focus(); return; }
+    gate.dataset.known = '1'; sendLead('ROI result', farmLines()); showResult();
+  });
+  document.querySelectorAll('.back').forEach(b => b.addEventListener('click', () => toStep(1)));
+  result.querySelectorAll('[data-ask]').forEach(b => b.addEventListener('click', async () => {
+    const sent = await sendLead(b.dataset.ask, farmLines());
+    result.hidden = true; $('done-farm').hidden = false; $('done-farm').querySelector('.done-text').textContent = doneText(sent);
+  }));
+
+  const inv = $('inv');
+  inv.addEventListener('submit', async e => {
+    e.preventDefault();
+    const name = inv['name'].value, email = inv['email'].value, badName = !name.trim(), badMail = !isMail(email);
+    showErr('iname', badName); showErr('iemail', badMail);
+    if (badName || badMail) { (badName ? inv['name'] : inv['email']).focus(); return; }
+    const kind = e.submitter?.dataset.ask || 'Pitch deck request';
+    if (kind === 'Meeting request' && BOOK_URL) open(BOOK_URL, '_blank', 'noopener');
+    const interest = [...inv.querySelectorAll('input[name="interest"]:checked')].map(i => i.value).join(', ');
+    const sent = await sendLead(kind, ['Name: ' + clip(name, 100), 'Email: ' + clip(email, 200), inv['org'].value.trim() && 'Organisation: ' + clip(inv['org'].value, 120),
+      inv['region'].value.trim() && 'Region: ' + clip(inv['region'].value, 80), interest && 'Interested in: ' + interest]);
+    inv.hidden = true; $('done-inv').hidden = false; $('done-inv').querySelector('.done-text').textContent = doneText(sent);
+  });
+  [[gate, 'name', 'name'], [gate, 'email', 'email'], [inv, 'name', 'iname'], [inv, 'email', 'iemail']].forEach(([f, n, k]) => f[n].addEventListener('input', () => showErr(k, false)));
+  ['ponds', 'tonnes', 'price', 'loss'].forEach(k => calc[k].addEventListener('input', () => showErr(k, false)));
 </script>
 </body>
 </html>
