@@ -258,7 +258,7 @@
         <span class="cap"><b>I run a farm</b><p>Optimise your profit. See how much of your fish losses AquaRoy could save.</p><span class="go">See my savings →</span></span>
       </a>
       <a class="door" href="#write" data-door="inv" aria-current="false">
-        <video muted loop playsinline preload="metadata" poster="media/contact-farms-hd.jpg" aria-hidden="true" data-src="media/contact-farms-hd.mp4" data-src-sm="media/contact-farms-sm2.mp4"></video>
+        <video muted loop playsinline preload="metadata" poster="media/contact-sea-hd.jpg" aria-hidden="true" data-src="media/contact-sea-hd.mp4" data-src-sm="media/contact-sea-sm.mp4"></video>
         <span class="cap"><b>I invest or partner</b><p>Let's own the future of smart aquaculture.</p><span class="go">Get the pitch deck →</span></span>
       </a>
     </div>
@@ -447,7 +447,7 @@
   })();
 
   // the films load only when they come near the screen and play only while seen; a still stays for reduced motion
-  // A phone gets the small copies (about 1.7 MB for the two doors, not 8.4 MB): the doors are 170 px wide there.
+  // A phone gets the small copies (about 1.5 MB for the two doors, not 11 MB): the doors are 170 px wide there.
   const smallFilms = matchMedia('(max-width: 760px)').matches;
   document.querySelectorAll('video[data-src]').forEach(v => {
     new IntersectionObserver(([e]) => {
