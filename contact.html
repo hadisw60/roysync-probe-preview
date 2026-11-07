@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Contact — RoySync</title>
+<script>document.documentElement.classList.add('js')</script>
 <meta name="description" content="Fish farmers: see what AquaRoy could save you and request a demo. Investors and partners: get the pitch deck and meet the founders.">
 <link rel="icon" type="image/png" href="assets/favicon.png">
 <link rel="preload" href="assets/fonts/sora.woff2" as="font" type="font/woff2" crossorigin>
@@ -69,45 +70,72 @@
   @media (max-width: 640px) { header { left: 10px; right: 10px; top: 10px; padding: 8px 8px 8px 12px; } }
   @media (prefers-reduced-motion: reduce) { .logo i::after { animation: none; } .nav-lens { transition: none; } }
 
-  /* ---- opening: the line, then the two doors as two real pictures ---- */
-  .open { padding-top: 130px; }
-  .open h1 { margin: 0; max-width: 900px; font: 500 clamp(40px, 5.2vw, 72px)/1.02 var(--head); letter-spacing: -.045em; color: var(--navy);
+  /* ---- opening: the line, then one question that sends each visitor down the right path ---- */
+  .open { position: relative; overflow: hidden; display: flex; align-items: center; min-height: 100vh; min-height: 100svh; padding: 124px 0 64px; color: #fff;
+          background: radial-gradient(120% 90% at 78% 6%, #15507f 0%, #0c2c4c 42%, #081627 100%); }
+  /* dimmer on the left, so the strands never fight the heading */
+  .ribbon { position: absolute; inset: 0; width: 100%; height: 100%; -webkit-mask-image: linear-gradient(90deg, rgba(0,0,0,.32) 0, rgba(0,0,0,.32) 34%, #000 66%); mask-image: linear-gradient(90deg, rgba(0,0,0,.32) 0, rgba(0,0,0,.32) 34%, #000 66%); }
+  .open-in { position: relative; z-index: 1; width: 100%; }
+  .open h1 { margin: 0; max-width: 900px; font: 500 clamp(40px, 5.2vw, 72px)/1.02 var(--head); letter-spacing: -.045em; color: #fff;
              text-wrap: balance; }   /* two even lines, never "surface." alone on the second */
-  .open-head p { margin: 22px 0 0; max-width: 520px; font-size: 18px; line-height: 1.55; color: var(--muted); }
-  .doors { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin-top: 44px; }
-  .door { position: relative; display: block; height: clamp(380px, 38vw, 520px); overflow: hidden; color: #fff; text-decoration: none; background: var(--navy); }
-  .door video, .door img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transition: transform 1.2s cubic-bezier(.2,.7,.2,1); }
-  .door:hover video, .door:hover img { transform: scale(1.04); }
-  .door::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(14,34,54,0) 45%, rgba(14,34,54,.85) 100%); }
-  .door .cap { position: absolute; z-index: 1; left: 36px; right: 36px; bottom: 36px; }
-  .door b { display: block; font: 500 clamp(26px, 3vw, 44px)/1.05 var(--head); letter-spacing: -.035em; }
-  .door p { margin: 10px 0 0; max-width: 400px; font-size: 17px; line-height: 1.5; color: rgba(255,255,255,.88); }
-  .door .go { display: inline-block; margin-top: 18px; font-size: 16px; border-bottom: 1px solid #fff; padding-bottom: 3px; }
-  .door[aria-current="true"] .go { border-bottom-width: 2px; }
+  .who { margin-top: 44px; }
+  .who h2 { margin: 0; font: 500 clamp(26px, 3vw, 38px)/1.15 var(--head); letter-spacing: -.035em; color: var(--ice); }
+  .who > p { margin: 10px 0 0; font-size: 18px; line-height: 1.55; color: rgba(255,255,255,.8); }
+  .who-pick { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin-top: 28px; }
+  /* each card is a door: its film shows on hover, and a click opens it into the panel below */
+  .who-pick button { position: relative; overflow: hidden; display: flex; flex-direction: column; align-items: flex-start; min-height: 220px; padding: 34px 36px; font: inherit; text-align: left; color: #fff; cursor: pointer;
+                     background: rgba(255,255,255,.07); border: 1px solid rgba(170,215,255,.26); border-radius: 6px; transition: transform .3s, border-color .3s, opacity .25s; }
+  .who-pick video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0; filter: contrast(1.001); transition: opacity .6s, transform 1.2s cubic-bezier(.2,.7,.2,1); }
+  .who-pick button::after { content: ""; position: absolute; inset: 0; opacity: 0; background: linear-gradient(90deg, rgba(9,22,38,.78), rgba(9,22,38,.3)); transition: opacity .6s; }
+  .who-pick b, .who-pick span, .who-pick i { position: relative; z-index: 1; }
+  .who-pick button:hover { transform: translateY(-4px); border-color: var(--ice); }
+  .who-pick button:hover video { opacity: 1; transform: scale(1.04); } .who-pick button:hover::after { opacity: 1; }
+  .who-pick b { font: 500 clamp(26px, 3vw, 40px)/1.08 var(--head); letter-spacing: -.035em; }
+  .who-pick span { margin-top: 10px; font-size: 17px; line-height: 1.45; color: rgba(255,255,255,.85); }
+  .who-pick i { margin-top: auto; padding: 18px 0 3px; font-style: normal; font-size: 16px; color: var(--ice); }
+  .who-pick button[aria-pressed="true"] { border-color: var(--ice); box-shadow: 0 0 0 1px var(--ice); }
+  .chosen .who-pick button[aria-pressed="false"] { opacity: .6; }
+  .js body:not(.chosen) .band, .js body:not(.chosen) .next { display: none; }
+  /* the door opening: the card's picture grows to fill the screen, then fades into the panel */
+  .opening { position: fixed; z-index: 9; background: var(--navy) center / cover no-repeat; transition: left .72s cubic-bezier(.7,0,.2,1), top .72s cubic-bezier(.7,0,.2,1), width .72s cubic-bezier(.7,0,.2,1), height .72s cubic-bezier(.7,0,.2,1), opacity .5s; }
+  .opening::after { content: ""; position: absolute; inset: 0; background: rgba(9,22,38,.45); }
+  .opening.wide { left: 0 !important; top: 0 !important; width: 100vw !important; height: 100vh !important; }
+  .opening.gone { opacity: 0; }
+  /* the first screen arrives in turn */
+  @keyframes rise { from { opacity: 0; transform: translateY(22px); } }
+  .open h1, .who h2, .who > p, .who-pick button { animation: rise .9s cubic-bezier(.2,.7,.2,1) backwards; }
+  .open h1 { animation-delay: .1s; } .who h2 { animation-delay: .32s; } .who > p { animation-delay: .42s; } .who-pick button { animation-delay: .54s; } .who-pick button + button { animation-delay: .68s; }
 
   /* ---- the middle: a pale band, the form in one framed box on it ---- */
-  .band { margin-top: 96px; padding: 80px 0; background: var(--paper); }
+  .band { padding: 80px 0; background: var(--paper); }
   /* the box reads top to bottom (heading, a few words, the form, then the facts on one line): split in two, its
      fields were squeezed into the right and the left stood half empty */
-  .box { padding: 60px 72px; background: #fff; border: 1px solid rgba(18,38,58,.12);
+  .box { --bx: 72px; padding: 0 var(--bx) 60px; background: #fff; border: 1px solid rgba(18,38,58,.12);
          border-radius: 6px; box-shadow: 0 24px 60px -36px rgba(14,34,54,.35); scroll-margin-top: 90px; }
-  .box-head { max-width: 620px; margin-bottom: 40px; }
-  .box .intro a { color: var(--blue); }
-  .box h2 { margin: 0; font: 500 44px/1.08 var(--head); letter-spacing: -.035em; color: var(--navy); }
-  .box .intro { margin: 16px 0 0; font-size: 17px; line-height: 1.65; color: var(--muted); }
+  /* the box opens on a dark panel: the visitor's own film behind the big line, so the eye stops here */
+  .box-head { position: relative; overflow: hidden; margin: 0 calc(-1 * var(--bx)) 44px; padding: 36px var(--bx) 52px; display: flex; flex-direction: column; min-height: 500px; background: var(--navy); border-radius: 5px 5px 0 0; }
+  .box-head > video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  .box-head::after { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, rgba(9,22,38,.9) 0%, rgba(9,22,38,.62) 55%, rgba(9,22,38,.2) 100%); }
+  .box-head > :not(video) { position: relative; z-index: 1; }
+  .box-head :focus-visible { outline-color: var(--ice); }
+  .box .intro a { color: var(--ice); }
+  .box h2 { margin: auto 0 0; font: 600 clamp(36px, 5vw, 58px)/1.06 var(--head); letter-spacing: -.045em; color: #fff; }
+  .box h2 span span, .box h2 em { display: block; } .box h2 em { font-style: normal; color: var(--ice); }
+  .box .intro { max-width: 640px; margin: 20px 0 0; font-size: 18px; line-height: 1.6; color: rgba(255,255,255,.86); } .box .intro b { color: #fff; font-weight: 600; }
   .facts { display: flex; flex-wrap: wrap; gap: 6px 36px; margin-top: 44px; padding-top: 22px; border-top: 1px solid var(--line); font-size: 15.5px; line-height: 1.6; color: var(--muted); }
   .facts b { font-weight: 400; color: var(--ink); }
   form { display: flex; flex-direction: column; gap: 30px; } form[hidden] { display: none; }
-  .tabs { display: flex; gap: 28px; margin-bottom: 36px; }
-  .tabs button { font: inherit; font-size: 16px; color: var(--faint); background: none; border: 0; padding: 0 0 6px; border-bottom: 2px solid transparent; cursor: pointer; }
-  .tabs button[aria-selected="true"] { color: var(--ink); font-weight: 500; border-bottom-color: var(--navy); }
+  .switch { align-self: flex-start; padding: 6px 0 3px; font: inherit; font-size: 15px; color: rgba(255,255,255,.82); background: none; border: 0; border-bottom: 1px solid rgba(159,208,247,.6); cursor: pointer; }
+  .switch:hover { color: #fff; }
   .fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 30px 36px; }
   label, .lab { display: block; font-size: 14px; color: var(--muted); }
   label i { font-style: normal; color: #8a9bab; }
-  input[type=text], input[type=email], input[type=number], textarea { display: block; width: 100%; margin-top: 6px; font: inherit; font-size: 18px; line-height: 1.4; color: var(--ink); padding: 8px 0;
+  input[type=text], input[type=email], input[type=number], textarea { display: block; width: 100%; margin-top: 6px; font: inherit; font-size: 19px; line-height: 1.4; color: var(--ink); padding: 8px 0;
     border: 0; border-bottom: 1px solid rgba(18,38,58,.3); border-radius: 0; background: transparent; outline: none; transition: border-color .2s; }
   input::placeholder, textarea::placeholder { color: #9aa9b7; }
-  input:focus, textarea:focus { border-bottom-color: var(--navy); }
+  input:focus, textarea:focus { border-bottom-color: var(--blue); box-shadow: 0 1px 0 var(--blue); }
+  #calc input[type=number] { font: 500 30px/1.2 var(--head); letter-spacing: -.03em; color: var(--navy); padding: 6px 0 10px; }
+  #calc input[type=number]::placeholder { color: #b6c3cf; }
   textarea { resize: vertical; min-height: 110px; }
   .bad input { border-bottom-color: var(--warn); }
   .err { margin: 6px 0 0; font-size: 13.5px; color: var(--warn); }
@@ -123,13 +151,14 @@
   .door-inv .fieldwrap.only-farm { display: none; }
   .fieldwrap.only-inv { display: none; } .door-inv .fieldwrap.only-inv { display: contents; }
   .send-row { display: flex; align-items: center; gap: 22px; flex-wrap: wrap; }
-  .send { font: 500 16px Jost, sans-serif; color: #fff; background: var(--navy); border: 0; padding: 16px 34px; cursor: pointer; transition: background .2s; }
-  .send:hover { background: #1b3550; }
+  .send { font: 600 16px Jost, sans-serif; color: #06182b; background: linear-gradient(135deg, #e3f3ff 0%, #9fd0f7 48%, #5fa9e6 100%); border: 0; border-radius: 999px; padding: 16px 36px; cursor: pointer;
+          box-shadow: 0 8px 26px -8px rgba(79,159,224,.7), inset 0 1px 0 rgba(255,255,255,.7); transition: transform .2s, filter .2s; }
+  .send:hover { transform: translateY(-1px); filter: brightness(1.05); }
   .send-row span { font-size: 14px; color: var(--faint); }
   /* the farm's path: three steps, the sum's inputs, then the result */
-  .stepper { display: flex; gap: 26px; margin: 0 0 32px; padding: 0; list-style: none; counter-reset: st; font-size: 15px; color: var(--faint); }
-  .stepper li { counter-increment: st; } .stepper li::before { content: counter(st) ". "; }
-  .stepper li[aria-current] { color: var(--navy); font-weight: 500; }
+  .stepper { display: flex; gap: 10px; margin: 0 0 36px; padding: 0; list-style: none; counter-reset: st; font-size: 15px; color: var(--faint); }
+  .stepper li { flex: 1; padding-top: 12px; border-top: 3px solid rgba(18,38,58,.12); counter-increment: st; transition: border-color .4s; } .stepper li::before { content: counter(st) ". "; }
+  .stepper li[aria-current], .stepper li:has(~ li[aria-current]) { color: var(--navy); border-top-color: var(--blue); } .stepper li[aria-current] { font-weight: 500; }
   input[type=number] { appearance: textfield; -moz-appearance: textfield; }
   input[type=number]::-webkit-inner-spin-button { appearance: none; }
   input[type=range] { display: block; width: 100%; margin: 16px 0 0; accent-color: var(--blue); }
@@ -137,16 +166,20 @@
   .ready { margin: 0; font-size: 18px; color: var(--ink); }
   .small { margin: 0; font-size: 13.5px; line-height: 1.55; color: var(--faint); }
   .send.ghost { color: var(--navy); background: none; box-shadow: inset 0 0 0 1px var(--navy); }
-  .send.ghost:hover { background: var(--paper); }
+  .send.ghost:hover { background: var(--paper); filter: none; }
   .back { font: inherit; font-size: 15px; color: var(--blue); background: none; border: 0; padding: 8px 0; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
-  .res-lead { margin: 0; font-size: 18px; color: var(--muted); }
-  .res-big { margin: 6px 0 0; font: 500 52px/1.1 var(--head); letter-spacing: -.035em; color: var(--navy); } .res-big b { font-weight: 500; color: var(--blue); }
-  .res-rows { margin: 30px 0; border-top: 1px solid var(--line); }
-  .res-rows div { display: flex; justify-content: space-between; gap: 20px; padding: 12px 0; border-bottom: 1px solid var(--line); font-size: 16.5px; }
+  /* the result is the page's high point: a dark card, and the saving counts up */
+  #result { padding: 46px 50px 40px; color: #fff; border-radius: 6px; background: radial-gradient(100% 130% at 92% 0%, #1a5a96 0%, #0e2c4d 52%, #0a1a2e 100%); }
+  .res-lead { margin: 0; font-size: 18px; color: var(--ice); }
+  .res-big { margin: 6px 0 0; font: 500 clamp(38px, 6vw, 68px)/1.08 var(--head); letter-spacing: -.04em; color: #fff; } .res-big b { font-weight: 600; color: var(--ice); }
+  .res-rows { margin: 30px 0; border-top: 1px solid rgba(255,255,255,.16); }
+  .res-rows div { display: flex; justify-content: space-between; gap: 20px; padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,.16); font-size: 16.5px; }
   .res-rows div[hidden] { display: none; }
-  .res-rows dt { color: var(--muted); } .res-rows dd { margin: 0; color: var(--ink); font-weight: 500; white-space: nowrap; }
-  .res-note { margin: 0 0 24px; font-size: 16.5px; line-height: 1.55; color: var(--warn); }
-  #result .small { margin-top: 18px; }
+  .res-rows dt { color: rgba(255,255,255,.72); } .res-rows dd { margin: 0; color: #fff; font-weight: 500; white-space: nowrap; }
+  .res-note { margin: 0 0 24px; font-size: 16.5px; line-height: 1.55; color: #ffc4b0; }
+  #result .small { margin-top: 18px; color: rgba(255,255,255,.62); }
+  #result .send.ghost { color: #fff; box-shadow: inset 0 0 0 1px rgba(255,255,255,.6); } #result .send.ghost:hover { background: rgba(255,255,255,.1); }
+  #result .back { color: var(--ice); } #result :focus-visible { outline-color: var(--ice); }
   .done { padding: 20px 0; } .done h3 { margin: 0; font: 500 28px var(--head); letter-spacing: -.03em; color: var(--navy); }
   .done p { margin: 12px 0 0; max-width: 440px; font-size: 16.5px; line-height: 1.6; color: var(--muted); }
   .done button { margin-top: 16px; font: inherit; font-size: 15px; color: var(--blue); background: none; border: 0; padding: 0; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
@@ -155,7 +188,7 @@
   .strip { position: relative; height: 400px; margin-top: 80px; overflow: hidden; background: var(--navy); }
   .strip video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
   /* Windows moves a playing film onto its own overlay plane, and building that plane froze the page for ~0.65 s; a filter keeps it drawn with the page */
-  .door video, .strip video { filter: contrast(1.001); }
+  .box-head > video, .strip video { filter: contrast(1.001); }
   .strip::after { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, rgba(14,34,54,.72), rgba(14,34,54,.1) 60%); }
   .strip p { position: absolute; z-index: 1; left: 64px; top: 50%; transform: translateY(-50%); margin: 0; max-width: 560px;
              font: 500 clamp(28px, 3vw, 40px)/1.15 var(--head); letter-spacing: -.03em; color: #fff; }
@@ -192,30 +225,26 @@
   .ft-news small { display: block; margin-top: 10px; font-size: 12px; line-height: 1.5; color: #6f879e; }
 
   /* finger-sized tap areas, invisible: the links stay the size they look */
-  .navlinks a::before, .ft-col a::before, .tabs button::before { content: ""; position: absolute; }
-  .ft-col a, .tabs button { position: relative; }
+  .navlinks a::before, .ft-col a::before { content: ""; position: absolute; }
+  .ft-col a { position: relative; }
   .navlinks a::before { inset: -7px -2px; }
   .ft-col a::before { inset: -4px -6px; }
-  .tabs button::before { inset: -7px -8px -9px; z-index: 1; }   /* above the form card that starts just under the tabs */
   .ft-bottom { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 10px 24px; max-width: var(--col); margin: 56px auto 0; padding-top: 22px;
                border-top: 1px solid rgba(170,210,255,.12); font-size: 12.5px; color: #6f879e; }
 
   /* ---- narrower screens ---- */
-  @media (max-width: 1100px) { .box { padding: 48px; } }
+  @media (max-width: 1100px) { .box { --bx: 48px; padding-bottom: 48px; } }
   @media (max-width: 900px) { .ft { grid-template-columns: 1fr 1fr; } .steps { grid-template-columns: minmax(0, 1fr); gap: 26px; } }
   @media (max-width: 640px) {
     :root { --gut: 20px; }
-    .open { padding-top: 92px; }
-    .open-head p { font-size: 16px; margin: 14px 0 0; }
-    /* on a phone both doors are seen at once: two tall tiles, the title and the link only */
-    .doors { gap: 10px; margin-top: 24px; }
-    .door { height: 300px; }
-    .door .cap { left: 14px; right: 14px; bottom: 16px; }
-    .door b { font-size: 22px; } .door p { display: none; } .door .go { margin-top: 10px; font-size: 14px; }
-    .band { margin-top: 40px; padding: 28px 0; }
-    .box { padding: 28px 20px; gap: 24px; }
-    .stepper { gap: 14px; font-size: 14px; } .stepper li { white-space: nowrap; }
-    .box h2 { font-size: 30px; } .box .intro { font-size: 16px; } .facts { display: none; } .res-big { font-size: 38px; }
+    .open { padding: 92px 0 36px; } .ribbon { opacity: .75; }
+    .who { margin-top: 30px; } .who > p { font-size: 16.5px; } .who-pick { grid-template-columns: minmax(0, 1fr); gap: 10px; margin-top: 20px; }
+    .who-pick button { min-height: 150px; padding: 24px; } .who-pick span { font-size: 16px; }
+    .band { padding: 28px 0; } #result { padding: 30px 22px 26px; }
+    .box { --bx: 20px; padding-bottom: 28px; gap: 24px; } .box-head { min-height: 460px; padding: 22px var(--bx) 36px; margin-bottom: 30px; }
+    .box-head::after { background: linear-gradient(180deg, rgba(9,22,38,.55), rgba(9,22,38,.9)); }
+    .stepper { gap: 8px; font-size: 13.5px; } .stepper li { white-space: nowrap; } #calc input[type=number] { font-size: 26px; }
+    .box h2 { font-size: 34px; } .box .intro { font-size: 17px; } .facts { display: none; } .res-big { font-size: 38px; }
     form { gap: 22px; }
     .fields { grid-template-columns: minmax(0, 1fr); gap: 22px; }
     input[type=text], input[type=email], input[type=number], textarea { font-size: 17px; }
@@ -226,7 +255,7 @@
     .steps p { margin: 0; font-size: 15.5px; }
   }
   @media (max-width: 540px) { footer { padding: 52px 16px 24px; font-size: 13px; } .ft { grid-template-columns: 1fr 1fr; gap: 28px 18px; } .ft-brand, .ft-news { grid-column: 1 / -1; } }
-  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } *, *::before, *::after { transition: none !important; } }
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } *, *::before, *::after { transition: none !important; } .open h1, .who h2, .who > p, .who-pick button { animation: none; } }
 </style>
 </head>
 <body class="door-farm">
@@ -247,35 +276,32 @@
 </header>
 
 <main>
-  <section class="open col" aria-label="Contact RoySync">
+  <section class="open" aria-label="Contact RoySync">
+    <canvas class="ribbon" aria-hidden="true"></canvas>
+    <div class="col open-in">
     <div class="open-head">
       <h1>Every farm has a story under the surface.</h1>
-      <p>Choose the door that fits, and a person at RoySync will answer within one working day.</p>
     </div>
-    <div class="doors">
-      <a class="door" href="#write" data-door="farm" aria-current="true">
-        <video muted loop playsinline preload="metadata" poster="media/contact-school-hd.jpg" aria-hidden="true" data-src="media/contact-school-hd.mp4" data-src-sm="media/contact-school-sm.mp4"></video>
-        <span class="cap"><b>I run a farm</b><p>Optimise your profit. See how much of your fish losses AquaRoy could save.</p><span class="go">See my savings →</span></span>
-      </a>
-      <a class="door" href="#write" data-door="inv" aria-current="false">
-        <video muted loop playsinline preload="metadata" poster="media/contact-sea-hd.jpg" aria-hidden="true" data-src="media/contact-sea-hd.mp4" data-src-sm="media/contact-sea-sm.mp4"></video>
-        <span class="cap"><b>I invest or partner</b><p>Let's own the future of smart aquaculture.</p><span class="go">Get the pitch deck →</span></span>
-      </a>
+    <div class="who">
+      <h2>Which one are you?</h2>
+      <p>We'll take you to the right place. A person at RoySync answers within one working day.</p>
+      <div class="who-pick">
+        <button type="button" data-door="farm" aria-pressed="false" aria-controls="write"><video muted loop playsinline preload="none" poster="media/contact-school-hd.jpg" aria-hidden="true" data-hover="media/contact-school-hd.mp4"></video><b>I run a farm</b><span>Ponds, tanks or sea cages.</span><i>See my savings →</i></button>
+        <button type="button" data-door="inv" aria-pressed="false" aria-controls="write"><video muted loop playsinline preload="none" poster="media/contact-sea-hd.jpg" aria-hidden="true" data-hover="media/contact-sea-hd.mp4"></video><b>I invest or partner</b><span>Investment, distribution and technology partnerships.</span><i>Get the pitch deck →</i></button>
+      </div>
+    </div>
     </div>
   </section>
 
   <div class="band">
     <div class="col">
       <section class="box" id="write" aria-labelledby="write-h">
-        <div class="tabs" role="tablist" aria-label="Who are you?">
-          <button type="button" role="tab" data-door="farm" aria-selected="true">I run a farm</button>
-          <button type="button" role="tab" data-door="inv" aria-selected="false">I invest or partner</button>
-        </div>
-
         <div class="box-head">
-          <h2 id="write-h"><span class="only-farm">You raise the fish. RoySync protects your investment.</span><span class="only-inv">Aquaculture is hungry for AI. We built the tools.</span></h2>
-          <p class="intro only-farm">Optimise your profit. Enter your ponds and see what fish losses cost you each year, and how much of that AquaRoy could save.</p>
-          <p class="intro only-inv">RoySync is an intelligent ecosystem targeting the multi-billion-dollar problem of fish lost on farms. Disease alone costs fish farming <a href="https://marinescience.blog.gov.uk/2017/02/02/solving-the-6-billion-per-year-global-aquaculture-disease-problem" target="_blank" rel="noopener">about $6 billion a year</a>.</p>
+          <video class="only-farm" muted loop playsinline preload="metadata" poster="media/contact-school-hd.jpg" aria-hidden="true" data-src="media/contact-school-hd.mp4" data-src-sm="media/contact-school-sm.mp4"></video><video class="only-inv" muted loop playsinline preload="metadata" poster="media/contact-sea-hd.jpg" aria-hidden="true" data-src="media/contact-sea-hd.mp4" data-src-sm="media/contact-sea-sm.mp4?v=2"></video>
+          <button type="button" class="switch only-farm" data-door="inv">Investing instead? Switch →</button><button type="button" class="switch only-inv" data-door="farm">Running a farm? Switch →</button>
+          <h2 id="write-h"><span class="only-farm"><span>You raise the fish.</span> <em>RoySync protects your investment.</em></span><span class="only-inv"><span>Aquaculture is hungry for AI.</span> <em>We built the tools.</em></span></h2>
+          <p class="intro only-farm"><b>Optimise your profit.</b> Enter your ponds and see what fish losses cost you each year, and how much of that AquaRoy could save.</p>
+          <p class="intro only-inv"><b>Let's own the future of smart aquaculture.</b> RoySync is an intelligent ecosystem targeting the <b>multi-billion-dollar problem</b> of fish lost on farms. Disease alone costs fish farming <a href="https://marinescience.blog.gov.uk/2017/02/02/solving-the-6-billion-per-year-global-aquaculture-disease-problem" target="_blank" rel="noopener">about $6 billion a year</a>.</p>
         </div>
 
         <div class="only-farm">
@@ -447,7 +473,7 @@
   })();
 
   // the films load only when they come near the screen and play only while seen; a still stays for reduced motion
-  // A phone gets the small copies (about 1.5 MB for the two doors, not 11 MB): the doors are 170 px wide there.
+  // A phone gets the small copies, about 1 MB each, and only the chosen path loads its film.
   const smallFilms = matchMedia('(max-width: 760px)').matches;
   document.querySelectorAll('video[data-src]').forEach(v => {
     new IntersectionObserver(([e]) => {
@@ -455,19 +481,101 @@
     }, { rootMargin: '200px 0px' }).observe(v);
   });
 
-  // the two doors: a door (in the pictures or the box's tabs) switches the box's words and path, and the steps
+  // the question at the top opens the visitor's path; the link in the panel changes path afterwards
   let door = 'farm';
   const setDoor = d => {
     door = d;
     document.body.classList.toggle('door-farm', d === 'farm'); document.body.classList.toggle('door-inv', d === 'inv');
-    document.querySelectorAll('.tabs button').forEach(b => b.setAttribute('aria-selected', b.dataset.door === d));
-    document.querySelectorAll('.door').forEach(b => b.setAttribute('aria-current', b.dataset.door === d));
+    document.querySelectorAll('.who-pick button').forEach(b => b.setAttribute('aria-pressed', document.body.classList.contains('chosen') && b.dataset.door === d));
   };
-  document.querySelectorAll('.tabs button').forEach(b => b.addEventListener('click', () => setDoor(b.dataset.door)));
-  document.querySelectorAll('.door').forEach(a => a.addEventListener('click', e => {
-    e.preventDefault(); setDoor(a.dataset.door);
-    document.getElementById('write').scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' });
-  }));
+  const enter = d => {
+    document.body.classList.add('chosen'); setDoor(d);
+    document.getElementById('write').scrollIntoView({ behavior: 'instant', block: 'start' });
+  };
+  document.querySelectorAll('.who-pick button').forEach(b => {
+    const v = b.querySelector('video');
+    // the card's film runs while the pointer is on it; a touch screen goes straight to the door opening
+    if (matchMedia('(hover: hover)').matches && !reduce) {
+      b.addEventListener('pointerenter', () => { if (!v.src) v.src = v.dataset.hover; v.play().catch(() => {}); });
+      b.addEventListener('pointerleave', () => v.pause());
+    }
+    b.addEventListener('click', () => {
+      if (reduce) return enter(b.dataset.door);
+      const r = b.getBoundingClientRect(), o = document.createElement('div');
+      o.className = 'opening'; o.style.cssText = `left:${r.left}px;top:${r.top}px;width:${r.width}px;height:${r.height}px;background-image:url(${v.poster})`;
+      document.body.appendChild(o); o.getBoundingClientRect(); o.classList.add('wide');
+      setTimeout(() => { enter(b.dataset.door); o.classList.add('gone'); setTimeout(() => o.remove(), 520); }, 740);
+    });
+  });
+  document.querySelectorAll('.switch').forEach(b => b.addEventListener('click', () => setDoor(b.dataset.door)));
+
+  // the landing's oxygen ribbon, moving across the first screen: thin strands twisting round one course, the same
+  // sums as the landing's, drawn on a canvas because here it never stops. It rests while off screen.
+  (() => {
+    const cv = document.querySelector('.ribbon'), box = cv.parentElement, c = cv.getContext('2d');
+    const COURSE = [[-0.12, 0.5], [0.2, 0.3], [0.52, 0.13], [0.8, 0.26], [0.98, 0.58], [1.14, 0.8]], COURSE_PHONE = [[-0.3, 0.34], [0.15, 0.2], [0.55, 0.12], [0.9, 0.2], [1.25, 0.42]];
+    const WEIGHTS = [[1, 0.3], [1, 0.42], [1.2, 0.58], [1.8, 0.8]];
+    let W = 0, H = 0, sc = 1, pts = [], nrm = [], arc = [], theta = [], Rs = [], fans = [], sets = [], wig = 4, grad = null, raf = 0, shown = true, t0 = 0;
+    const noise = (s, a, b, e) => Math.min(1, Math.max(0, 0.5 + 0.28 * Math.sin(s / 610 + a) + 0.14 * Math.sin(s / 233 + b) + 0.08 * Math.sin(s / 1490 + e)));
+    const build = () => {
+      const dpr = Math.min(devicePixelRatio || 1, 2);
+      W = box.clientWidth; H = box.clientHeight; cv.width = W * dpr; cv.height = H * dpr; c.setTransform(dpr, 0, 0, dpr, 0, 0);
+      sc = Math.min(1, Math.max(0.45, W / 1440));
+      const P = (W < 760 ? COURSE_PHONE : COURSE).map(([x, y]) => [x * W, y * H]); pts = [];
+      for (let i = 0; i < P.length - 1; i++) {
+        const p0 = P[i - 1] || P[i], p1 = P[i], p2 = P[i + 1], p3 = P[i + 2] || p2;
+        const c1 = [p1[0] + (p2[0] - p0[0]) / 6, p1[1] + (p2[1] - p0[1]) / 6], c2 = [p2[0] - (p3[0] - p1[0]) / 6, p2[1] - (p3[1] - p1[1]) / 6];
+        const n = Math.max(8, Math.ceil(Math.hypot(p2[0] - p1[0], p2[1] - p1[1]) / 12));
+        for (let j = i ? 1 : 0; j <= n; j++) { const t = j / n, u = 1 - t; pts.push([0, 1].map(k => u * u * u * p1[k] + 3 * u * u * t * c1[k] + 3 * u * t * t * c2[k] + t * t * t * p2[k])); }
+      }
+      nrm = []; arc = [0]; theta = [0];
+      pts.forEach((p, i) => {
+        const a = pts[Math.max(i - 1, 0)], b = pts[Math.min(i + 1, pts.length - 1)], dx = b[0] - a[0], dy = b[1] - a[1], L = Math.hypot(dx, dy) || 1;
+        nrm.push([-dy / L, dx / L]);
+        if (i) { arc.push(arc[i - 1] + Math.hypot(p[0] - pts[i - 1][0], p[1] - pts[i - 1][1])); theta.push(theta[i - 1] + 2 * Math.PI * (arc[i] - arc[i - 1]) / (380 + 1000 * noise(arc[i], 1.7, 0.3, 2.6))); }
+      });
+      Rs = arc.map(s => sc * (26 + 66 * Math.pow(noise(s, 0.4, 2.1, 4.0), 1.4))); fans = arc.map(s => 0.05 + 0.08 * noise(s, 3.1, 1.2, 0.5));
+      wig = 4 * Math.max(sc, 0.7);
+      const phone = W < 760; sets = [[], [], [], []];
+      for (let k = 0, N = phone ? 18 : 32; k < N; k++) sets[k % 7 === 3 ? 3 : k % 3].push([k, 0, 1, 1, 1]);
+      for (let k = 0, N = phone ? 6 : 12; k < N; k++) sets[k % 5 === 2 ? 3 : k % 3].push([k, 1, 1.6, 0.45, 1.35]);
+      grad = c.createLinearGradient(0, 0, W, H); grad.addColorStop(0, '#a9dcff'); grad.addColorStop(0.45, '#5db2f0'); grad.addColorStop(1, '#3a8fdc');
+    };
+    const end = arc => arc[arc.length - 1];
+    const lift = s => { const a = end(arc) * 0.3, b = end(arc) * 0.82; return s > a && s < b ? 120 * sc * Math.pow(Math.sin(Math.PI * (s - a) / (b - a)), 2) : 0; };
+    const draw = (t, p) => {
+      c.clearRect(0, 0, W, H);
+      const last = Math.floor(p * (pts.length - 1));
+      c.globalCompositeOperation = 'lighter'; c.lineJoin = 'round'; c.strokeStyle = grad;
+      // a soft light round the ribbon, standing in for a blur
+      [[130, 0.018], [90, 0.024], [54, 0.03]].forEach(([w, o]) => { c.lineWidth = w * sc; c.globalAlpha = o; c.beginPath(); for (let i = 0; i <= last; i++) i ? c.lineTo(pts[i][0], pts[i][1]) : c.moveTo(pts[i][0], pts[i][1]); c.stroke(); });
+      sets.forEach((set, g) => {
+        c.lineWidth = WEIGHTS[g][0]; c.globalAlpha = WEIGHTS[g][1]; c.beginPath();
+        for (const [k, side, spread, scale, twist] of set) for (let i = 0; i <= last; i += W < 760 ? 1 : 2) {
+          const s = arc[i], o = (side ? lift(s) : 0) + scale * Rs[i] * Math.sin(theta[i] * twist + t * 0.22 + k * fans[i] * spread) + wig * Math.sin(s / 37 + k * 0.4 + t * 0.5);
+          const x = pts[i][0] + nrm[i][0] * o, y = pts[i][1] + nrm[i][1] * o;
+          i ? c.lineTo(x, y) : c.moveTo(x, y);
+        }
+        c.stroke();
+      });
+      c.globalAlpha = 1; c.globalCompositeOperation = 'source-over';
+    };
+    const frame = now => {
+      raf = 0; if (!shown || document.hidden) return;
+      if (!t0) t0 = now;
+      const t = (now - t0) / 1000, q = Math.min(1, t / 2.6);
+      draw(t, 1 - Math.pow(1 - q, 3));
+      raf = requestAnimationFrame(frame);
+    };
+    const go = () => { if (!reduce && !raf && shown && !document.hidden) raf = requestAnimationFrame(frame); };
+    build();
+    if (reduce) draw(0, 1);
+    let wait = 0;
+    new ResizeObserver(() => { clearTimeout(wait); wait = setTimeout(() => { build(); if (reduce) draw(0, 1); }, 200); }).observe(box);
+    new IntersectionObserver(([e]) => { shown = e.isIntersecting; go(); }).observe(box);
+    document.addEventListener('visibilitychange', go);
+    go();
+  })();
 
   const $ = id => document.getElementById(id), clip = (s, n) => s.trim().slice(0, n);
   const isMail = s => /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(s.trim());
@@ -511,6 +619,7 @@
     $('r-low').hidden = r.net >= 0;
     $('r-basis').textContent = `An estimate from your own numbers, not a promise. It takes one float per pond at ${money(FLOAT)} plus ${money(YEARLY)} a year, and assumes the floats catch ${CAUGHT * 100}% of the water's losses in time.`;
     toStep(3);
+    if (!reduce) { const el = $('r-saved'), t0 = performance.now(), tick = now => { const p = Math.min(1, (now - t0) / 1400); el.textContent = money(r.saved * (1 - Math.pow(1 - p, 3))); if (p < 1) requestAnimationFrame(tick); }; requestAnimationFrame(tick); }
   };
   const farmLines = () => { const r = sum(), f = farm; return [
     'Name: ' + clip(gate['name'].value, 100), 'Email: ' + clip(gate['email'].value, 200),
